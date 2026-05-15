@@ -15,21 +15,28 @@ import { CoinStack } from "@/components/shared/illustrations/CoinStack";
 import { FloatingCoins } from "@/components/shared/illustrations/FloatingCoins";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
-import type { PaymentStatus } from "@/types";
+import type { Payment, PaymentStatus } from "@/types";
+
+type VerifyResponse = { status: PaymentStatus; reference: string; payment: Payment };
 
 function PaymentReturnContent() {
   const params = useSearchParams();
   const { user, hydrated } = useAuth();
   const [status, setStatus] = useState<PaymentStatus>("pending");
   const [message, setMessage] = useState("Your payment is being verified securely.");
+  const [thankYouMessage, setThankYouMessage] = useState<string | null>(null);
   const reference = useMemo(() => params.get("reference") ?? params.get("payment_reference") ?? params.get("session_id") ?? params.get("transaction_id") ?? "", [params]);
 
   useEffect(() => {
     if (!reference) return;
-    api<{ status: PaymentStatus }>(`/api/payments/verify/${reference}`)
+    api<VerifyResponse>(`/api/payments/verify/${reference}`)
       .then((res) => {
         setStatus(res.data.status);
-        if (res.data.status === "completed") setMessage("Payment completed successfully. Your wallet has been updated.");
+        if (res.data.status === "completed") {
+          setMessage("Payment completed successfully. Your contribution has been recorded.");
+          const project = res.data.payment?.projectId as { thankYouMessage?: string } | undefined;
+          if (project?.thankYouMessage) setThankYouMessage(project.thankYouMessage);
+        }
         if (res.data.status === "failed") setMessage("Payment failed. Please try again.");
         if (res.data.status === "pending") setMessage("Payment is still pending. We'll update your dashboard once confirmed.");
       })
@@ -66,6 +73,12 @@ function PaymentReturnContent() {
         <CardContent className="flex flex-col items-center gap-4 relative">
           <div><PaymentStatusBadge status={status} /></div>
           <p className="text-muted-foreground">{message}</p>
+
+          {thankYouMessage && (
+            <div className="w-full rounded-2xl border border-amber-200/60 bg-amber-50/60 px-4 py-3 text-sm text-amber-900 backdrop-blur-sm">
+              {thankYouMessage}
+            </div>
+          )}
 
           {!hydrated || !user ? (
             <div className="w-full rounded-2xl border border-white/60 bg-white/60 p-4 backdrop-blur-sm">

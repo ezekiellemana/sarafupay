@@ -139,7 +139,7 @@ export const createPublicPayment = async (input: PublicPaymentInput) => {
 export const verifyLocalPayment = async (reference: string) => {
   const payment = await Payment.findOne({
     $or: [{ snippeReference: reference }, { snippeSessionId: reference }, { externalReference: reference }]
-  }).populate("projectId", "title description");
+  }).populate("projectId", "title description thankYouMessage");
   if (!payment) throw new AppError("Payment reference not found.", 404, "PAYMENT_NOT_FOUND");
 
   if (payment.status === "pending") {
