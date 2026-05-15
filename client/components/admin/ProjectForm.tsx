@@ -47,7 +47,7 @@ export function ProjectForm({ onCreated }: { onCreated: () => void }) {
   };
 
   return (
-    <form className="grid gap-4 md:grid-cols-2" onSubmit={submit}>
+    <form className="grid gap-4 md:grid-cols-2" method="post" onSubmit={submit}>
       {fields.map(([name, label, type]) => (
         <div key={name} className="flex flex-col gap-2">
           <Label htmlFor={name}>{label}</Label>

@@ -56,7 +56,7 @@ export default function ProfilePage() {
           </div>
         </CardHeader>
         <CardContent>
-          <form className="grid gap-4" onSubmit={form.handleSubmit(save)}>
+          <form className="grid gap-4" method="post" onSubmit={form.handleSubmit(save)}>
             {["fullName", "phoneNumber", "email"].map((name) => (
               <div key={name} className="flex flex-col gap-2">
                 <Label htmlFor={name}>{name === "fullName" ? "Full name" : name === "phoneNumber" ? "Phone number" : "Email"}</Label>

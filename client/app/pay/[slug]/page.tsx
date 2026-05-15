@@ -210,7 +210,7 @@ export default function PublicPayPage({ params }: { params: Promise<{ slug: stri
             <h2 className="text-lg font-bold text-[#071a0e]">Support this project</h2>
             <p className="mt-1 text-sm text-muted-foreground">Enter your details and pay securely.</p>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="mt-5 flex flex-col gap-4">
+            <form method="post" onSubmit={handleSubmit(onSubmit)} className="mt-5 flex flex-col gap-4">
               <div className="flex flex-col gap-2">
                 <Label htmlFor="payerName">Full name *</Label>
                 <Input id="payerName" placeholder="John Doe" className="rounded-2xl" {...register("payerName", { required: "Full name is required." })} />

@@ -53,7 +53,7 @@ export function RegisterForm() {
         <CardDescription>Start tracking your monthly contributions with ease.</CardDescription>
       </CardHeader>
       <CardContent>
-        <form className="grid gap-4" onSubmit={form.handleSubmit(onSubmit)}>
+        <form className="grid gap-4" method="post" onSubmit={form.handleSubmit(onSubmit)}>
           {[
             ["fullName", "Full name", "text"],
             ["phoneNumber", "Phone number", "tel"],

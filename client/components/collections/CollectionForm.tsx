@@ -78,7 +78,7 @@ export function CollectionForm({ onSuccess }: { onSuccess: (collection: Collecti
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
+    <form method="post" onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
       {/* Title */}
       <div className="flex flex-col gap-2">
         <Label htmlFor="title">Project/Event title *</Label>

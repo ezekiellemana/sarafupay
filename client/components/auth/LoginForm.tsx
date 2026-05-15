@@ -48,7 +48,7 @@ export function LoginForm() {
         <CardDescription>Login to continue managing your contributions.</CardDescription>
       </CardHeader>
       <CardContent>
-        <form className="flex flex-col gap-4" onSubmit={form.handleSubmit(onSubmit)}>
+        <form className="flex flex-col gap-4" method="post" onSubmit={form.handleSubmit(onSubmit)}>
           <div className="flex flex-col gap-2">
             <Label htmlFor="identifier">Email or phone number</Label>
             <Input id="identifier" {...form.register("identifier")} aria-invalid={!!form.formState.errors.identifier} />
