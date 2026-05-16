@@ -32,6 +32,10 @@ export const members = asyncHandler(async (req, res) => {
 });
 
 export const payments = asyncHandler(async (req, res) => {
+  const page = Math.max(1, parseInt(String(req.query.page ?? "1"), 10));
+  const limit = Math.min(100, Math.max(1, parseInt(String(req.query.limit ?? "50"), 10)));
+  const skip = (page - 1) * limit;
+
   const query: Record<string, unknown> = {};
   if (req.query.status) query.status = req.query.status;
   if (req.query.month) query.monthPaidFor = req.query.month;
@@ -45,11 +49,22 @@ export const payments = asyncHandler(async (req, res) => {
     ];
   }
 
-  const rows = await Payment.find(query)
-    .populate("userId", "fullName email phoneNumber")
-    .populate("projectId", "title")
-    .sort({ createdAt: -1 });
-  res.json({ success: true, message: "Payments loaded.", data: { payments: rows } });
+  const [rows, total] = await Promise.all([
+    Payment.find(query)
+      .populate("userId", "fullName email phoneNumber")
+      .populate("projectId", "title")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    Payment.countDocuments(query)
+  ]);
+
+  res.json({
+    success: true,
+    message: "Payments loaded.",
+    data: { payments: rows, total, page, limit, totalPages: Math.ceil(total / limit) }
+  });
 });
 
 export const summary = asyncHandler(async (_req, res) => {
