@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DashboardShell } from "@/components/layout/DashboardShell";
@@ -30,7 +31,29 @@ export default function AdminPaymentsPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const [exporting, setExporting] = useState(false);
   const debouncedSearch = useDebouncedValue(search);
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      // Use fetch with credentials so the auth cookie is sent correctly in both
+      // same-origin (dev proxy) and cross-origin (production) deployments.
+      const res = await fetch(`${apiUrl}/api/admin/export/payments`, { credentials: "include" });
+      if (!res.ok) throw new Error("Export failed — check that you are still logged in as admin.");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "sarafupay-payments.csv";
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to export payments.");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   // Reset to page 1 whenever the search query changes.
   useEffect(() => {
@@ -63,9 +86,14 @@ export default function AdminPaymentsPage() {
           title="Payments"
           description="Filter and export contribution payments."
           action={
-            <a href={`${apiUrl}/api/admin/export/payments`}>
-              <Button className="h-11 rounded-2xl bg-white/80" variant="outline">Export CSV</Button>
-            </a>
+            <Button
+              className="h-11 rounded-2xl bg-white/80"
+              variant="outline"
+              disabled={exporting}
+              onClick={handleExport}
+            >
+              {exporting ? "Exporting…" : "Export CSV"}
+            </Button>
           }
         />
         <Input
