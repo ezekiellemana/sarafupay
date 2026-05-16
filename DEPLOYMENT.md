@@ -83,11 +83,13 @@ You will need:
 2. Select **GitHub** → authorize DigitalOcean → choose your SarafuPay repo and the `main` branch.
 3. DigitalOcean will scan the repo. When it shows the detected component:
    - Click **Edit** on the component
-   - **Source directory:** `server`
-   - **Build command:** `npm install && npm run build`
-   - **Run command:** `npm start`
-   - **HTTP port:** `5000`
+   - **Source directory:** `.` *(the repo root — not `server`)*
+   - **Build command:** `npm install --workspace server && npm --workspace server run build`
+   - **Run command:** `node server/dist/server.js`
+   - **HTTP port:** `8080`
    - Click **Save**
+
+   > **Why root, not `server`?** This is an npm workspaces monorepo. When the source directory is set to `server`, DigitalOcean packages only `server/` for the container, but npm installs shared dependencies to the **root** `node_modules/`. At runtime the app cannot find those modules. Setting the source directory to `.` (root) ensures the root `node_modules/` is included in the deployed artifact. The build command targets only the `server` workspace so client dependencies are not installed.
 4. Click **Next** and skip to **Environment Variables** — add all the backend variables from the table below.
 5. Choose a plan: **Basic → $12/mo** is sufficient for MVP.
 6. Click **Create Resources** and wait for the first deploy to finish.
@@ -101,11 +103,13 @@ You will need:
 ### Verify the backend is running
 
 Open this URL in your browser (replace with your actual URL):
-```
+
+```text
 https://sarafupay-api-xxxxx.ondigitalocean.app/health
 ```
 
 Expected response:
+
 ```json
 {
   "status": "ok",

@@ -2,6 +2,9 @@
   "name": "sarafupay",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "20.x"
+  },
   "workspaces": ["client", "server"],
   "scripts": {
     "dev:client": "npm --workspace client run dev",
