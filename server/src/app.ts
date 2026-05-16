@@ -7,6 +7,7 @@ import cookieParser from "cookie-parser";
 import { env, isProduction } from "./config/env";
 import { errorHandler, notFound } from "./middleware/error.middleware";
 import { sanitizeRequest } from "./middleware/sanitize.middleware";
+import { globalApiLimiter } from "./middleware/rateLimit.middleware";
 import authRoutes from "./routes/auth.routes";
 import projectRoutes from "./routes/project.routes";
 import collectionRoutes from "./routes/collection.routes";
@@ -48,6 +49,11 @@ app.use(sanitizeRequest);
 app.get("/health", (_req, res) => {
   res.json({ success: true, message: "SarafuPay API is healthy.", data: { service: "sarafupay-api" } });
 });
+
+// Global rate limiter covers all /api/* routes not already covered by specific limiters.
+// /health is not under /api/ so it is excluded automatically.
+// Webhook routes are skipped inside globalApiLimiter (they have their own limiter).
+app.use("/api", globalApiLimiter);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/projects", projectRoutes);

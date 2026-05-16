@@ -245,6 +245,24 @@ Work through this top to bottom before opening SarafuPay to real users.
 
 ---
 
+## Rate Limits
+
+All limits are per IP address. When a limit is exceeded the server returns `429 Too Many Requests` with `{ "errorCode": "RATE_LIMITED" }`.
+
+| Endpoint group | Window | Limit | Notes |
+| --- | --- | --- | --- |
+| All `/api/*` (global fallback) | 15 min | 300 req | Catches any route without a specific limiter |
+| `POST /api/auth/login`, `/register` | 15 min | 20 req | Prevents brute-force credential attacks |
+| `POST /api/payments/create-session` | 10 min | 30 req | Authenticated payment creation |
+| `POST /api/payments/create-public-session` | 10 min | 15 req | Public/guest payment creation |
+| `GET /api/collections/public/*` | 15 min | 120 req | Public collection page reads |
+| `POST /api/webhooks/snippe` | 5 min | 60 req | Allows Snippe retries; blocks unauthenticated floods |
+| `GET /health` | — | unlimited | Health check is not under `/api/` — excluded from global limiter |
+
+Specific limiters are additive on top of the global limit. A login attempt consumes from both the 300/15 min global bucket and the 20/15 min auth bucket, so the auth limiter is always the binding constraint for that route.
+
+---
+
 ## Troubleshooting
 
 ### CORS error in browser
