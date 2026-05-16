@@ -84,12 +84,14 @@ You will need:
 3. DigitalOcean will scan the repo. When it shows the detected component:
    - Click **Edit** on the component
    - **Source directory:** `.` *(the repo root — not `server`)*
-   - **Build command:** `npm install --workspace server && npm --workspace server run build`
+   - **Build command:** `npm install --workspace server --include=dev && npm --workspace server run build`
    - **Run command:** `node server/dist/server.js`
    - **HTTP port:** `8080`
    - Click **Save**
 
    > **Why root, not `server`?** This is an npm workspaces monorepo. When the source directory is set to `server`, DigitalOcean packages only `server/` for the container, but npm installs shared dependencies to the **root** `node_modules/`. At runtime the app cannot find those modules. Setting the source directory to `.` (root) ensures the root `node_modules/` is included in the deployed artifact. The build command targets only the `server` workspace so client dependencies are not installed.
+   >
+   > **Why `--include=dev`?** DigitalOcean sets `NODE_ENV=production` before running the build command, which causes npm to skip devDependencies automatically. The TypeScript compiler (`tsc`) requires `@types/node`, `@types/express`, and the other `@types/*` packages listed in `server/package.json` devDependencies to compile successfully. The `--include=dev` flag installs them for the build step only — they have no effect at runtime since `node server/dist/server.js` executes plain compiled JavaScript.
 4. Click **Next** and skip to **Environment Variables** — add all the backend variables from the table below.
 5. Choose a plan: **Basic → $12/mo** is sufficient for MVP.
 6. Click **Create Resources** and wait for the first deploy to finish.
