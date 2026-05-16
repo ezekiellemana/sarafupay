@@ -5,7 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { CheckCircle2, Clock, LockKeyhole, ShieldCheck, Users, WalletCards } from "lucide-react";
+import { Ban, CheckCircle2, Clock, LockKeyhole, ShieldCheck, Users, WalletCards } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -203,6 +203,16 @@ export default function PublicPayPage({ params }: { params: Promise<{ slug: stri
                 <div>
                   <h2 className="text-lg font-bold text-[#071a0e]">Temporarily paused</h2>
                   <p className="mt-1 text-sm text-muted-foreground">This collection is not accepting payments right now. Check back soon.</p>
+                </div>
+              </div>
+            ) : collection.status === "closed" ? (
+              <div className="flex flex-col items-center gap-4 py-6 text-center">
+                <div className="flex size-14 items-center justify-center rounded-2xl bg-red-50 ring-1 ring-red-200/60">
+                  <Ban className="size-7 text-red-500" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-[#071a0e]">Collection closed</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">This collection is no longer accepting payments. Thank you for your support!</p>
                 </div>
               </div>
             ) : (

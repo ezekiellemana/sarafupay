@@ -3,10 +3,11 @@
 import { use, useState } from "react";
 import Link from "next/link";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { ArrowLeft, Download, Power } from "lucide-react";
+import { ArrowLeft, Download, Pause, Pencil, Play, Power } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { LoadingState } from "@/components/shared/LoadingState";
 import { ErrorState } from "@/components/shared/ErrorState";
@@ -21,17 +22,43 @@ import { useCollectionSummary, useCollectionPayments } from "@/hooks/useCollecti
 
 export default function CollectionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { summary, loading, error } = useCollectionSummary(id);
+  const { summary, loading, error, reload } = useCollectionSummary(id);
   const { payments } = useCollectionPayments(id);
   const [archiving, setArchiving] = useState(false);
+  const [updating, setUpdating] = useState(false);
 
   const handleExportCsv = () => {
     collectionsApi.exportCsv(id);
     toast.success("Downloading contributor list…");
   };
 
+  const handlePause = async () => {
+    setUpdating(true);
+    try {
+      await collectionsApi.update(id, { status: "paused" });
+      toast.success("Collection paused.");
+      reload();
+    } catch (err: unknown) {
+      toast.error(getApiErrorMessage(err, "Failed to pause collection."));
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleReactivate = async () => {
+    setUpdating(true);
+    try {
+      await collectionsApi.update(id, { status: "active" });
+      toast.success("Collection reactivated.");
+      reload();
+    } catch (err: unknown) {
+      toast.error(getApiErrorMessage(err, "Failed to reactivate collection."));
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   const handleArchive = async () => {
-    if (!confirm("Are you sure you want to close this collection? Contributors won't be able to pay anymore.")) return;
     setArchiving(true);
     try {
       await collectionsApi.archive(id);
@@ -72,14 +99,68 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
                   />
                 </div>
               </div>
+
               <div className="flex flex-wrap items-center gap-2">
                 <StatusBadge status={summary.collection.status} />
+
+                <Link href={`/dashboard/collections/${id}/edit`}>
+                  <Button size="sm" variant="outline" className="rounded-2xl">
+                    <Pencil className="mr-1.5 size-4" /> Edit
+                  </Button>
+                </Link>
+
                 <Button size="sm" variant="outline" className="rounded-2xl" onClick={handleExportCsv}>
                   <Download className="mr-1.5 size-4" /> Export CSV
                 </Button>
-                <Button size="sm" variant="outline" className="rounded-2xl text-destructive hover:bg-destructive/5" onClick={handleArchive} disabled={archiving}>
-                  <Power className="mr-1.5 size-4" /> {archiving ? "Closing..." : "Close Collection"}
-                </Button>
+
+                {summary.collection.status === "active" && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="rounded-2xl text-amber-600 hover:bg-amber-50"
+                    onClick={handlePause}
+                    disabled={updating}
+                  >
+                    <Pause className="mr-1.5 size-4" /> {updating ? "Updating..." : "Pause"}
+                  </Button>
+                )}
+
+                {summary.collection.status === "paused" && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="rounded-2xl text-[#16a34a] hover:bg-green-50"
+                    onClick={handleReactivate}
+                    disabled={updating}
+                  >
+                    <Play className="mr-1.5 size-4" /> {updating ? "Updating..." : "Reactivate"}
+                  </Button>
+                )}
+
+                {summary.collection.status !== "closed" && (
+                  <Dialog>
+                    <DialogTrigger
+                      disabled={archiving}
+                      className="inline-flex items-center gap-1.5 rounded-2xl border border-input bg-background px-3 py-1.5 text-sm font-medium text-destructive shadow-xs hover:bg-destructive/5 disabled:pointer-events-none disabled:opacity-50"
+                    >
+                      <Power className="size-4" /> {archiving ? "Closing..." : "Close"}
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Close this collection?</DialogTitle>
+                        <DialogDescription>
+                          Contributors won&apos;t be able to pay anymore. All existing payments are preserved and stats remain visible.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <DialogFooter>
+                        <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
+                        <Button variant="destructive" onClick={handleArchive} disabled={archiving}>
+                          {archiving ? "Closing..." : "Yes, close it"}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                )}
               </div>
             </div>
 

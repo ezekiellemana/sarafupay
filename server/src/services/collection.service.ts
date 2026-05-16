@@ -71,7 +71,7 @@ export const getCollectionByIdForOwner = async (id: string, ownerId: Types.Objec
 };
 
 export const getPublicCollectionBySlug = async (slug: string) => {
-  const collection = await Project.findOne({ slug, visibility: "public", status: { $in: ["active", "paused"] } })
+  const collection = await Project.findOne({ slug, visibility: "public", status: { $in: ["active", "paused", "closed"] } })
     .select("-ownerId -createdBy -rules")
     .lean();
   if (!collection) throw new AppError("Collection not found or no longer active.", 404, "COLLECTION_NOT_FOUND");

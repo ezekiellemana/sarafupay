@@ -29,23 +29,30 @@ type FormValues = {
   thankYouMessage: string;
 };
 
-export function CollectionForm({ onSuccess }: { onSuccess: (collection: Collection) => void }) {
+export function CollectionForm({
+  onSuccess,
+  collection
+}: {
+  onSuccess: (collection: Collection) => void;
+  collection?: Collection;
+}) {
+  const isEdit = Boolean(collection);
   const [loading, setLoading] = useState(false);
   const { register, handleSubmit, control, formState: { errors } } = useForm<FormValues>({
     defaultValues: {
-      title: "",
-      description: "",
-      collectionType: "custom",
-      targetAmount: "",
-      suggestedAmount: "",
-      minimumAmount: "",
-      currency: "TZS",
-      allowCustomAmount: true,
-      startDate: "",
-      endDate: "",
-      visibility: "public",
-      paymentPurpose: "",
-      thankYouMessage: ""
+      title: collection?.title ?? "",
+      description: collection?.description ?? "",
+      collectionType: collection?.collectionType ?? "custom",
+      targetAmount: collection?.targetAmount?.toString() ?? "",
+      suggestedAmount: collection?.suggestedAmount?.toString() ?? "",
+      minimumAmount: collection?.minimumAmount?.toString() ?? "",
+      currency: collection?.currency ?? "TZS",
+      allowCustomAmount: collection?.allowCustomAmount !== false,
+      startDate: collection?.startDate ? collection.startDate.split("T")[0] : "",
+      endDate: collection?.endDate ? collection.endDate.split("T")[0] : "",
+      visibility: collection?.visibility ?? "public",
+      paymentPurpose: collection?.paymentPurpose ?? "",
+      thankYouMessage: collection?.thankYouMessage ?? ""
     }
   });
 
@@ -67,11 +74,17 @@ export function CollectionForm({ onSuccess }: { onSuccess: (collection: Collecti
         paymentPurpose: values.paymentPurpose || undefined,
         thankYouMessage: values.thankYouMessage || undefined
       };
-      const res = await collectionsApi.create(payload);
-      toast.success("Project/event created successfully!");
+      let res;
+      if (isEdit && collection) {
+        res = await collectionsApi.update(collection._id, payload);
+        toast.success("Project/event updated successfully!");
+      } else {
+        res = await collectionsApi.create(payload);
+        toast.success("Project/event created successfully!");
+      }
       onSuccess(res.data.collection);
     } catch (err: unknown) {
-      toast.error(getApiErrorMessage(err, "Failed to create collection."));
+      toast.error(getApiErrorMessage(err, isEdit ? "Failed to update collection." : "Failed to create collection."));
     } finally {
       setLoading(false);
     }
@@ -205,7 +218,7 @@ export function CollectionForm({ onSuccess }: { onSuccess: (collection: Collecti
         disabled={loading}
         className="h-12 rounded-2xl bg-linear-to-r from-[#052e16] via-[#16a34a] to-[#4ade80] text-white shadow-lg shadow-green-700/20 hover:brightness-105"
       >
-        {loading ? "Creating..." : "Create Project/Event"}
+        {loading ? (isEdit ? "Saving..." : "Creating...") : (isEdit ? "Save Changes" : "Create Project/Event")}
       </Button>
     </form>
   );
