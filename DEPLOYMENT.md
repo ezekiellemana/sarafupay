@@ -84,7 +84,7 @@ You will need:
 3. DigitalOcean will scan the repo. When it shows the detected component:
    - Click **Edit** on the component
    - **Source directory:** `.` *(the repo root — not `server`)*
-   - **Build command:** `npm install --workspace server --include=dev && npm --workspace server run build`
+   - **Build command:** `npm install --workspace server && npm --workspace server run build`
    - **Run command:** `node server/dist/server.js`
    - **HTTP port:** `8080`
    - Click **Save**
