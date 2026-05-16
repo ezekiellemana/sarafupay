@@ -321,7 +321,7 @@ These build credibility and professional appearance for owners running real coll
 **User story:** As a user with a problem, I want to find a way to contact support so I can get help without hunting for an email address.
 
 **Frontend:**
-- New page: `client/app/contact/page.tsx` — email link (`support@sarafupay.co.tz`), brief FAQ, link to Terms and Privacy
+- New page: `client/app/contact/page.tsx` — email link (`sarafupaytz@gmail.com`), brief FAQ, link to Terms and Privacy
 - `client/components/layout/Footer.tsx` — add "Contact" link to the Footer nav
 - `client/components/layout/Navbar.tsx` — optionally add "Help" link
 

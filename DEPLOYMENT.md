@@ -41,7 +41,7 @@ You will need:
 - A domain name (optional but strongly recommended for production)
 - Your Snippe API key and Payment Profile ID
 
-> **Do not launch until `SNIPPE_WEBHOOK_SECRET` is set and the webhook test passes.** Without it, payments where the user closes the browser before redirecting back will stay stuck as "pending" forever.
+> **Do not launch until `SNIPPE_WEBHOOK_SECRET` is set and the webhook test passes.** Without it, the server will not start in `NODE_ENV=production`. In development, these vars are optional — payment creation will fail with a clear 503 error if they are missing, rather than crashing the server.
 
 ---
 
@@ -147,8 +147,8 @@ Add these in **App Platform → your app → Settings → Environment Variables*
 | `COOKIE_NAME` | `sarafupay_token` | Can leave as-is. |
 | `CLIENT_URL` | `https://your-domain.com` | Your Vercel frontend URL. **No trailing slash.** Must be exact. |
 | `SERVER_URL` | `https://api.your-domain.com` | Your DigitalOcean backend URL. **No trailing slash. Must be HTTPS.** |
-| `SNIPPE_API_KEY` | From Snippe dashboard | Never put this in the frontend. |
-| `SNIPPE_WEBHOOK_SECRET` | From Snippe dashboard | **Required before production.** Leave blank only for local testing. |
+| `SNIPPE_API_KEY` | From Snippe dashboard | **Required in production — server will not start without this.** Never expose in the frontend. |
+| `SNIPPE_WEBHOOK_SECRET` | From Snippe dashboard | **Required in production — server will not start without this.** Copy from Snippe dashboard → Settings → Webhook Secret. |
 | `SNIPPE_BASE_URL` | `https://api.snippe.sh` | Do not change. |
 | `SNIPPE_PROFILE_ID` | Your profile ID | Sets SarafuPay branding on the Snippe checkout page. |
 | `ADMIN_NAME` | Your name | Used by the seed script. |
@@ -242,6 +242,24 @@ Work through this top to bottom before opening SarafuPay to real users.
 - [ ] Accessing another user's collection payments returns 404
 - [ ] `/api/admin/*` returns 403 for a normal user account
 - [ ] Admin password changed from seed default
+
+---
+
+## Rate Limits
+
+All limits are per IP address. When a limit is exceeded the server returns `429 Too Many Requests` with `{ "errorCode": "RATE_LIMITED" }`.
+
+| Endpoint group | Window | Limit | Notes |
+| --- | --- | --- | --- |
+| All `/api/*` (global fallback) | 15 min | 300 req | Catches any route without a specific limiter |
+| `POST /api/auth/login`, `/register` | 15 min | 20 req | Prevents brute-force credential attacks |
+| `POST /api/payments/create-session` | 10 min | 30 req | Authenticated payment creation |
+| `POST /api/payments/create-public-session` | 10 min | 15 req | Public/guest payment creation |
+| `GET /api/collections/public/*` | 15 min | 120 req | Public collection page reads |
+| `POST /api/webhooks/snippe` | 5 min | 60 req | Allows Snippe retries; blocks unauthenticated floods |
+| `GET /health` | — | unlimited | Health check is not under `/api/` — excluded from global limiter |
+
+Specific limiters are additive on top of the global limit. A login attempt consumes from both the 300/15 min global bucket and the 20/15 min auth bucket, so the auth limiter is always the binding constraint for that route.
 
 ---
 

@@ -76,12 +76,12 @@ export default function TermsPage() {
                 "Collecting funds for illegal purposes or activities.",
                 "Impersonating another person, organisation, or charity.",
                 "Using the platform to launder money or conduct financial fraud.",
-                "Violating Snippe&apos;s payment terms or attempting to circumvent payment controls.",
-                "Attempting to access or interfere with other users&apos; accounts or data.",
+                "Violating Snippe's payment terms or attempting to circumvent payment controls.",
+                "Attempting to access or interfere with other users' accounts or data.",
               ].map((item) => (
                 <li key={item} className="flex gap-2 text-sm text-slate-600">
                   <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-red-400" />
-                  <span dangerouslySetInnerHTML={{ __html: item }} />
+                  <span>{item}</span>
                 </li>
               ))}
             </ul>
@@ -117,10 +117,10 @@ export default function TermsPage() {
           </Section>
 
           <Section title="8. Contact">
-            {/* TODO before launch: confirm support@sarafupay.co.tz is a live inbox */}
+
             <p>If you have questions about these Terms of Service, please contact us at{" "}
-              <a href="mailto:support@sarafupay.co.tz" className="font-medium text-[#16a34a] underline underline-offset-2 hover:text-[#14532d]">
-                support@sarafupay.co.tz
+              <a href="mailto:sarafupaytz@gmail.com" className="font-medium text-[#16a34a] underline underline-offset-2 hover:text-[#14532d]">
+                sarafupaytz@gmail.com
               </a>.
             </p>
           </Section>

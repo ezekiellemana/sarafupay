@@ -159,13 +159,12 @@ export default function PrivacyPage() {
 
           <Section title="9. Contact">
             <p>For any privacy-related questions or requests, please contact:</p>
-            {/* TODO before launch: confirm support@sarafupay.co.tz is a live inbox */}
             <div className="mt-3 rounded-xl bg-slate-50 p-4 text-sm text-slate-700">
               <p className="font-semibold text-[#0b1f3a]">SarafuPay</p>
               <p className="mt-1">
                 Email:{" "}
-                <a href="mailto:support@sarafupay.co.tz" className="font-medium text-[#16a34a] underline underline-offset-2 hover:text-[#14532d]">
-                  support@sarafupay.co.tz
+                <a href="mailto:sarafupaytz@gmail.com" className="font-medium text-[#16a34a] underline underline-offset-2 hover:text-[#14532d]">
+                  sarafupaytz@gmail.com
                 </a>
               </p>
             </div>

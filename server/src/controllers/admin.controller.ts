@@ -5,16 +5,14 @@ import { getAdminDashboard } from "../services/dashboard.service";
 
 export const members = asyncHandler(async (req, res) => {
   const search = String(req.query.search ?? "");
-  const query: any = search
-    ? {
-        role: "member",
-        $or: [
-          { fullName: new RegExp(search, "i") },
-          { email: new RegExp(search, "i") },
-          { phoneNumber: new RegExp(search, "i") }
-        ]
-      }
-    : { role: "member" };
+  const query: Record<string, unknown> = { role: "member" };
+  if (search) {
+    query.$or = [
+      { fullName: new RegExp(search, "i") },
+      { email: new RegExp(search, "i") },
+      { phoneNumber: new RegExp(search, "i") }
+    ];
+  }
 
   const users = await User.find(query).select("-passwordHash").sort({ createdAt: -1 }).lean();
   const payments = await Payment.aggregate([
@@ -32,6 +30,10 @@ export const members = asyncHandler(async (req, res) => {
 });
 
 export const payments = asyncHandler(async (req, res) => {
+  const page = Math.max(1, parseInt(String(req.query.page ?? "1"), 10));
+  const limit = Math.min(100, Math.max(1, parseInt(String(req.query.limit ?? "50"), 10)));
+  const skip = (page - 1) * limit;
+
   const query: Record<string, unknown> = {};
   if (req.query.status) query.status = req.query.status;
   if (req.query.month) query.monthPaidFor = req.query.month;
@@ -45,11 +47,22 @@ export const payments = asyncHandler(async (req, res) => {
     ];
   }
 
-  const rows = await Payment.find(query)
-    .populate("userId", "fullName email phoneNumber")
-    .populate("projectId", "title")
-    .sort({ createdAt: -1 });
-  res.json({ success: true, message: "Payments loaded.", data: { payments: rows } });
+  const [rows, total] = await Promise.all([
+    Payment.find(query)
+      .populate("userId", "fullName email phoneNumber")
+      .populate("projectId", "title")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    Payment.countDocuments(query)
+  ]);
+
+  res.json({
+    success: true,
+    message: "Payments loaded.",
+    data: { payments: rows, total, page, limit, totalPages: Math.ceil(total / limit) }
+  });
 });
 
 export const summary = asyncHandler(async (_req, res) => {
@@ -60,7 +73,7 @@ export const summary = asyncHandler(async (_req, res) => {
 export const unpaidMembers = asyncHandler(async (_req, res) => {
   const currentMonth = new Date().toISOString().slice(0, 7);
   const paidUserIds = await Payment.distinct("userId", { status: "completed", monthPaidFor: currentMonth });
-  const users = await User.find({ role: "member", _id: { $nin: paidUserIds } }).select("-passwordHash");
+  const users = await User.find({ role: "member", _id: { $nin: paidUserIds } }).select("-passwordHash").lean();
   res.json({ success: true, message: "Unpaid members loaded.", data: { members: users } });
 });
 
