@@ -22,7 +22,7 @@ export function HeroSection() {
           Tanzania&apos;s group contribution platform
         </div>
         <div className="flex flex-col gap-4">
-          <h1 className="max-w-3xl text-5xl font-black leading-[0.98] tracking-tight text-[#0B1F3A] md:text-7xl">
+          <h1 className="max-w-3xl text-5xl font-black leading-[0.98] tracking-tight text-[#071a0e] md:text-7xl">
             SarafuPay
             <span className="block sarafu-gradient-text-gold">Lipa kwa urahisi.</span>
           </h1>
@@ -90,13 +90,13 @@ export function HeroSection() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Wallet overview</p>
-                <p className="mt-1 text-3xl font-bold tracking-tight text-[#0B1F3A]">35,000 TZS</p>
+                <p className="mt-1 text-3xl font-bold tracking-tight text-[#071a0e]">35,000 TZS</p>
               </div>
               <span className="flex size-12 items-center justify-center rounded-2xl bg-amber-50 coin-glow">
                 <GoldCoin size={32} animate={false} />
               </span>
             </div>
-            <div className="relative overflow-hidden rounded-2xl bg-[#0B1F3A] p-5 text-white">
+            <div className="relative overflow-hidden rounded-2xl bg-[#071a0e] p-5 text-white">
               <div className="absolute -right-8 -top-8 size-28 rounded-full bg-amber-400/10 blur-2xl" />
               <p className="relative text-sm text-white/70">Group Monthly Contribution</p>
               <div className="relative mt-5 flex items-end justify-between">
@@ -111,9 +111,9 @@ export function HeroSection() {
             <div className="grid gap-3 sm:grid-cols-2">
               {[
                 ["Status", "Completed", "text-[#16A34A] font-semibold"],
-                ["Next due", "Jun 5, 2026", "text-[#0B1F3A]"],
-                ["Reference", "SPY-202605-A1B2", "text-[#0B1F3A] font-mono text-xs"],
-                ["Method", "Mobile money", "text-[#0B1F3A]"]
+                ["Next due", "Jun 5, 2026", "text-[#071a0e]"],
+                ["Reference", "SPY-202605-A1B2", "text-[#071a0e] font-mono text-xs"],
+                ["Method", "Mobile money", "text-[#071a0e]"]
               ].map(([label, value, color]) => (
                 <div key={label} className="rounded-xl border border-white/70 bg-white/60 p-3 backdrop-blur-sm">
                   <p className="text-xs text-muted-foreground">{label}</p>

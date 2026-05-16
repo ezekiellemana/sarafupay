@@ -19,9 +19,9 @@ const features = [
     title: "Owner Dashboard",
     desc: "See total collected, contributor count, and per-payment records for every collection you run.",
     Icon: ChartNoAxesCombined,
-    tint: "bg-blue-50/70 border-blue-200/50",
-    iconBg: "bg-linear-to-br from-blue-500/15 to-sky-400/10",
-    iconColor: "text-blue-600",
+    tint: "bg-emerald-50/70 border-emerald-200/50",
+    iconBg: "bg-linear-to-br from-emerald-500/15 to-green-400/10",
+    iconColor: "text-emerald-600",
     illustration: null,
   },
   {
@@ -70,7 +70,7 @@ export function FeaturesSection() {
           <GoldCoin size={28} animate={false} />
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-600">Built for collections</p>
         </div>
-        <h2 className="mt-2 text-3xl font-bold text-[#0B1F3A]">Everything you need to collect and track</h2>
+        <h2 className="mt-2 text-3xl font-bold text-[#071a0e]">Everything you need to collect and track</h2>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {features.map(({ title, desc, Icon, tint, iconBg, iconColor, illustration }, index) => (
             <motion.div
@@ -85,7 +85,7 @@ export function FeaturesSection() {
               <div className={`flex size-12 items-center justify-center rounded-2xl ${iconBg}`}>
                 {illustration ?? <Icon className={`size-5 ${iconColor}`} />}
               </div>
-              <h3 className="mt-5 font-semibold text-[#0B1F3A]">{title}</h3>
+              <h3 className="mt-5 font-semibold text-[#071a0e]">{title}</h3>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">{desc}</p>
             </motion.div>
           ))}

@@ -52,10 +52,10 @@ export default function PaymentStartPage() {
         <Card className="glass-premium relative overflow-hidden border-0 shadow-2xl shadow-slate-900/10">
           {/* Background glow */}
           <div className="absolute -right-10 -top-10 size-52 rounded-full bg-amber-400/10 blur-3xl" />
-          <div className="absolute -left-8 bottom-0 size-40 rounded-full bg-sky-400/15 blur-3xl" />
+          <div className="absolute -left-8 bottom-0 size-40 rounded-full bg-[#4ade80]/10 blur-3xl" />
 
           <CardHeader className="relative">
-            <CardTitle className="flex items-center gap-2 text-[#0B1F3A]">
+            <CardTitle className="flex items-center gap-2 text-[#071a0e]">
               <Sparkles className="size-5 text-amber-500" />
               Snippe hosted checkout
             </CardTitle>
@@ -63,7 +63,7 @@ export default function PaymentStartPage() {
 
           <CardContent className="relative flex flex-col gap-5">
             {/* Amount banner */}
-            <div className="relative flex items-center justify-between overflow-hidden rounded-3xl bg-[#0B1F3A] p-5 text-white">
+            <div className="relative flex items-center justify-between overflow-hidden rounded-3xl bg-[#071a0e] p-5 text-white">
               <div className="absolute -right-6 -top-6 size-28 rounded-full bg-amber-400/10 blur-2xl" />
               <div>
                 <p className="text-sm text-white/60">Monthly amount</p>
@@ -80,7 +80,7 @@ export default function PaymentStartPage() {
             </div>
 
             <div className="grid gap-2">
-              <label className="text-sm font-semibold text-[#0B1F3A]">Project</label>
+              <label className="text-sm font-semibold text-[#071a0e]">Project</label>
               <Select value={projectId} onValueChange={(value) => setProjectId(value ?? "")}>
                 <SelectTrigger className="w-full rounded-2xl border-white/70 bg-white/80 backdrop-blur-sm">
                   <SelectValue placeholder="Select project" />
@@ -100,7 +100,7 @@ export default function PaymentStartPage() {
                 <GoldCoin size={28} animate={false} />
                 <div>
                   <p className="text-xs text-muted-foreground">Contribution month</p>
-                  <p className="mt-0.5 font-semibold text-[#0B1F3A]">{currentMonth()}</p>
+                  <p className="mt-0.5 font-semibold text-[#071a0e]">{currentMonth()}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 rounded-2xl bg-emerald-500/10 p-4 text-emerald-800">
