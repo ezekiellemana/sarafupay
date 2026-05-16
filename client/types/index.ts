@@ -25,6 +25,9 @@ export type User = {
   email: string;
   role: Role;
   isActive: boolean;
+  businessName?: string;
+  bio?: string;
+  avatarUrl?: string;
 };
 
 export type Member = User & {
@@ -54,6 +57,7 @@ export type Collection = {
   thankYouMessage?: string;
   showContributors?: boolean;
   recentContributors?: { name: string; amount: number; paidAt?: string }[];
+  ownerName?: string | null;
   publicPaymentLink?: string;
   totalCollected: number;
   contributorCount: number;

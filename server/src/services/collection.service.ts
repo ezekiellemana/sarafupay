@@ -1,6 +1,7 @@
 import type { Types } from "mongoose";
 import { Project } from "../models/Project.model";
 import { Payment } from "../models/Payment.model";
+import { User } from "../models/User.model";
 import { AppError } from "../utils/AppError";
 import { generateUniqueSlug } from "../utils/slugify";
 import { env } from "../config/env";
@@ -78,13 +79,25 @@ const truncateName = (name: string): string => {
   return `${parts[0]} ${parts[parts.length - 1][0]}.`;
 };
 
+const getOwnerPublicName = async (ownerId?: Types.ObjectId): Promise<string | null> => {
+  if (!ownerId) return null;
+  const owner = await User.findById(ownerId).select("businessName fullName").lean();
+  if (!owner) return null;
+  return owner.businessName?.trim() || owner.fullName.split(" ")[0];
+};
+
 export const getPublicCollectionBySlug = async (slug: string) => {
   const collection = await Project.findOne({ slug, visibility: "public", status: { $in: ["active", "paused", "closed"] } })
-    .select("-ownerId -createdBy -rules")
+    .select("-createdBy -rules")
     .lean();
   if (!collection) throw new AppError("Collection not found or no longer active.", 404, "COLLECTION_NOT_FOUND");
 
-  if (!collection.showContributors) return collection;
+  const ownerName = await getOwnerPublicName(collection.ownerId);
+
+  // Strip internal owner ID before returning
+  const { ownerId: _ownerId, ...publicCollection } = collection;
+
+  if (!collection.showContributors) return { ...publicCollection, ownerName };
 
   const recentPayments = await Payment.find({ projectId: collection._id, status: "completed" })
     .sort({ createdAt: -1 })
@@ -98,7 +111,7 @@ export const getPublicCollectionBySlug = async (slug: string) => {
     paidAt: p.paidAt ?? p.createdAt
   }));
 
-  return { ...collection, recentContributors };
+  return { ...publicCollection, ownerName, recentContributors };
 };
 
 export const updateCollection = async (id: string, ownerId: Types.ObjectId, updates: Partial<CreateCollectionInput & { status: string }>) => {

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { Ban, CheckCircle2, Clock, LockKeyhole, ShieldCheck, Users, WalletCards } from "lucide-react";
+import { Ban, CheckCircle2, Clock, LockKeyhole, ShieldCheck, Store, Users, WalletCards } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -135,6 +135,12 @@ export default function PublicPayPage({ params }: { params: Promise<{ slug: stri
                   {COLLECTION_TYPE_LABELS[collection.collectionType]}
                 </p>
                 <h1 className="mt-1 text-2xl font-bold text-[#071a0e] leading-tight">{collection.title}</h1>
+                {collection.ownerName && (
+                  <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Store className="size-3 shrink-0 text-amber-600" />
+                    Organized by <span className="font-medium text-[#071a0e]">{collection.ownerName}</span>
+                  </p>
+                )}
                 {collection.description && (
                   <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{collection.description}</p>
                 )}
