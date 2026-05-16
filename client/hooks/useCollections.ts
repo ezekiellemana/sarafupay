@@ -29,15 +29,19 @@ export const useCollectionSummary = (id: string) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
+  const load = () => {
     if (!id) return;
+    setLoading(true);
     collectionsApi.getSummary(id)
-      .then((res) => setSummary(res.data))
+      .then((res) => { setSummary(res.data); setError(""); })
       .catch((err: unknown) => setError(getApiErrorMessage(err, "Unable to load summary.")))
       .finally(() => setLoading(false));
-  }, [id]);
+  };
 
-  return { summary, loading, error };
+  // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/set-state-in-effect
+  useEffect(() => { load(); }, [id]);
+
+  return { summary, loading, error, reload: load };
 };
 
 export const useCollectionPayments = (id: string) => {

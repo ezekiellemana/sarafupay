@@ -5,7 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { CheckCircle2, Clock, LockKeyhole, ShieldCheck, Users, WalletCards } from "lucide-react";
+import { Ban, CheckCircle2, Clock, LockKeyhole, ShieldCheck, Store, Users, WalletCards } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -135,6 +135,12 @@ export default function PublicPayPage({ params }: { params: Promise<{ slug: stri
                   {COLLECTION_TYPE_LABELS[collection.collectionType]}
                 </p>
                 <h1 className="mt-1 text-2xl font-bold text-[#071a0e] leading-tight">{collection.title}</h1>
+                {collection.ownerName && (
+                  <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Store className="size-3 shrink-0 text-amber-600" />
+                    Organized by <span className="font-medium text-[#071a0e]">{collection.ownerName}</span>
+                  </p>
+                )}
                 {collection.description && (
                   <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{collection.description}</p>
                 )}
@@ -205,12 +211,22 @@ export default function PublicPayPage({ params }: { params: Promise<{ slug: stri
                   <p className="mt-1 text-sm text-muted-foreground">This collection is not accepting payments right now. Check back soon.</p>
                 </div>
               </div>
+            ) : collection.status === "closed" ? (
+              <div className="flex flex-col items-center gap-4 py-6 text-center">
+                <div className="flex size-14 items-center justify-center rounded-2xl bg-red-50 ring-1 ring-red-200/60">
+                  <Ban className="size-7 text-red-500" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-[#071a0e]">Collection closed</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">This collection is no longer accepting payments. Thank you for your support!</p>
+                </div>
+              </div>
             ) : (
               <>
             <h2 className="text-lg font-bold text-[#071a0e]">Support this project</h2>
             <p className="mt-1 text-sm text-muted-foreground">Enter your details and pay securely.</p>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="mt-5 flex flex-col gap-4">
+            <form method="post" onSubmit={handleSubmit(onSubmit)} className="mt-5 flex flex-col gap-4">
               <div className="flex flex-col gap-2">
                 <Label htmlFor="payerName">Full name *</Label>
                 <Input id="payerName" placeholder="John Doe" className="rounded-2xl" {...register("payerName", { required: "Full name is required." })} />
@@ -306,6 +322,39 @@ export default function PublicPayPage({ params }: { params: Promise<{ slug: stri
           </div>
         </motion.div>
       </div>
+
+      {/* Recent contributors */}
+      {collection.recentContributors !== undefined && (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+          className="mx-auto mt-6 max-w-5xl rounded-3xl border border-white/70 bg-white/85 p-6 shadow-xl shadow-slate-900/5 backdrop-blur-xl"
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <Users className="size-4 text-[#16a34a]" />
+            <h2 className="font-semibold text-[#071a0e]">Recent Contributors</h2>
+          </div>
+
+          {collection.recentContributors.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">No contributions yet — be the first!</p>
+          ) : (
+            <div className="flex flex-col divide-y divide-slate-100">
+              {collection.recentContributors.map((c, i) => (
+                <div key={i} className="flex items-center justify-between py-2.5">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex size-8 items-center justify-center rounded-full bg-green-50 text-sm font-bold text-[#16a34a]">
+                      {c.name[0]?.toUpperCase() ?? "?"}
+                    </span>
+                    <span className="text-sm font-medium text-[#071a0e]">{c.name}</span>
+                  </div>
+                  <span className="text-sm font-semibold text-amber-700">{formatMoney(c.amount, collection.currency)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </motion.div>
+      )}
 
       {/* Footer */}
       <div className="mt-10 text-center text-xs text-muted-foreground">

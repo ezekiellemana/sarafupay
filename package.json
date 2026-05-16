@@ -5,6 +5,7 @@
   "workspaces": ["client", "server"],
   "scripts": {
     "dev:client": "npm --workspace client run dev",
+    "dev:client:safe": "npm --workspace client run dev:safe",
     "dev:server": "npm --workspace server run dev",
     "build": "npm --workspace server run build && npm --workspace client run build",
     "seed": "npm --workspace server run seed"

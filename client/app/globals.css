@@ -284,3 +284,19 @@
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.04); }
 }
+
+@media print {
+  body, html {
+    background: white !important;
+  }
+
+  /* Override grid centering so receipt appears at the top of the printed page */
+  main {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    min-height: auto !important;
+    padding: 1.5rem !important;
+    overflow: visible !important;
+  }
+}

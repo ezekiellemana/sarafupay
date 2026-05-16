@@ -57,9 +57,9 @@ export default function LoginPage() {
 
         {/* Right panel — form */}
         <div className="flex flex-col items-center justify-center p-6 md:p-10">
-          <div className="mb-6 flex items-center gap-2 font-semibold text-[#0B1F3A] lg:hidden">
+          <div className="mb-6 flex items-center gap-2 font-semibold text-[#071a0e] lg:hidden">
             <Link href="/" className="flex items-center gap-2">
-              <span className="flex size-10 items-center justify-center rounded-2xl bg-[#0B1F3A] text-white coin-glow">
+              <span className="flex size-10 items-center justify-center rounded-2xl bg-[#071a0e] text-white coin-glow">
                 <WalletCards />
               </span>
               SarafuPay

@@ -36,6 +36,7 @@ export interface IProject {
   coverImageUrl?: string;
   paymentPurpose?: string;
   thankYouMessage?: string;
+  showContributors?: boolean;
   publicPaymentLink?: string;
   totalCollected: number;
   contributorCount: number;
@@ -71,6 +72,7 @@ const projectSchema = new Schema<IProject>(
     coverImageUrl: { type: String },
     paymentPurpose: { type: String },
     thankYouMessage: { type: String },
+    showContributors: { type: Boolean, default: false },
     publicPaymentLink: { type: String },
     totalCollected: { type: Number, default: 0 },
     contributorCount: { type: Number, default: 0 },

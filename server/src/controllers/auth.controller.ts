@@ -28,7 +28,10 @@ export const loginSchema = z.object({
 export const profileSchema = z.object({
   fullName: z.string().min(2).optional(),
   phoneNumber: z.string().regex(/^\+?255\d{9}$|^0\d{9}$/).optional(),
-  email: z.string().email().optional()
+  email: z.string().email().optional(),
+  businessName: z.string().max(120).optional(),
+  bio: z.string().max(300).optional(),
+  avatarUrl: z.string().url().optional().or(z.literal(""))
 });
 
 export const changePasswordSchema = z.object({
@@ -102,5 +105,8 @@ export const serializeUser = (user: IUser) => ({
   phoneNumber: user.phoneNumber,
   email: user.email,
   role: user.role,
-  isActive: user.isActive
+  isActive: user.isActive,
+  businessName: user.businessName,
+  bio: user.bio,
+  avatarUrl: user.avatarUrl
 });

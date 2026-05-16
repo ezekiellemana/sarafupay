@@ -1,6 +1,7 @@
 import type { Types } from "mongoose";
 import { Project } from "../models/Project.model";
 import { Payment } from "../models/Payment.model";
+import { User } from "../models/User.model";
 import { AppError } from "../utils/AppError";
 import { generateUniqueSlug } from "../utils/slugify";
 import { env } from "../config/env";
@@ -21,6 +22,7 @@ export type CreateCollectionInput = {
   minimumAmount?: number;
   currency?: string;
   allowCustomAmount?: boolean;
+  showContributors?: boolean;
   startDate?: string;
   endDate?: string;
   visibility?: string;
@@ -53,6 +55,7 @@ export const createCollection = async (ownerId: Types.ObjectId, input: CreateCol
     coverImageUrl: input.coverImageUrl,
     paymentPurpose: input.paymentPurpose,
     thankYouMessage: input.thankYouMessage,
+    showContributors: input.showContributors ?? false,
     publicPaymentLink,
     totalCollected: 0,
     contributorCount: 0
@@ -70,12 +73,45 @@ export const getCollectionByIdForOwner = async (id: string, ownerId: Types.Objec
   return collection;
 };
 
+const truncateName = (name: string): string => {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length <= 1) return parts[0] ?? "Anonymous";
+  return `${parts[0]} ${parts[parts.length - 1][0]}.`;
+};
+
+const getOwnerPublicName = async (ownerId?: Types.ObjectId): Promise<string | null> => {
+  if (!ownerId) return null;
+  const owner = await User.findById(ownerId).select("businessName fullName").lean();
+  if (!owner) return null;
+  return owner.businessName?.trim() || owner.fullName.split(" ")[0];
+};
+
 export const getPublicCollectionBySlug = async (slug: string) => {
-  const collection = await Project.findOne({ slug, visibility: "public", status: { $in: ["active", "paused"] } })
-    .select("-ownerId -createdBy -rules")
+  const collection = await Project.findOne({ slug, visibility: "public", status: { $in: ["active", "paused", "closed"] } })
+    .select("-createdBy -rules")
     .lean();
   if (!collection) throw new AppError("Collection not found or no longer active.", 404, "COLLECTION_NOT_FOUND");
-  return collection;
+
+  const ownerName = await getOwnerPublicName(collection.ownerId);
+
+  // Strip internal owner ID before returning
+  const { ownerId: _ownerId, ...publicCollection } = collection;
+
+  if (!collection.showContributors) return { ...publicCollection, ownerName };
+
+  const recentPayments = await Payment.find({ projectId: collection._id, status: "completed" })
+    .sort({ createdAt: -1 })
+    .limit(15)
+    .select("customerName amount paidAt createdAt")
+    .lean();
+
+  const recentContributors = recentPayments.map((p) => ({
+    name: truncateName(p.customerName ?? "Anonymous"),
+    amount: p.amount,
+    paidAt: p.paidAt ?? p.createdAt
+  }));
+
+  return { ...publicCollection, ownerName, recentContributors };
 };
 
 export const updateCollection = async (id: string, ownerId: Types.ObjectId, updates: Partial<CreateCollectionInput & { status: string }>) => {
@@ -97,6 +133,7 @@ export const updateCollection = async (id: string, ownerId: Types.ObjectId, upda
     ...(updates.coverImageUrl !== undefined && { coverImageUrl: updates.coverImageUrl }),
     ...(updates.paymentPurpose !== undefined && { paymentPurpose: updates.paymentPurpose }),
     ...(updates.thankYouMessage !== undefined && { thankYouMessage: updates.thankYouMessage }),
+    ...(updates.showContributors !== undefined && { showContributors: updates.showContributors }),
     ...(updates.status && { status: updates.status })
   });
 

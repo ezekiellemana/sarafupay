@@ -22,6 +22,7 @@ type FormValues = {
   minimumAmount: string;
   currency: string;
   allowCustomAmount: boolean;
+  showContributors: boolean;
   startDate: string;
   endDate: string;
   visibility: string;
@@ -29,23 +30,31 @@ type FormValues = {
   thankYouMessage: string;
 };
 
-export function CollectionForm({ onSuccess }: { onSuccess: (collection: Collection) => void }) {
+export function CollectionForm({
+  onSuccess,
+  collection
+}: {
+  onSuccess: (collection: Collection) => void;
+  collection?: Partial<Collection>;
+}) {
+  const isEdit = Boolean(collection?._id);
   const [loading, setLoading] = useState(false);
   const { register, handleSubmit, control, formState: { errors } } = useForm<FormValues>({
     defaultValues: {
-      title: "",
-      description: "",
-      collectionType: "custom",
-      targetAmount: "",
-      suggestedAmount: "",
-      minimumAmount: "",
-      currency: "TZS",
-      allowCustomAmount: true,
-      startDate: "",
-      endDate: "",
-      visibility: "public",
-      paymentPurpose: "",
-      thankYouMessage: ""
+      title: collection?.title ?? "",
+      description: collection?.description ?? "",
+      collectionType: collection?.collectionType ?? "custom",
+      targetAmount: collection?.targetAmount?.toString() ?? "",
+      suggestedAmount: collection?.suggestedAmount?.toString() ?? "",
+      minimumAmount: collection?.minimumAmount?.toString() ?? "",
+      currency: collection?.currency ?? "TZS",
+      allowCustomAmount: collection?.allowCustomAmount !== false,
+      showContributors: collection?.showContributors ?? false,
+      startDate: collection?.startDate ? collection.startDate.split("T")[0] : "",
+      endDate: collection?.endDate ? collection.endDate.split("T")[0] : "",
+      visibility: collection?.visibility ?? "public",
+      paymentPurpose: collection?.paymentPurpose ?? "",
+      thankYouMessage: collection?.thankYouMessage ?? ""
     }
   });
 
@@ -61,24 +70,31 @@ export function CollectionForm({ onSuccess }: { onSuccess: (collection: Collecti
         minimumAmount: values.minimumAmount ? Number(values.minimumAmount) : undefined,
         currency: values.currency,
         allowCustomAmount: values.allowCustomAmount,
+        showContributors: values.showContributors,
         startDate: values.startDate || undefined,
         endDate: values.endDate || undefined,
         visibility: values.visibility,
         paymentPurpose: values.paymentPurpose || undefined,
         thankYouMessage: values.thankYouMessage || undefined
       };
-      const res = await collectionsApi.create(payload);
-      toast.success("Project/event created successfully!");
+      let res;
+      if (collection?._id) {
+        res = await collectionsApi.update(collection._id, payload);
+        toast.success("Project/event updated successfully!");
+      } else {
+        res = await collectionsApi.create(payload);
+        toast.success("Project/event created successfully!");
+      }
       onSuccess(res.data.collection);
     } catch (err: unknown) {
-      toast.error(getApiErrorMessage(err, "Failed to create collection."));
+      toast.error(getApiErrorMessage(err, isEdit ? "Failed to update collection." : "Failed to create collection."));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
+    <form method="post" onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
       {/* Title */}
       <div className="flex flex-col gap-2">
         <Label htmlFor="title">Project/Event title *</Label>
@@ -170,6 +186,20 @@ export function CollectionForm({ onSuccess }: { onSuccess: (collection: Collecti
         </div>
       </div>
 
+      {/* Show contributors toggle */}
+      <div className="flex items-center gap-3 rounded-2xl border border-white/70 bg-white/60 p-4 backdrop-blur-sm">
+        <input
+          id="showContributors"
+          type="checkbox"
+          {...register("showContributors")}
+          className="size-4 rounded accent-[#16a34a]"
+        />
+        <div>
+          <Label htmlFor="showContributors" className="cursor-pointer font-medium">Show recent contributors publicly</Label>
+          <p className="text-xs text-muted-foreground">Only first name + last initial and amount are shown — never phone or email.</p>
+        </div>
+      </div>
+
       {/* Dates */}
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-2">
@@ -191,7 +221,13 @@ export function CollectionForm({ onSuccess }: { onSuccess: (collection: Collecti
       {/* Thank you message */}
       <div className="flex flex-col gap-2">
         <Label htmlFor="thankYouMessage">Thank-you message (shown after payment)</Label>
-        <Input id="thankYouMessage" placeholder="e.g. Thank you for your generous contribution!" {...register("thankYouMessage")} className="rounded-2xl" />
+        <textarea
+          id="thankYouMessage"
+          rows={2}
+          placeholder="e.g. Thank you for your generous support — it means the world to us!"
+          {...register("thankYouMessage")}
+          className="rounded-2xl border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+        />
       </div>
 
       <Button
@@ -199,7 +235,7 @@ export function CollectionForm({ onSuccess }: { onSuccess: (collection: Collecti
         disabled={loading}
         className="h-12 rounded-2xl bg-linear-to-r from-[#052e16] via-[#16a34a] to-[#4ade80] text-white shadow-lg shadow-green-700/20 hover:brightness-105"
       >
-        {loading ? "Creating..." : "Create Project/Event"}
+        {loading ? (isEdit ? "Saving..." : "Creating...") : (isEdit ? "Save Changes" : "Create Project/Event")}
       </Button>
     </form>
   );

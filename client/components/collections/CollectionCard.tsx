@@ -85,7 +85,7 @@ export function CollectionCard({ collection }: { collection: Collection }) {
                 <Eye className="mr-1 size-3" /> View
               </Button>
             </Link>
-            <Link href={`/dashboard/collections/${collection._id}?edit=1`}>
+            <Link href={`/dashboard/collections/${collection._id}/edit`}>
               <Button size="sm" variant="ghost" className="h-8 rounded-xl px-3 text-xs hover:text-amber-600">
                 <Pencil className="size-3" />
               </Button>
