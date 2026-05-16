@@ -42,3 +42,17 @@ export const env = envSchema.parse({
 });
 
 export const isProduction = env.NODE_ENV === "production";
+
+// Fail fast in production if payment gateway secrets are missing.
+// Keeps local development flexible (Snippe not required to run the app locally).
+if (isProduction) {
+  const missing: string[] = [];
+  if (!env.SNIPPE_API_KEY) missing.push("SNIPPE_API_KEY");
+  if (!env.SNIPPE_WEBHOOK_SECRET) missing.push("SNIPPE_WEBHOOK_SECRET");
+  if (missing.length > 0) {
+    throw new Error(
+      `[env] Missing required production environment variable(s): ${missing.join(", ")}. ` +
+      "Server cannot start without payment gateway credentials."
+    );
+  }
+}

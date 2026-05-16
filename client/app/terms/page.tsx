@@ -76,12 +76,12 @@ export default function TermsPage() {
                 "Collecting funds for illegal purposes or activities.",
                 "Impersonating another person, organisation, or charity.",
                 "Using the platform to launder money or conduct financial fraud.",
-                "Violating Snippe&apos;s payment terms or attempting to circumvent payment controls.",
-                "Attempting to access or interfere with other users&apos; accounts or data.",
+                "Violating Snippe's payment terms or attempting to circumvent payment controls.",
+                "Attempting to access or interfere with other users' accounts or data.",
               ].map((item) => (
                 <li key={item} className="flex gap-2 text-sm text-slate-600">
                   <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-red-400" />
-                  <span dangerouslySetInnerHTML={{ __html: item }} />
+                  <span>{item}</span>
                 </li>
               ))}
             </ul>

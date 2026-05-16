@@ -124,7 +124,7 @@ export default function ProfilePage() {
                   className="rounded-2xl"
                   {...form.register("businessName")}
                 />
-                <p className="text-xs text-muted-foreground">Shown as "Organized by …" on public payment pages.</p>
+                <p className="text-xs text-muted-foreground">Shown as &quot;Organized by &hellip;&quot; on public payment pages.</p>
                 {form.formState.errors.businessName && <p className="text-sm text-destructive">{form.formState.errors.businessName.message}</p>}
               </div>
               <div className="flex flex-col gap-2">

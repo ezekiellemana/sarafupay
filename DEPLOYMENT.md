@@ -41,7 +41,7 @@ You will need:
 - A domain name (optional but strongly recommended for production)
 - Your Snippe API key and Payment Profile ID
 
-> **Do not launch until `SNIPPE_WEBHOOK_SECRET` is set and the webhook test passes.** Without it, payments where the user closes the browser before redirecting back will stay stuck as "pending" forever.
+> **Do not launch until `SNIPPE_WEBHOOK_SECRET` is set and the webhook test passes.** Without it, the server will not start in `NODE_ENV=production`. In development, these vars are optional — payment creation will fail with a clear 503 error if they are missing, rather than crashing the server.
 
 ---
 
@@ -147,8 +147,8 @@ Add these in **App Platform → your app → Settings → Environment Variables*
 | `COOKIE_NAME` | `sarafupay_token` | Can leave as-is. |
 | `CLIENT_URL` | `https://your-domain.com` | Your Vercel frontend URL. **No trailing slash.** Must be exact. |
 | `SERVER_URL` | `https://api.your-domain.com` | Your DigitalOcean backend URL. **No trailing slash. Must be HTTPS.** |
-| `SNIPPE_API_KEY` | From Snippe dashboard | Never put this in the frontend. |
-| `SNIPPE_WEBHOOK_SECRET` | From Snippe dashboard | **Required before production.** Leave blank only for local testing. |
+| `SNIPPE_API_KEY` | From Snippe dashboard | **Required in production — server will not start without this.** Never expose in the frontend. |
+| `SNIPPE_WEBHOOK_SECRET` | From Snippe dashboard | **Required in production — server will not start without this.** Copy from Snippe dashboard → Settings → Webhook Secret. |
 | `SNIPPE_BASE_URL` | `https://api.snippe.sh` | Do not change. |
 | `SNIPPE_PROFILE_ID` | Your profile ID | Sets SarafuPay branding on the Snippe checkout page. |
 | `ADMIN_NAME` | Your name | Used by the seed script. |

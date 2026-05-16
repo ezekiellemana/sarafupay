@@ -66,10 +66,30 @@ export const getPayment = asyncHandler(async (req, res) => {
 
 export const verifyPayment = asyncHandler(async (req, res) => {
   const payment = await verifyLocalPayment(String(req.params.reference));
+
+  // Return only safe public receipt fields. Sensitive PII (phone, email, message,
+  // raw webhook payload, internal IDs) is not exposed on this unauthenticated endpoint.
+  const publicPayment = {
+    _id: payment._id,
+    status: payment.status,
+    amount: payment.amount,
+    currency: payment.currency,
+    customerName: payment.customerName,
+    externalReference: payment.externalReference,
+    snippeReference: payment.snippeReference,
+    paidAt: payment.paidAt,
+    createdAt: payment.createdAt,
+    projectId: payment.projectId // already populated with { title, description, thankYouMessage }
+  };
+
   res.json({
     success: true,
     message: "Payment status loaded.",
-    data: { status: payment.status, reference: payment.snippeReference ?? payment.externalReference, payment }
+    data: {
+      status: payment.status,
+      reference: payment.snippeReference ?? payment.externalReference,
+      payment: publicPayment
+    }
   });
 });
 
