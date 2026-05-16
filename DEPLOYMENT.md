@@ -107,10 +107,16 @@ https://sarafupay-api-xxxxx.ondigitalocean.app/health
 
 Expected response:
 ```json
-{"success":true,"message":"SarafuPay API is healthy.","data":{"service":"sarafupay-api"}}
+{
+  "status": "ok",
+  "uptime": 12,
+  "environment": "production",
+  "db": "connected",
+  "timestamp": "2026-05-17T10:00:00.000Z"
+}
 ```
 
-If you see this, the backend is working.
+If `status` is `"ok"` and `db` is `"connected"`, the backend and database are both working. If you see `"status": "degraded"` and HTTP `503`, the backend started but cannot reach MongoDB — check `MONGO_URI` and Atlas Network Access.
 
 ---
 
