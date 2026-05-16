@@ -117,10 +117,10 @@ export default function TermsPage() {
           </Section>
 
           <Section title="8. Contact">
-            {/* TODO before launch: confirm support@sarafupay.co.tz is a live inbox */}
+
             <p>If you have questions about these Terms of Service, please contact us at{" "}
-              <a href="mailto:support@sarafupay.co.tz" className="font-medium text-[#16a34a] underline underline-offset-2 hover:text-[#14532d]">
-                support@sarafupay.co.tz
+              <a href="mailto:sarafupaytz@gmail.com" className="font-medium text-[#16a34a] underline underline-offset-2 hover:text-[#14532d]">
+                sarafupaytz@gmail.com
               </a>.
             </p>
           </Section>

@@ -198,10 +198,10 @@ If an owner creates two active projects, `getMemberDashboard` silently returns d
 
 ---
 
-### 🟡 IMPORTANT — `support@sarafupay.co.tz` email in Terms page is unconfirmed
+### 🟡 IMPORTANT — `sarafupaytz@gmail.com` email in Terms page is unconfirmed
 
 **File:** `client/app/terms/page.tsx` line 121  
-**Finding:** A code comment reads `{/* TODO before launch: confirm support@sarafupay.co.tz is a live inbox */}`. This contact email must be working before the terms page is visible to users.
+**Finding:** A code comment reads `{/* TODO before launch: confirm sarafupaytz@gmail.com is a live inbox */}`. This contact email must be working before the terms page is visible to users.
 
 ---
 
@@ -324,7 +324,7 @@ This URL is stored in the database at creation time. If `CLIENT_URL` changes (do
 | 1 | `SNIPPE_API_KEY` / `SNIPPE_WEBHOOK_SECRET` must be required in env schema | `server/src/config/env.ts` |
 | 2 | Restrict PII in `GET /api/payments/verify/:reference` for unauthenticated callers | `server/src/controllers/payment.controller.ts` + routes |
 | 3 | Remove `dangerouslySetInnerHTML` from terms page | `client/app/terms/page.tsx` |
-| 4 | Confirm `support@sarafupay.co.tz` is a live inbox | External / Terms page |
+| 4 | Confirm `sarafupaytz@gmail.com` is a live inbox | External / Terms page |
 | 5 | Write `DEPLOYMENT.md` with env vars, start commands, webhook registration | New file |
 
 ### Fix before public launch
