@@ -3,6 +3,7 @@
 import { use, useState } from "react";
 import Link from "next/link";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { formatMoney } from "@/lib/formatters";
 import { ArrowLeft, Download, Pause, Pencil, Play, Power } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,8 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { CollectionStats } from "@/components/collections/CollectionStats";
 import { ContributorTable } from "@/components/collections/ContributorTable";
 import { PaymentLinkCard } from "@/components/collections/PaymentLinkCard";
+import { PaymentStatusChart } from "@/components/collections/PaymentStatusChart";
+import { TopContributors } from "@/components/collections/TopContributors";
 import { collectionsApi, COLLECTION_TYPE_EMOJIS, COLLECTION_TYPE_LABELS } from "@/lib/collections";
 import { getApiErrorMessage } from "@/lib/api";
 import { useCollectionSummary, useCollectionPayments } from "@/hooks/useCollections";
@@ -170,11 +173,22 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
             {/* Stats cards */}
             <CollectionStats summary={summary} />
 
+            {/* Analytics: status breakdown + top contributors */}
+            {payments.length > 0 && (
+              <div className="grid gap-6 lg:grid-cols-2">
+                <PaymentStatusChart payments={payments} />
+                <TopContributors payments={payments} currency={summary.collection.currency} />
+              </div>
+            )}
+
             {/* Monthly chart */}
             {summary.monthlyChart.length > 0 && (
               <Card className="border-white/70 bg-white/80 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
                 <CardHeader>
                   <CardTitle className="text-[#071a0e]">Collections Over Time</CardTitle>
+                  <p className="text-xs text-muted-foreground">
+                    {summary.monthlyChart.length} month{summary.monthlyChart.length !== 1 ? "s" : ""} of completed payment data
+                  </p>
                 </CardHeader>
                 <CardContent className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
@@ -186,10 +200,39 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                      <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                      <YAxis tick={{ fontSize: 12 }} />
-                      <Tooltip contentStyle={{ borderRadius: "1rem", border: "1px solid #e2e8f0", backdropFilter: "blur(12px)" }} />
-                      <Area type="monotone" dataKey="total" stroke="#16a34a" strokeWidth={2} fill="url(#collectionGrad)" />
+                      <XAxis
+                        dataKey="month"
+                        tick={{ fontSize: 11 }}
+                        tickFormatter={(v: string) => {
+                          const parts = v.split("-");
+                          if (parts.length < 2) return v;
+                          return new Date(Number(parts[0]), Number(parts[1]) - 1)
+                            .toLocaleString("en", { month: "short", year: "2-digit" });
+                        }}
+                      />
+                      <YAxis
+                        tick={{ fontSize: 11 }}
+                        tickFormatter={(v: number) =>
+                          v >= 1_000_000 ? `${(v / 1_000_000).toFixed(1)}M`
+                          : v >= 1_000 ? `${(v / 1_000).toFixed(0)}k`
+                          : String(v)
+                        }
+                        width={48}
+                      />
+                      <Tooltip
+                        contentStyle={{ borderRadius: "1rem", border: "1px solid #e2e8f0", backdropFilter: "blur(12px)" }}
+                        formatter={(value: unknown) => [
+                          formatMoney(Number(value), summary.collection.currency),
+                          "Collected"
+                        ]}
+                        labelFormatter={(label: unknown) => {
+                          const parts = String(label).split("-");
+                          if (parts.length < 2) return String(label);
+                          return new Date(Number(parts[0]), Number(parts[1]) - 1)
+                            .toLocaleString("en", { month: "long", year: "numeric" });
+                        }}
+                      />
+                      <Area type="monotone" dataKey="total" name="Collected" stroke="#16a34a" strokeWidth={2} fill="url(#collectionGrad)" />
                     </AreaChart>
                   </ResponsiveContainer>
                 </CardContent>
