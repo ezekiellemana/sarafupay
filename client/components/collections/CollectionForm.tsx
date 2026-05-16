@@ -22,6 +22,7 @@ type FormValues = {
   minimumAmount: string;
   currency: string;
   allowCustomAmount: boolean;
+  showContributors: boolean;
   startDate: string;
   endDate: string;
   visibility: string;
@@ -48,6 +49,7 @@ export function CollectionForm({
       minimumAmount: collection?.minimumAmount?.toString() ?? "",
       currency: collection?.currency ?? "TZS",
       allowCustomAmount: collection?.allowCustomAmount !== false,
+      showContributors: collection?.showContributors ?? false,
       startDate: collection?.startDate ? collection.startDate.split("T")[0] : "",
       endDate: collection?.endDate ? collection.endDate.split("T")[0] : "",
       visibility: collection?.visibility ?? "public",
@@ -68,6 +70,7 @@ export function CollectionForm({
         minimumAmount: values.minimumAmount ? Number(values.minimumAmount) : undefined,
         currency: values.currency,
         allowCustomAmount: values.allowCustomAmount,
+        showContributors: values.showContributors,
         startDate: values.startDate || undefined,
         endDate: values.endDate || undefined,
         visibility: values.visibility,
@@ -180,6 +183,20 @@ export function CollectionForm({
         <div>
           <Label htmlFor="allowCustomAmount" className="cursor-pointer font-medium">Allow custom amount</Label>
           <p className="text-xs text-muted-foreground">Payers can enter their own amount. If off, the suggested amount is fixed.</p>
+        </div>
+      </div>
+
+      {/* Show contributors toggle */}
+      <div className="flex items-center gap-3 rounded-2xl border border-white/70 bg-white/60 p-4 backdrop-blur-sm">
+        <input
+          id="showContributors"
+          type="checkbox"
+          {...register("showContributors")}
+          className="size-4 rounded accent-[#16a34a]"
+        />
+        <div>
+          <Label htmlFor="showContributors" className="cursor-pointer font-medium">Show recent contributors publicly</Label>
+          <p className="text-xs text-muted-foreground">Only first name + last initial and amount are shown — never phone or email.</p>
         </div>
       </div>
 

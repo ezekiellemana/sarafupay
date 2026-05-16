@@ -25,6 +25,7 @@ export const createCollectionSchema = z.object({
   minimumAmount: z.coerce.number().min(0).optional(),
   currency: z.string().default("TZS"),
   allowCustomAmount: z.boolean().default(true),
+  showContributors: z.boolean().optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   visibility: z.enum(["public", "private"]).default("public"),

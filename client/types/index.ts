@@ -52,6 +52,8 @@ export type Collection = {
   coverImageUrl?: string;
   paymentPurpose?: string;
   thankYouMessage?: string;
+  showContributors?: boolean;
+  recentContributors?: { name: string; amount: number; paidAt?: string }[];
   publicPaymentLink?: string;
   totalCollected: number;
   contributorCount: number;

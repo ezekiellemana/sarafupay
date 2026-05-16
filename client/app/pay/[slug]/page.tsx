@@ -317,6 +317,39 @@ export default function PublicPayPage({ params }: { params: Promise<{ slug: stri
         </motion.div>
       </div>
 
+      {/* Recent contributors */}
+      {collection.recentContributors !== undefined && (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+          className="mx-auto mt-6 max-w-5xl rounded-3xl border border-white/70 bg-white/85 p-6 shadow-xl shadow-slate-900/5 backdrop-blur-xl"
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <Users className="size-4 text-[#16a34a]" />
+            <h2 className="font-semibold text-[#071a0e]">Recent Contributors</h2>
+          </div>
+
+          {collection.recentContributors.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">No contributions yet — be the first!</p>
+          ) : (
+            <div className="flex flex-col divide-y divide-slate-100">
+              {collection.recentContributors.map((c, i) => (
+                <div key={i} className="flex items-center justify-between py-2.5">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex size-8 items-center justify-center rounded-full bg-green-50 text-sm font-bold text-[#16a34a]">
+                      {c.name[0]?.toUpperCase() ?? "?"}
+                    </span>
+                    <span className="text-sm font-medium text-[#071a0e]">{c.name}</span>
+                  </div>
+                  <span className="text-sm font-semibold text-amber-700">{formatMoney(c.amount, collection.currency)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </motion.div>
+      )}
+
       {/* Footer */}
       <div className="mt-10 text-center text-xs text-muted-foreground">
         Powered by <Link href="/" className="font-medium text-[#16a34a] hover:underline">SarafuPay</Link> · Secure payments via Snippe
