@@ -34,9 +34,9 @@ export function CollectionForm({
   collection
 }: {
   onSuccess: (collection: Collection) => void;
-  collection?: Collection;
+  collection?: Partial<Collection>;
 }) {
-  const isEdit = Boolean(collection);
+  const isEdit = Boolean(collection?._id);
   const [loading, setLoading] = useState(false);
   const { register, handleSubmit, control, formState: { errors } } = useForm<FormValues>({
     defaultValues: {
@@ -75,7 +75,7 @@ export function CollectionForm({
         thankYouMessage: values.thankYouMessage || undefined
       };
       let res;
-      if (isEdit && collection) {
+      if (collection?._id) {
         res = await collectionsApi.update(collection._id, payload);
         toast.success("Project/event updated successfully!");
       } else {

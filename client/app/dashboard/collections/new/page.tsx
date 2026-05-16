@@ -7,11 +7,16 @@ import { ArrowLeft, Check, Copy, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { PageHeader } from "@/components/shared/PageHeader";
 import { CollectionForm } from "@/components/collections/CollectionForm";
+import { COLLECTION_TEMPLATES, type CollectionTemplate } from "@/lib/templates";
+import { formatMoney } from "@/lib/formatters";
 import type { Collection } from "@/types";
 
+type Step = "pick" | "form";
+
 export default function NewCollectionPage() {
+  const [step, setStep] = useState<Step>("pick");
+  const [selectedTemplate, setSelectedTemplate] = useState<CollectionTemplate | null>(null);
   const [created, setCreated] = useState<Collection | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -29,6 +34,14 @@ export default function NewCollectionPage() {
     }
   };
 
+  const handleContinue = () => {
+    if (selectedTemplate) setStep("form");
+  };
+
+  const handleBackToPicker = () => {
+    setStep("pick");
+  };
+
   return (
     <DashboardShell>
       <div className="mx-auto max-w-2xl">
@@ -41,6 +54,7 @@ export default function NewCollectionPage() {
         </div>
 
         <AnimatePresence mode="wait">
+          {/* ── Success state ── */}
           {created ? (
             <motion.div
               key="success"
@@ -85,10 +99,10 @@ export default function NewCollectionPage() {
                     "They'll open the link and pay securely through Snippe.",
                     "You'll see all contributions in your collection dashboard.",
                     "Export a CSV report of all contributors anytime."
-                  ].map((step, i) => (
+                  ].map((s, i) => (
                     <li key={i} className="flex items-start gap-2">
                       <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-green-100 text-xs font-bold text-green-700">{i + 1}</span>
-                      {step}
+                      {s}
                     </li>
                   ))}
                 </ul>
@@ -98,15 +112,114 @@ export default function NewCollectionPage() {
                 <Button className="h-11 w-full rounded-2xl" variant="outline">← Back to My Projects</Button>
               </Link>
             </motion.div>
+
+          ) : step === "pick" ? (
+            /* ── Template picker ── */
+            <motion.div
+              key="pick"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="flex flex-col gap-6"
+            >
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">New collection</p>
+                <h1 className="mt-1 text-2xl font-bold text-[#071a0e]">Choose a template</h1>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Pick a starting point — you can edit every detail before creating.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {COLLECTION_TEMPLATES.map((template) => {
+                  const isSelected = selectedTemplate?.key === template.key;
+                  return (
+                    <motion.button
+                      key={template.key}
+                      type="button"
+                      whileHover={{ y: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setSelectedTemplate(template)}
+                      className={`rounded-3xl border p-4 text-left transition-all duration-150 ${
+                        isSelected
+                          ? "border-[#16a34a] bg-green-50/70 shadow-lg shadow-green-700/10 ring-2 ring-[#16a34a]/25"
+                          : "border-white/70 bg-white/80 shadow-lg shadow-slate-900/5 hover:border-[#16a34a]/40 hover:bg-green-50/30"
+                      }`}
+                    >
+                      <span className="text-3xl leading-none">{template.emoji}</span>
+                      <p className={`mt-2.5 text-sm font-semibold leading-tight ${isSelected ? "text-[#16a34a]" : "text-[#071a0e]"}`}>
+                        {template.name}
+                      </p>
+                      <p className="mt-1 text-xs leading-snug text-muted-foreground line-clamp-2">
+                        {template.tagline}
+                      </p>
+                      {template.defaults.suggestedAmount && (
+                        <p className="mt-2 text-xs font-medium text-amber-600">
+                          ~{formatMoney(template.defaults.suggestedAmount, template.defaults.currency ?? "TZS")}
+                        </p>
+                      )}
+                      {isSelected && (
+                        <div className="mt-2 flex items-center gap-1 text-xs font-semibold text-[#16a34a]">
+                          <Check className="size-3" /> Selected
+                        </div>
+                      )}
+                    </motion.button>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center justify-between gap-4 rounded-3xl border border-white/70 bg-white/80 px-5 py-4 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
+                <p className="text-sm text-muted-foreground">
+                  {selectedTemplate
+                    ? <><span className="font-medium text-[#071a0e]">{selectedTemplate.emoji} {selectedTemplate.name}</span> selected</>
+                    : "Select a template above to continue."}
+                </p>
+                <Button
+                  onClick={handleContinue}
+                  disabled={!selectedTemplate}
+                  className="shrink-0 rounded-2xl bg-linear-to-r from-[#052e16] via-[#16a34a] to-[#4ade80] text-white shadow-lg shadow-green-700/20 hover:brightness-105 disabled:opacity-50"
+                >
+                  Continue →
+                </Button>
+              </div>
+            </motion.div>
+
           ) : (
-            <motion.div key="form" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-              <PageHeader
-                eyebrow="New collection"
-                title="Create Project/Event"
-                description="Set up your money collection project. You'll get a shareable payment link immediately."
-              />
+            /* ── Form step ── */
+            <motion.div
+              key="form"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+            >
+              <div className="mb-6 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleBackToPicker}
+                  className="text-sm text-muted-foreground underline-offset-2 hover:underline hover:text-[#071a0e]"
+                >
+                  ← Change template
+                </button>
+                {selectedTemplate && (
+                  <span className="rounded-xl border border-white/70 bg-white/80 px-2.5 py-1 text-sm font-medium text-[#071a0e] shadow-sm">
+                    {selectedTemplate.emoji} {selectedTemplate.name}
+                  </span>
+                )}
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">New collection</p>
+                <h1 className="mt-1 text-2xl font-bold text-[#071a0e]">Create Project/Event</h1>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Fields pre-filled from your template — edit anything before creating.
+                </p>
+              </div>
+
               <div className="mt-6 rounded-3xl border border-white/70 bg-white/85 p-6 shadow-2xl shadow-slate-900/8 backdrop-blur-xl">
-                <CollectionForm onSuccess={handleSuccess} />
+                <CollectionForm
+                  collection={selectedTemplate?.defaults}
+                  onSuccess={handleSuccess}
+                />
               </div>
             </motion.div>
           )}
