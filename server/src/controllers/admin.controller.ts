@@ -5,16 +5,14 @@ import { getAdminDashboard } from "../services/dashboard.service";
 
 export const members = asyncHandler(async (req, res) => {
   const search = String(req.query.search ?? "");
-  const query: any = search
-    ? {
-        role: "member",
-        $or: [
-          { fullName: new RegExp(search, "i") },
-          { email: new RegExp(search, "i") },
-          { phoneNumber: new RegExp(search, "i") }
-        ]
-      }
-    : { role: "member" };
+  const query: Record<string, unknown> = { role: "member" };
+  if (search) {
+    query.$or = [
+      { fullName: new RegExp(search, "i") },
+      { email: new RegExp(search, "i") },
+      { phoneNumber: new RegExp(search, "i") }
+    ];
+  }
 
   const users = await User.find(query).select("-passwordHash").sort({ createdAt: -1 }).lean();
   const payments = await Payment.aggregate([
@@ -75,7 +73,7 @@ export const summary = asyncHandler(async (_req, res) => {
 export const unpaidMembers = asyncHandler(async (_req, res) => {
   const currentMonth = new Date().toISOString().slice(0, 7);
   const paidUserIds = await Payment.distinct("userId", { status: "completed", monthPaidFor: currentMonth });
-  const users = await User.find({ role: "member", _id: { $nin: paidUserIds } }).select("-passwordHash");
+  const users = await User.find({ role: "member", _id: { $nin: paidUserIds } }).select("-passwordHash").lean();
   res.json({ success: true, message: "Unpaid members loaded.", data: { members: users } });
 });
 

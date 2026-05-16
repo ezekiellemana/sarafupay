@@ -14,7 +14,10 @@ export function DashboardShell({ children, admin = false }: { children: React.Re
   const { user, hydrated } = useAuth();
 
   useEffect(() => {
-    if (hydrated && admin && user && user.role !== "admin") {
+    if (!hydrated || !admin) return;
+    if (!user) {
+      router.replace("/login");
+    } else if (user.role !== "admin") {
       router.replace("/dashboard");
     }
   }, [admin, hydrated, router, user]);

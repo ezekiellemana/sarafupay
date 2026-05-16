@@ -37,27 +37,45 @@ export const getMemberDashboard = async (userId: Types.ObjectId) => {
 
 export const getAdminDashboard = async () => {
   const currentMonth = getCurrentMonth();
-  const [members, payments, projects] = await Promise.all([
-    User.find({ role: "member", isActive: true }),
-    Payment.find().populate("userId", "fullName email phoneNumber").populate("projectId", "title").sort({ createdAt: -1 }),
-    Project.find().sort({ createdAt: -1 })
-  ]);
 
-  const completed = payments.filter((payment) => payment.status === "completed");
-  const paidThisMonth = new Set(
-    completed.filter((payment) => payment.monthPaidFor === currentMonth && payment.userId).map((payment) => payment.userId?.toString())
-  );
-  const monthlyChart = buildMonthlyChart(completed);
+  const [collectedResult, statusCounts, paidThisMonthIds, totalMembers, monthlyChartRaw, latestPayments, projects] =
+    await Promise.all([
+      Payment.aggregate<{ total: number }>([
+        { $match: { status: "completed" } },
+        { $group: { _id: null, total: { $sum: "$amount" } } }
+      ]),
+      Payment.aggregate<{ _id: string; count: number }>([{ $group: { _id: "$status", count: { $sum: 1 } } }]),
+      Payment.distinct("userId", { status: "completed", monthPaidFor: currentMonth }),
+      User.countDocuments({ role: "member", isActive: true }),
+      Payment.aggregate<{ _id: string; total: number }>([
+        { $match: { status: "completed" } },
+        { $group: { _id: "$monthPaidFor", total: { $sum: "$amount" } } },
+        { $sort: { _id: -1 } },
+        { $limit: 12 },
+        { $sort: { _id: 1 } }
+      ]),
+      Payment.find()
+        .populate("userId", "fullName email phoneNumber")
+        .populate("projectId", "title")
+        .sort({ createdAt: -1 })
+        .limit(8)
+        .lean(),
+      Project.find().sort({ createdAt: -1 }).lean()
+    ]);
+
+  const totalCollected = collectedResult[0]?.total ?? 0;
+  const statusMap = new Map(statusCounts.map((s) => [s._id, s.count]));
+  const paidMembersThisMonth = paidThisMonthIds.length;
 
   return {
-    totalCollected: completed.reduce((sum, payment) => sum + payment.amount, 0),
-    totalMembers: members.length,
-    paidMembersThisMonth: paidThisMonth.size,
-    unpaidMembersThisMonth: Math.max(members.length - paidThisMonth.size, 0),
-    pendingPayments: payments.filter((payment) => payment.status === "pending").length,
-    failedPayments: payments.filter((payment) => payment.status === "failed").length,
-    monthlyChart,
-    latestPayments: payments.slice(0, 8),
+    totalCollected,
+    totalMembers,
+    paidMembersThisMonth,
+    unpaidMembersThisMonth: Math.max(totalMembers - paidMembersThisMonth, 0),
+    pendingPayments: statusMap.get("pending") ?? 0,
+    failedPayments: statusMap.get("failed") ?? 0,
+    monthlyChart: monthlyChartRaw.map(({ _id, total }) => ({ month: _id, total })),
+    latestPayments,
     projects
   };
 };
@@ -67,11 +85,3 @@ const fallbackTarget = (project: { monthlyContributionAmount: number; startDate?
   return months.length ? months.length * project.monthlyContributionAmount : project.monthlyContributionAmount * 12;
 };
 
-const buildMonthlyChart = (payments: { monthPaidFor: string; amount: number }[]) => {
-  const totals = new Map<string, number>();
-  payments.forEach((payment) => totals.set(payment.monthPaidFor, (totals.get(payment.monthPaidFor) ?? 0) + payment.amount));
-  return Array.from(totals.entries())
-    .sort(([a], [b]) => a.localeCompare(b))
-    .slice(-12)
-    .map(([month, total]) => ({ month, total }));
-};

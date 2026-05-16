@@ -55,27 +55,24 @@ export default function AdminPaymentsPage() {
     }
   };
 
-  // Reset to page 1 whenever the search query changes.
   useEffect(() => {
-    setPage(1);
-  }, [debouncedSearch]);
-
-  // Fetch whenever page or search changes. When search changes, the effect above
-  // resets page to 1 first, which triggers this effect again at page 1.
-  useEffect(() => {
-    setLoading(true);
-    const params = new URLSearchParams({ page: String(page), limit: String(PAGE_LIMIT) });
-    if (debouncedSearch) params.set("search", debouncedSearch);
-
-    api<PaymentsResponse>(`/api/admin/payments?${params}`)
-      .then((res) => {
+    async function load() {
+      setLoading(true);
+      const params = new URLSearchParams({ page: String(page), limit: String(PAGE_LIMIT) });
+      if (debouncedSearch) params.set("search", debouncedSearch);
+      try {
+        const res = await api<PaymentsResponse>(`/api/admin/payments?${params}`);
         setPayments(res.data.payments);
         setTotalPages(res.data.totalPages);
         setTotal(res.data.total);
         setError("");
-      })
-      .catch((err: unknown) => setError(getApiErrorMessage(err, "Unable to load payments.")))
-      .finally(() => setLoading(false));
+      } catch (err: unknown) {
+        setError(getApiErrorMessage(err, "Unable to load payments."));
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
   }, [debouncedSearch, page]);
 
   return (
@@ -100,7 +97,7 @@ export default function AdminPaymentsPage() {
           className="max-w-md"
           placeholder="Search member or reference"
           value={search}
-          onChange={(event) => setSearch(event.target.value)}
+          onChange={(event) => { setSearch(event.target.value); if (page !== 1) setPage(1); }}
         />
         {loading && <LoadingState label="Loading payments..." />}
         {error && (
