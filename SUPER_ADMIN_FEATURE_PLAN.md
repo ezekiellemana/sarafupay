@@ -5,198 +5,136 @@
 
 ---
 
-## Current Admin Capabilities (as of v1.2.1)
+## Current Admin Capabilities
 
-### Backend routes — all under `/api/admin/*`, all require `role: admin`
+### Backend endpoints (all protected by `protect` + `requireAdmin`)
 
-| Method | Route | What it does |
-| --- | --- | --- |
-| `GET` | `/api/admin/summary` | Aggregated dashboard: totalCollected, totalMembers, paidThisMonth, pendingPayments, failedPayments, monthlyChart (12 months), latestPayments (8), projects |
-| `GET` | `/api/admin/members` | All members (role=member), searchable by name/email/phone, enriched with totalPaid |
-| `GET` | `/api/admin/payments` | All payments, paginated, filtered by status/month/projectId/search |
-| `GET` | `/api/admin/unpaid-members` | Members with no completed payment this month |
-| `GET` | `/api/admin/export/payments` | Full CSV export of all payments |
+| Method | Route | Handler | What it returns |
+| --- | --- | --- | --- |
+| `GET` | `/api/dashboard/admin` | `getAdminDashboard()` | totalCollected, totalMembers, paidThisMonth, pendingPayments, failedPayments, monthlyChart (12 mo), latestPayments (8), projects (all) |
+| `GET` | `/api/admin/summary` | `summary()` → same service | Same as above (redundant, kept for backwards compat) |
+| `GET` | `/api/admin/members` | `members()` | All users with role=member, enriched with totalPaid + paidMonths |
+| `GET` | `/api/admin/payments` | `payments()` | Paginated payments, filterable by status / month / projectId / search |
+| `GET` | `/api/admin/unpaid-members` | `unpaidMembers()` | Members with no completed payment this month |
+| `GET` | `/api/admin/export/payments` | `exportPaymentsCsv()` | CSV file download |
+| `GET` | `/health` | inline in app.ts | status, db, uptime, environment — **no auth required** |
 
-### Frontend pages
+### Frontend admin pages
 
-| Page | What it shows |
+| Page | What it shows today |
 | --- | --- |
-| `/admin` | 4 KPI cards (totalCollected, members, paid this month, failed), monthly area chart, latest 8 payments table |
-| `/admin/members` | Search input + members table (name, email, phone, totalPaid) |
-| `/admin/payments` | Search + paginated payments table + CSV export button |
-| `/admin/projects` | Project creation form + grid of all admin-created projects |
+| `/admin` | 4 KPI cards (totalCollected, totalMembers, paidThisMonth, failedPayments), 12-month area chart, latest 8 payments |
+| `/admin/members` | Search input + table: name, email, phone, totalPaid |
+| `/admin/payments` | Search + paginated table + CSV export button |
+| `/admin/projects` | Create project form + grid of all projects |
 
-### What is NOT covered today
+### Key files
 
-- No user activate/deactivate
-- No member-created collection (public collections) visible in admin
-- No admin project status override (pause/close)
-- No date/amount range filters on payments
-- No system health panel in the UI
-- No audit/pre-launch checklist UI
-- No recent registrations or recent projects on the overview page
-- No total user count, total project count, total payment count KPIs
-- No payment detail drawer
+**Backend**
+- `server/src/services/dashboard.service.ts` — `getAdminDashboard()` (extend here for Phase A)
+- `server/src/controllers/admin.controller.ts` — all admin controllers
+- `server/src/routes/admin.routes.ts` — route registration
+- `server/src/models/User.model.ts` — `isActive` boolean gates auth
+- `server/src/middleware/auth.middleware.ts` — `protect` (checks `isActive` on every request)
+- `server/src/middleware/admin.middleware.ts` — `requireAdmin`
+
+**Frontend**
+- `client/app/admin/page.tsx` — main dashboard
+- `client/app/admin/members/page.tsx`
+- `client/app/admin/payments/page.tsx`
+- `client/app/admin/projects/page.tsx`
+- `client/components/admin/AdminStatsCards.tsx` — 4-card KPI grid
+- `client/components/admin/MembersTable.tsx`
+- `client/components/admin/AdminPaymentsTable.tsx`
+- `client/components/admin/ProjectForm.tsx`
+- `client/hooks/useDashboard.ts` — `useAdminDashboard()` calls `GET /api/dashboard/admin`
+- `client/types/index.ts` — `AdminDashboardData` type
 
 ---
 
-## Missing Features by Phase
+## What Is Missing
+
+- No user activate/deactivate endpoint or UI
+- No filter by role/status on members page
+- No total user / total project / total payment KPIs on overview
+- No recent registrations or recent projects on overview
+- No quick-links section (Manage Members / Projects / Payments / Health)
+- No project status override (pause / close) by admin
+- Admin projects page shows only admin-created projects, not member-created ones
+- No owner info displayed on projects
+- No date range or amount range filters on payments
+- No payment detail drawer
+- No system health panel in the UI
+- No pre-launch audit checklist
+
+---
+
+## Phase Plans
 
 ---
 
 ### Phase A — Platform Overview Improvements
 
-**Goal:** Make the `/admin` dashboard show full platform health at a glance.
+**Goal:** Replace the 4-card KPI strip with a full platform health overview.
 
-#### Backend — extend `GET /api/admin/summary`
+**Risk: Low — read-only only, no mutations.**
 
-Add to the existing `getAdminDashboard` aggregation (all read-only):
+#### Backend — `server/src/services/dashboard.service.ts`
 
-| New field | Source |
-| --- | --- |
-| `totalUsers` | `User.countDocuments()` |
-| `activeUsers` | `User.countDocuments({ isActive: true })` |
-| `totalCollections` | `Project.countDocuments()` |
-| `activeCollections` | `Project.countDocuments({ status: "active" })` |
-| `totalPayments` | `Payment.countDocuments()` |
-| `completedPayments` | already have via aggregation |
-| `recentUsers` | `User.find().sort({ createdAt: -1 }).limit(5).select(...)` |
-| `recentProjects` | `Project.find().sort({ createdAt: -1 }).limit(5).lean()` |
-
-**Files changed:** `server/src/services/dashboard.service.ts` only.
-**Risk:** Low — read-only aggregations, no mutations.
-
-#### Frontend — `/admin` page
-
-- Replace 4-card grid with 8-card grid (2 rows of 4)
-- Add "Recent Registrations" section (last 5 users)
-- Add "Recent Projects" section (last 5 collections)
-- Add quick-link cards at the bottom: Manage Members / Manage Projects / Manage Payments / System Health
-
-**Files changed:** `client/app/admin/page.tsx`, `client/components/admin/AdminStatsCards.tsx`
-**Risk:** Low.
-
----
-
-### Phase B — Member Management
-
-**Goal:** Let admin activate/deactivate users safely.
-
-#### Backend — new route
+Add to the `Promise.all([...])` in `getAdminDashboard()`:
 
 ```
-PATCH /api/admin/members/:id/status
-Body: { isActive: boolean }
-Guard: cannot deactivate yourself (req.user._id !== id)
-Guard: cannot deactivate another admin
-Returns: updated user (no passwordHash)
+totalUsers         = User.countDocuments()
+activeUsers        = User.countDocuments({ isActive: true })
+totalCollections   = Project.countDocuments()
+activeCollections  = Project.countDocuments({ status: "active" })
+totalPayments      = Payment.countDocuments()
+completedPayments  = statusMap.get("completed")   // already computed from statusCounts
+recentUsers        = User.find().sort({ createdAt: -1 }).limit(5).select("fullName email phoneNumber createdAt role isActive")
+recentProjects     = Project.find().sort({ createdAt: -1 }).limit(5).lean()
 ```
 
-**Files changed:** `server/src/controllers/admin.controller.ts`, `server/src/routes/admin.routes.ts`
-**Risk:** Medium — mutations. Deactivating a user blocks their next login (isActive check in auth). Reversible.
+Extend the return object and the `AdminDashboardData` type in `client/types/index.ts`.
 
-#### Frontend — `/admin/members` page
+**Files changed:**
+- `server/src/services/dashboard.service.ts` — add 4 new parallel queries, extend return
+- `client/types/index.ts` — extend `AdminDashboardData`
+- `client/components/admin/AdminStatsCards.tsx` — 8-card grid (2 rows of 4)
+- `client/app/admin/page.tsx` — add Recent Users, Recent Projects sections, Quick Links
 
-- Add role/status filter chips (All / Active / Inactive)
-- Add "Deactivate" / "Reactivate" button per row
-- Confirmation dialog before deactivate: "Deactivate {name}? They will not be able to log in."
-- Show member's collection count and total they've collected in project(s)
-
-**Files changed:** `client/app/admin/members/page.tsx`, `client/components/admin/MembersTable.tsx`
-**Risk:** Medium — needs confirmation guard.
-
----
-
-### Phase C — Project / Collection Management
-
-**Goal:** Admin can see ALL collections (including member-created) and control their status.
-
-#### Backend — new route
-
-```
-GET /api/admin/collections
-Query: search, status, page, limit
-Populates: ownerId → { fullName, email }
-Returns: all projects/collections with owner info, totalCollected, contributorCount
-```
-
-```
-PATCH /api/admin/collections/:id/status
-Body: { status: "active" | "paused" | "closed" }
-Guard: cannot delete, only status change
-```
-
-**Why new route, not reuse `/api/projects`?** The existing `/api/projects` is member-facing and returns only the user's own projects. Admin needs all projects with owner info.
-
-**Files changed:** `server/src/controllers/admin.controller.ts`, `server/src/routes/admin.routes.ts`
-**Risk:** Medium — status change (pause/close) affects payment acceptance for that collection. Closing is reversible by reopening. Add confirmation for "close".
-
-#### Frontend — `/admin/projects` page
-
-- Replace current form-heavy page with a split layout:
-  - Top: searchable, filterable table of ALL collections with owner, status, totalCollected
-  - Bottom (or modal): "Create platform project" form (existing ProjectForm)
-- Actions per row: Pause / Reactivate / Close (with confirmation on Close)
-
-**Files changed:** `client/app/admin/projects/page.tsx`, new `AdminCollectionsTable` component
-**Risk:** Medium.
-
----
-
-### Phase D — Payment Monitoring Enhancements
-
-**Goal:** Add date range and amount range filters; add payment detail drawer.
-
-#### Backend — extend `GET /api/admin/payments`
-
-Add query params:
-- `dateFrom` / `dateTo` → filter `createdAt` range
-- `amountMin` / `amountMax` → filter `amount` range
-- No new route needed — extend existing query builder
-
-Also populate `ownerId` (project owner) in payment rows.
-
-**Files changed:** `server/src/controllers/admin.controller.ts`
-**Risk:** Low — read-only query enhancements.
-
-#### Frontend — `/admin/payments` page
-
-- Date range picker (two date inputs)
-- Amount range inputs
-- Payment detail drawer: click a row to see full payment record (reference, metadata, webhookPayload summary, paidAt)
-
-**Files changed:** `client/app/admin/payments/page.tsx`, new `PaymentDetailDrawer` component
-**Risk:** Low.
+**No new routes. No mutations. No risk to existing flows.**
 
 ---
 
 ### Phase E — System Health Panel
 
-**Goal:** Admin can see live backend/DB status from the dashboard.
+**Goal:** Show live backend/DB status from the admin dashboard.
+
+**Risk: Low — frontend-only, uses existing public `/health` endpoint.**
 
 #### Backend
-No changes. Uses existing `GET /health` endpoint (public, no auth required):
+
+Zero changes. `GET /health` already returns:
 ```json
 { "status": "ok", "uptime": 140, "environment": "production", "db": "connected", "timestamp": "..." }
 ```
 
 #### Frontend — new `SystemHealthCard` component
 
-- Fetches `GET /health` on mount and on "Refresh" button click
-- Shows: status, db, environment, uptime, last checked time
-- Green badge if `status: ok`, red badge if `status: degraded` or fetch error
-- No secrets exposed (health endpoint already sanitized)
+- `client/components/admin/SystemHealthCard.tsx` — fetches `GET /health`, shows status badge, db, environment, uptime, last checked time + Refresh button
+- `client/app/admin/page.tsx` — render it in the overview page
 
-**Files changed:** `client/components/admin/SystemHealthCard.tsx` (new), `client/app/admin/page.tsx`
-**Risk:** Low.
+**Files changed:** 1 new component + 1 page edit.
 
 ---
 
-### Phase F — Audit / Pre-Launch Checklist
+### Phase F — Pre-Launch Audit Checklist
 
-**Goal:** Admin sees at a glance whether all critical platform settings are configured.
+**Goal:** Admin sees at a glance if all critical configuration is in place.
 
-#### Backend — new route
+**Risk: Low — boolean flags only, no secret values exposed.**
+
+#### Backend — new controller + route
 
 ```
 GET /api/admin/audit
@@ -208,21 +146,120 @@ Returns boolean flags only — never exposes values:
   snippeProfileIdConfigured: boolean,
   clientUrlConfigured: boolean,
   serverUrlConfigured: boolean,
+  jwtSecretConfigured: boolean,
   nodeEnvProduction: boolean
 }
 ```
 
-**Files changed:** `server/src/controllers/admin.controller.ts`, `server/src/routes/admin.routes.ts`
-**Risk:** Low — boolean flags, no secret values.
+**Files changed:**
+- `server/src/controllers/admin.controller.ts` — new `audit` handler
+- `server/src/routes/admin.routes.ts` — `router.get("/audit", audit)`
+- `client/components/admin/AuditChecklist.tsx` — new component, green check / red X per flag
 
-#### Frontend — `AuditChecklist` component
+---
 
-- Shows each flag as a green checkmark or red X
-- Links to relevant settings page or DEPLOYMENT.md
-- "All checks passing" / "N checks need attention" summary
+### Phase D — Payment Monitoring Enhancements
 
-**Files changed:** `client/components/admin/AuditChecklist.tsx` (new), `client/app/admin/page.tsx`
-**Risk:** Low.
+**Goal:** Add date range and amount range filters; add payment detail drawer.
+
+**Risk: Low — read-only query enhancements, no mutations.**
+
+#### Backend — `server/src/controllers/admin.controller.ts` → `payments()`
+
+Add to query builder (no new route):
+```
+dateFrom / dateTo  → filter createdAt: { $gte, $lte }
+amountMin / amountMax → filter amount: { $gte, $lte }
+```
+
+Also populate `ownerId` (project owner) in payment rows for display.
+
+#### Frontend — `client/app/admin/payments/page.tsx`
+
+- Date range picker (two `<input type="date">`)
+- Amount range inputs
+- New `PaymentDetailDrawer` component: click a row → side drawer showing full record (reference, customerName/phone, monthPaidFor, paidAt, metadata summary)
+
+**Files changed:**
+- `server/src/controllers/admin.controller.ts` (payments fn — ~10 lines)
+- `client/app/admin/payments/page.tsx`
+- `client/components/admin/PaymentDetailDrawer.tsx` (new)
+
+---
+
+### Phase B — Member Management
+
+**Goal:** Admin can activate/deactivate users safely. Deactivated users cannot log in.
+
+**Risk: Medium — writes to User.isActive. Reversible. Protected by guards.**
+
+#### Backend — new route
+
+```
+PATCH /api/admin/members/:id/status
+Body: { isActive: boolean }
+Guards (enforced in controller):
+  - cannot modify yourself (req.user._id !== id)
+  - cannot deactivate another admin (target.role !== "admin")
+Returns: updated user without passwordHash
+```
+
+**Why deactivation works immediately:** `protect` middleware re-fetches the user from DB on every request and checks `user.isActive`. No token invalidation needed.
+
+**Files changed:**
+- `server/src/controllers/admin.controller.ts` — new `updateMemberStatus` handler
+- `server/src/routes/admin.routes.ts` — `router.patch("/members/:id/status", updateMemberStatus)`
+
+#### Frontend
+
+- `client/app/admin/members/page.tsx` — add status filter chips (All / Active / Inactive), pass to API
+- `client/components/admin/MembersTable.tsx` — add Activate/Deactivate button per row, show isActive badge
+- New `ConfirmDialog` component — "Deactivate {name}? They will not be able to log in." — with Cancel + Confirm buttons
+
+**Files changed:**
+- `client/app/admin/members/page.tsx`
+- `client/components/admin/MembersTable.tsx`
+- `client/components/ui/ConfirmDialog.tsx` (new, reusable)
+
+---
+
+### Phase C — Collection / Project Management
+
+**Goal:** Admin sees ALL collections (including member-created) with owner info and can change their status.
+
+**Risk: Medium — status mutation affects payment acceptance. Close is reversible. Protected by confirmation.**
+
+#### Backend — two new routes
+
+```
+GET /api/admin/collections
+Query: search, status, page, limit
+Populates: ownerId → { fullName, email }
+Returns: all projects with owner info, totalCollected, contributorCount
+```
+
+```
+PATCH /api/admin/collections/:id/status
+Body: { status: "active" | "paused" | "closed" }
+Guard: only these 3 statuses allowed (no "draft" or "completed" via this route)
+Returns: updated project
+```
+
+**Why a new route, not reuse `/api/projects`?** Existing `/api/projects` is member-facing, returns only the authenticated user's own projects, and has different filters.
+
+**Files changed:**
+- `server/src/controllers/admin.controller.ts` — new `collections` + `updateCollectionStatus` handlers
+- `server/src/routes/admin.routes.ts` — 2 new route registrations
+
+#### Frontend — `/admin/projects` page
+
+Replace the current form-only page with a split layout:
+- **Top half:** searchable filterable table of ALL collections (title, owner, status badge, totalCollected, contributorCount) with Pause / Reactivate / Close actions. Close shows `ConfirmDialog`.
+- **Bottom / collapsible:** "Create Platform Project" form (existing `ProjectForm`, unchanged)
+
+**Files changed:**
+- `client/app/admin/projects/page.tsx`
+- `client/components/admin/AdminCollectionsTable.tsx` (new)
 
 ---
 
@@ -230,27 +267,31 @@ Returns boolean flags only — never exposes values:
 
 | Phase | Backend changes | Frontend changes | Risk | Value |
 | --- | --- | --- | --- | --- |
-| **A — Overview KPIs** | Extend `/summary` aggregation | 8-card grid, recent users/projects sections | Low | High |
-| **E — Health panel** | None (uses `/health`) | New `SystemHealthCard` component | Low | Medium |
-| **D — Payment filters** | Extend query params | Date/amount filters, detail drawer | Low | Medium |
-| **B — Member deactivate** | New `PATCH /admin/members/:id/status` | Confirmation dialog, status filter | Medium | High |
-| **C — Collection admin** | New `GET/PATCH /admin/collections` | New collections table, status actions | Medium | High |
-| **F — Audit checklist** | New `GET /admin/audit` | New `AuditChecklist` component | Low | Medium |
+| **A — Overview KPIs** | Extend `getAdminDashboard()` service only | 8-card grid, recent users/projects, quick links | Low | High |
+| **E — Health panel** | None | 1 new `SystemHealthCard` component | Low | Medium |
+| **F — Audit checklist** | 1 new `audit` handler + route | 1 new `AuditChecklist` component | Low | Medium |
+| **D — Payment filters** | Extend `payments()` query (~10 lines) | Date/amount filters + detail drawer | Low | Medium |
+| **B — Member deactivate** | 1 new `PATCH` endpoint with guards | Confirmation dialog, status filter, row actions | Medium | High |
+| **C — Collection admin** | 2 new routes (GET + PATCH) | New collections table, status actions | Medium | High |
 
 ---
 
 ## Recommended Implementation Order
 
-**Phase A + E together** — read-only, zero risk to existing flows, highest immediate value.
-Gives the platform overview page real substance and a live health indicator.
+**Round 1 — Phase A + E (implement together)**
+Read-only. Zero risk to existing flows. Highest immediate value. Makes the overview page a real platform dashboard.
 
-**Phase D** — payment filter improvements are frontend-mostly, very safe.
+**Round 2 — Phase F**
+Backend is a single function returning booleans. Frontend is a simple card. Low risk.
 
-**Phase B** — member deactivation after A/E/D are stable and tested.
+**Round 3 — Phase D**
+Payment filter enhancements are mostly additive query params + a drawer component. Very safe.
 
-**Phase C** — project admin management (new backend route required).
+**Round 4 — Phase B**
+Member deactivation. Needs careful guard implementation and confirmation UI. Validate + test before proceeding to C.
 
-**Phase F** — audit checklist last, as it depends on all other phases being stable.
+**Round 5 — Phase C**
+Collection management. New backend routes + replacement of the projects page. Most frontend work.
 
 ---
 
@@ -264,3 +305,5 @@ Gives the platform overview page real substance and a live health indicator.
 - No new roles added (`member` and `admin` remain the only roles)
 - No payment records deleted or manually completed
 - No user records deleted
+- Member dashboard (`/dashboard`) untouched
+- Project creation/payment/CSV/receipt flows untouched

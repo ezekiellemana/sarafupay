@@ -114,7 +114,18 @@ export type DashboardData = {
   recentPayments: Payment[];
 };
 
+export type RecentUser = {
+  _id: string;
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  role: Role;
+  isActive: boolean;
+  createdAt: string;
+};
+
 export type AdminDashboardData = {
+  // existing fields
   totalCollected: number;
   totalMembers: number;
   paidMembersThisMonth: number;
@@ -124,6 +135,19 @@ export type AdminDashboardData = {
   monthlyChart: { month: string; total: number }[];
   latestPayments: Payment[];
   projects: Project[];
+  // platform-wide KPIs
+  totalUsers: number;
+  activeUsers: number;
+  totalCollections: number;
+  activeCollections: number;
+  totalPayments: number;
+  completedPayments: number;
+  // status breakdowns
+  paymentsByStatus: { status: string; count: number }[];
+  projectsByStatus: { status: string; count: number }[];
+  // recent activity
+  recentUsers: RecentUser[];
+  latestCompletedPayments: Payment[];
 };
 
 export type CollectionSummary = {

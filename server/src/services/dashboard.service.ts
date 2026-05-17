@@ -38,36 +38,62 @@ export const getMemberDashboard = async (userId: Types.ObjectId) => {
 export const getAdminDashboard = async () => {
   const currentMonth = getCurrentMonth();
 
-  const [collectedResult, statusCounts, paidThisMonthIds, totalMembers, monthlyChartRaw, latestPayments, projects] =
-    await Promise.all([
-      Payment.aggregate<{ total: number }>([
-        { $match: { status: "completed" } },
-        { $group: { _id: null, total: { $sum: "$amount" } } }
-      ]),
-      Payment.aggregate<{ _id: string; count: number }>([{ $group: { _id: "$status", count: { $sum: 1 } } }]),
-      Payment.distinct("userId", { status: "completed", monthPaidFor: currentMonth }),
-      User.countDocuments({ role: "member", isActive: true }),
-      Payment.aggregate<{ _id: string; total: number }>([
-        { $match: { status: "completed" } },
-        { $group: { _id: "$monthPaidFor", total: { $sum: "$amount" } } },
-        { $sort: { _id: -1 } },
-        { $limit: 12 },
-        { $sort: { _id: 1 } }
-      ]),
-      Payment.find()
-        .populate("userId", "fullName email phoneNumber")
-        .populate("projectId", "title")
-        .sort({ createdAt: -1 })
-        .limit(8)
-        .lean(),
-      Project.find().sort({ createdAt: -1 }).lean()
-    ]);
+  const [
+    collectedResult,
+    statusCounts,
+    paidThisMonthIds,
+    totalMembers,
+    monthlyChartRaw,
+    latestPayments,
+    projects,
+    totalUsers,
+    activeUsers,
+    projectStatusCounts,
+    recentUsers,
+    latestCompletedPayments,
+  ] = await Promise.all([
+    Payment.aggregate<{ total: number }>([
+      { $match: { status: "completed" } },
+      { $group: { _id: null, total: { $sum: "$amount" } } }
+    ]),
+    Payment.aggregate<{ _id: string; count: number }>([{ $group: { _id: "$status", count: { $sum: 1 } } }]),
+    Payment.distinct("userId", { status: "completed", monthPaidFor: currentMonth }),
+    User.countDocuments({ role: "member", isActive: true }),
+    Payment.aggregate<{ _id: string; total: number }>([
+      { $match: { status: "completed" } },
+      { $group: { _id: "$monthPaidFor", total: { $sum: "$amount" } } },
+      { $sort: { _id: -1 } },
+      { $limit: 12 },
+      { $sort: { _id: 1 } }
+    ]),
+    Payment.find()
+      .populate("userId", "fullName email phoneNumber")
+      .populate("projectId", "title")
+      .sort({ createdAt: -1 })
+      .limit(8)
+      .lean(),
+    Project.find().sort({ createdAt: -1 }).lean(),
+    User.countDocuments(),
+    User.countDocuments({ isActive: true }),
+    Project.aggregate<{ _id: string; count: number }>([{ $group: { _id: "$status", count: { $sum: 1 } } }]),
+    User.find().sort({ createdAt: -1 }).limit(5).select("-passwordHash").lean(),
+    Payment.find({ status: "completed" })
+      .populate("userId", "fullName email phoneNumber")
+      .populate("projectId", "title")
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .lean(),
+  ]);
 
   const totalCollected = collectedResult[0]?.total ?? 0;
   const statusMap = new Map(statusCounts.map((s) => [s._id, s.count]));
+  const projectStatusMap = new Map(projectStatusCounts.map((s) => [s._id, s.count]));
   const paidMembersThisMonth = paidThisMonthIds.length;
+  const totalPayments = statusCounts.reduce((sum, s) => sum + s.count, 0);
+  const totalCollections = projectStatusCounts.reduce((sum, s) => sum + s.count, 0);
 
   return {
+    // existing fields — backward compatible
     totalCollected,
     totalMembers,
     paidMembersThisMonth,
@@ -76,7 +102,18 @@ export const getAdminDashboard = async () => {
     failedPayments: statusMap.get("failed") ?? 0,
     monthlyChart: monthlyChartRaw.map(({ _id, total }) => ({ month: _id, total })),
     latestPayments,
-    projects
+    projects,
+    // new fields
+    totalUsers,
+    activeUsers,
+    totalCollections,
+    activeCollections: projectStatusMap.get("active") ?? 0,
+    totalPayments,
+    completedPayments: statusMap.get("completed") ?? 0,
+    paymentsByStatus: statusCounts.map(({ _id, count }) => ({ status: _id, count })),
+    projectsByStatus: projectStatusCounts.map(({ _id, count }) => ({ status: _id, count })),
+    recentUsers,
+    latestCompletedPayments,
   };
 };
 
