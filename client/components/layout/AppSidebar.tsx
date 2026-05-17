@@ -2,9 +2,20 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, BarChart3, Folders, FolderKanban, History, LogOut, Settings, Shield, User, Users, WalletCards } from "lucide-react";
+import {
+  Activity,
+  BarChart3,
+  Folders,
+  FolderKanban,
+  History,
+  LogOut,
+  Settings,
+  Shield,
+  User,
+  Users,
+  WalletCards,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { WalletIllustration } from "@/components/shared/illustrations/WalletIllustration";
 import { adminNav, memberNav } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -19,7 +30,7 @@ const icons: Record<string, React.ReactNode> = {
   Projects: <FolderKanban />,
   Members: <Users />,
   Activity: <Activity />,
-  Settings: <Settings />
+  Settings: <Settings />,
 };
 
 export function AppSidebar({ admin = false }: { admin?: boolean }) {
@@ -28,34 +39,44 @@ export function AppSidebar({ admin = false }: { admin?: boolean }) {
   const items = admin ? adminNav : memberNav;
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-white/10 bg-[#071a0e]/95 p-4 text-sidebar-foreground shadow-2xl shadow-green-950/20 backdrop-blur-xl lg:flex">
-      {/* Logo */}
-      <Link href="/" className="mb-8 flex items-center gap-2.5 text-lg font-semibold text-white">
-        <span className="relative flex size-10 items-center justify-center rounded-xl bg-primary coin-glow">
-          <WalletCards className="size-5" />
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-white/[0.07] bg-[#071a0e]/97 p-4 text-sidebar-foreground shadow-2xl shadow-green-950/30 backdrop-blur-xl lg:flex">
+
+      {/* ── Brand / Logo ── */}
+      <Link
+        href="/"
+        className="mb-2 flex items-center gap-3 rounded-2xl px-1 py-2 transition-opacity hover:opacity-80"
+      >
+        <span className="relative flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary coin-glow">
+          <WalletCards className="size-6 text-white" />
         </span>
         <div className="flex flex-col leading-tight">
-          <span className="text-sm font-bold text-white">SarafuPay</span>
-          <span className="text-[10px] sarafu-gradient-text-gold font-semibold">Lipa kwa urahisi</span>
+          <span className="text-base font-extrabold tracking-tight text-white">SarafuPay</span>
+          <span className="text-[11px] sarafu-gradient-text-gold font-semibold tracking-wide">
+            Lipa kwa urahisi
+          </span>
         </div>
       </Link>
 
-      {/* Role badge */}
+      {/* Separator */}
+      <div className="mb-4 border-t border-white/[0.07]" />
+
+      {/* ── Role badge / User info ── */}
       {user && (
-        <div className="mb-4 flex items-center gap-2 rounded-2xl bg-white/5 px-3 py-2 ring-1 ring-white/10">
-          <span className="flex size-7 items-center justify-center rounded-full bg-primary/20 text-xs font-bold text-primary">
+        <div className="mb-5 flex items-center gap-2.5 rounded-2xl bg-white/6 px-3 py-2.5 ring-1 ring-white/12">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/30 text-sm font-bold text-white ring-2 ring-primary/20">
             {user.fullName?.[0]?.toUpperCase() ?? "U"}
           </span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-medium text-white/90">{user.fullName}</p>
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-400">
+            <p className="truncate text-xs font-semibold text-white">{user.fullName}</p>
+            <p className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-amber-400">
               {user.role === "admin" ? "Platform Admin" : "Member"}
             </p>
           </div>
         </div>
       )}
 
-      <nav className="flex flex-1 flex-col gap-1.5">
+      {/* ── Navigation ── */}
+      <nav className="flex flex-1 flex-col gap-1">
         {items.map((item) => {
           const active = pathname === item.href;
           return (
@@ -63,35 +84,40 @@ export function AppSidebar({ admin = false }: { admin?: boolean }) {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm transition-all",
+                "flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition-all duration-150",
                 active
-                  ? "bg-linear-to-r from-primary/80 via-emerald-400/70 to-amber-400/30 text-white shadow-lg shadow-green-500/20"
-                  : "text-sidebar-foreground/70 hover:bg-white/8 hover:text-white"
+                  ? "bg-linear-to-r from-primary/90 via-emerald-400/75 to-amber-400/35 text-white shadow-lg shadow-green-500/25"
+                  : "text-sidebar-foreground/80 hover:bg-white/8 hover:text-white",
               )}
             >
-              <span className={cn("size-4.5", active ? "text-white" : "text-sidebar-foreground/60")}>
+              <span
+                className={cn(
+                  "flex size-5 shrink-0 items-center justify-center",
+                  active ? "text-white" : "text-sidebar-foreground/65",
+                )}
+              >
                 {icons[item.label]}
               </span>
               {item.label}
-              {active && <span className="ml-auto size-1.5 rounded-full bg-amber-400" />}
+              {active && (
+                <span className="ml-auto size-2 shrink-0 rounded-full bg-amber-400 shadow-sm shadow-amber-400/60" />
+              )}
             </Link>
           );
         })}
       </nav>
 
-      {/* Wallet illustration */}
-      <div className="my-4 flex justify-center opacity-30">
-        <WalletIllustration size={72} animate={false} />
+      {/* ── Footer ── */}
+      <div className="mt-4 border-t border-white/[0.07] pt-3">
+        <Button
+          variant="ghost"
+          className="h-10 w-full justify-start gap-3 rounded-2xl px-3 text-sm font-medium text-sidebar-foreground/70 hover:bg-white/8 hover:text-white"
+          onClick={logout}
+        >
+          <LogOut className="size-4 shrink-0" />
+          Logout
+        </Button>
       </div>
-
-      <Button
-        variant="ghost"
-        className="h-11 justify-start rounded-2xl text-sidebar-foreground/70 hover:bg-white/10 hover:text-white"
-        onClick={logout}
-      >
-        <LogOut data-icon="inline-start" />
-        Logout
-      </Button>
     </aside>
   );
 }

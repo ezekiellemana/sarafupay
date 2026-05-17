@@ -32,7 +32,7 @@ export function DashboardShell({ children, admin = false }: { children: React.Re
     return (
       <div className="min-h-screen bg-background">
         <main className="pb-24 lg:ml-64 lg:pb-0">
-          <div className="mx-auto max-w-7xl px-4 py-6 md:px-8">
+          <div className="mx-auto max-w-7xl px-4 py-8 md:px-8 lg:px-10">
             <LoadingState label="Loading your workspace..." />
           </div>
         </main>
@@ -49,7 +49,7 @@ export function DashboardShell({ children, admin = false }: { children: React.Re
     return (
       <div className="min-h-screen bg-background">
         <main className="pb-24 lg:ml-64 lg:pb-0">
-          <div className="mx-auto max-w-7xl px-4 py-6 md:px-8">
+          <div className="mx-auto max-w-7xl px-4 py-8 md:px-8 lg:px-10">
             <LoadingState label="Redirecting..." />
           </div>
         </main>
@@ -62,7 +62,7 @@ export function DashboardShell({ children, admin = false }: { children: React.Re
       <FloatingBlobBackground />
       <AppSidebar admin={admin} />
       <main className="pb-24 lg:ml-64 lg:pb-0">
-        <div className="mx-auto max-w-7xl px-4 py-6 md:px-8">
+        <div className="mx-auto max-w-7xl px-4 py-8 md:px-8 lg:px-10">
           <PageTransition>{children}</PageTransition>
         </div>
       </main>
