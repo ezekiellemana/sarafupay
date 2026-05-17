@@ -24,9 +24,9 @@ export function PageHeader({
       className={cn("flex flex-col gap-4 md:flex-row md:items-end md:justify-between", className)}
     >
       <div>
-        {eyebrow && <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">{eyebrow}</p>}
-        <h1 className="mt-1 text-3xl font-bold tracking-tight text-[#0B1F3A] md:text-4xl">{title}</h1>
-        {description && <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground md:text-base">{description}</p>}
+        {eyebrow && <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">{eyebrow}</p>}
+        <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-[#0B1F3A] md:text-4xl">{title}</h1>
+        {description && <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-slate-600 md:text-base">{description}</p>}
       </div>
       {action && <div className="flex shrink-0 flex-wrap gap-2">{action}</div>}
     </motion.div>
