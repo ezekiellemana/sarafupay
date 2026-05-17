@@ -123,7 +123,7 @@ function Card({ children, className }: { children: React.ReactNode; className?: 
 }
 
 function CardBody({ children }: { children: React.ReactNode }) {
-  return <div className="divide-y divide-slate-50 px-6">{children}</div>;
+  return <div className="divide-y divide-slate-100 px-6">{children}</div>;
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────

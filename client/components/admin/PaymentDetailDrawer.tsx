@@ -16,18 +16,18 @@ import type { AdminPaymentDetail, Payment } from "@/types";
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex items-start gap-2 py-1.5">
-      <span className="w-32 shrink-0 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+    <div className="flex items-start gap-3 py-2">
+      <span className="w-32 shrink-0 text-xs font-bold uppercase tracking-wide text-slate-500">
         {label}
       </span>
-      <span className="break-all text-sm text-[#0B1F3A]">{value ?? "—"}</span>
+      <span className="break-all text-sm font-medium text-[#0B1F3A]">{value ?? "—"}</span>
     </div>
   );
 }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+    <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
       {children}
     </p>
   );
@@ -112,7 +112,7 @@ export function PaymentDetailDrawer({ payment, open, onClose }: PaymentDetailDra
               {/* References */}
               <section>
                 <SectionTitle>References</SectionTitle>
-                <div className="divide-y divide-slate-50">
+                <div className="divide-y divide-slate-100">
                   <InfoRow label="Snippe ref" value={detail.snippeReference ?? "—"} />
                   <InfoRow label="External ref" value={detail.externalReference} />
                   <InfoRow label="Month" value={detail.monthPaidFor} />
@@ -190,9 +190,9 @@ export function PaymentDetailDrawer({ payment, open, onClose }: PaymentDetailDra
 
               {/* Amount */}
               <section>
-                <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-3">
-                  <p className="text-xs text-muted-foreground">Amount</p>
-                  <p className="mt-1 text-xl font-bold text-emerald-700">
+                <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 px-5 py-5">
+                  <p className="text-xs font-semibold text-slate-500">Amount</p>
+                  <p className="mt-2 text-2xl font-bold text-emerald-700">
                     {formatMoney(detail.amount, detail.currency)}
                   </p>
                 </div>

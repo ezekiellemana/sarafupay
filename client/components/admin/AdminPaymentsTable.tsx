@@ -39,7 +39,7 @@ export function AdminPaymentsTable({ payments, onView }: AdminPaymentsTableProps
         </TableHeader>
         <TableBody>
           {payments.map((p) => (
-            <TableRow key={p._id} className="cursor-pointer">
+            <TableRow key={p._id} className="cursor-pointer" onClick={() => onView?.(p)}>
               <TableCell className="text-xs text-slate-500">
                 {formatDate(p.paidAt ?? p.createdAt)}
               </TableCell>
@@ -47,7 +47,7 @@ export function AdminPaymentsTable({ payments, onView }: AdminPaymentsTableProps
                 <p className="truncate text-sm font-semibold text-[#0B1F3A]">{payerName(p)}</p>
                 <p className="truncate text-xs text-slate-500">{p.monthPaidFor}</p>
               </TableCell>
-              <TableCell className="max-w-36 truncate text-sm font-medium text-[#0B1F3A]">
+              <TableCell className="max-w-36 truncate text-sm font-semibold text-[#0B1F3A]">
                 {collectionTitle(p)}
               </TableCell>
               <TableCell className="font-semibold text-[#0B1F3A]">
@@ -68,7 +68,7 @@ export function AdminPaymentsTable({ payments, onView }: AdminPaymentsTableProps
                     variant="outline"
                     size="sm"
                     className="text-xs font-medium"
-                    onClick={() => onView(p)}
+                    onClick={(e) => { e.stopPropagation(); onView(p); }}
                   >
                     View
                   </Button>

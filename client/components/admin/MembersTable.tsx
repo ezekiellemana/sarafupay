@@ -25,7 +25,7 @@ export function MembersTable({ members, onView }: MembersTableProps) {
         </TableHeader>
         <TableBody>
           {members.map((member) => (
-            <TableRow key={member._id} className="cursor-pointer">
+            <TableRow key={member._id} className="cursor-pointer" onClick={() => onView(member)}>
               <TableCell>
                 <div className="flex items-center gap-3">
                   <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-blue-500/10 text-sm font-bold text-blue-600">
@@ -42,11 +42,11 @@ export function MembersTable({ members, onView }: MembersTableProps) {
                   {member.isActive ? "Active" : "Inactive"}
                 </StatusBadge>
               </TableCell>
-              <TableCell className="font-medium text-[#0B1F3A]">
+              <TableCell className="font-semibold text-[#0B1F3A]">
                 {formatMoney(member.totalPaid ?? 0)}
               </TableCell>
               <TableCell>
-                <span className="inline-flex size-6 items-center justify-center rounded-full bg-amber-500/10 text-xs font-semibold text-amber-700">
+                <span className="inline-flex size-7 items-center justify-center rounded-full bg-amber-500/10 text-xs font-semibold text-amber-700">
                   {member.collectionsCount ?? 0}
                 </span>
               </TableCell>
@@ -58,7 +58,7 @@ export function MembersTable({ members, onView }: MembersTableProps) {
                   variant="outline"
                   size="sm"
                   className="text-xs font-medium"
-                  onClick={() => onView(member)}
+                  onClick={(e) => { e.stopPropagation(); onView(member); }}
                 >
                   View
                 </Button>

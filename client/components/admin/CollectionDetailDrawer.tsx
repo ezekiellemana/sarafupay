@@ -39,18 +39,18 @@ const TYPE_LABELS: Record<string, string> = {
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex items-start gap-2 py-1.5">
-      <span className="w-28 shrink-0 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+    <div className="flex items-start gap-3 py-2">
+      <span className="w-28 shrink-0 text-xs font-bold uppercase tracking-wide text-slate-500">
         {label}
       </span>
-      <span className="text-sm text-[#0B1F3A]">{value ?? "—"}</span>
+      <span className="text-sm font-medium text-[#0B1F3A]">{value ?? "—"}</span>
     </div>
   );
 }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+    <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
       {children}
     </p>
   );
@@ -172,7 +172,7 @@ export function CollectionDetailDrawer({
               {/* Details */}
               <section>
                 <SectionTitle>Details</SectionTitle>
-                <div className="divide-y divide-slate-50">
+                <div className="divide-y divide-slate-100">
                   <InfoRow
                     label="Owner"
                     value={
@@ -243,15 +243,15 @@ export function CollectionDetailDrawer({
               <section>
                 <SectionTitle>Activity</SectionTitle>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-3">
-                    <p className="text-xs text-muted-foreground">Total collected</p>
-                    <p className="mt-1 text-base font-bold text-emerald-700">
+                  <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 px-5 py-4">
+                    <p className="text-xs font-semibold text-slate-500">Total collected</p>
+                    <p className="mt-1.5 text-lg font-bold text-emerald-700">
                       {formatMoney(detail.collection.totalCollected)}
                     </p>
                   </div>
-                  <div className="rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-3">
-                    <p className="text-xs text-muted-foreground">Contributors</p>
-                    <p className="mt-1 text-base font-bold text-blue-700">
+                  <div className="rounded-2xl border border-blue-100 bg-blue-50/60 px-5 py-4">
+                    <p className="text-xs font-semibold text-slate-500">Contributors</p>
+                    <p className="mt-1.5 text-lg font-bold text-blue-700">
                       {detail.collection.contributorCount}
                     </p>
                   </div>
@@ -270,13 +270,13 @@ export function CollectionDetailDrawer({
                     {detail.recentPayments.map((p: Payment) => (
                       <div
                         key={p._id}
-                        className="flex items-center gap-3 rounded-xl border border-slate-100 bg-white px-4 py-2.5"
+                        className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3"
                       >
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-[#0B1F3A]">
+                          <p className="truncate text-sm font-semibold text-[#0B1F3A]">
                             {paymentUserName(p)}
                           </p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-xs text-slate-500">
                             {p.monthPaidFor} · {formatDate(p.createdAt)}
                           </p>
                         </div>

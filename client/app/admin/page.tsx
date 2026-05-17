@@ -591,13 +591,13 @@ export default function AdminPage() {
                 {QUICK_ACTIONS.map(({ href, label, desc, icon, accent }) => (
                   <Link key={href} href={href}>
                     <Card className="h-full cursor-pointer border-slate-100/60 bg-white/80 shadow-xl shadow-slate-900/5 backdrop-blur-xl transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl">
-                      <CardContent className="flex flex-col gap-3 pb-5 pt-5">
-                        <span className={cn("flex size-10 items-center justify-center rounded-2xl", accent)}>
+                      <CardContent className="flex flex-col gap-4 pb-6 pt-6">
+                        <span className={cn("flex size-12 items-center justify-center rounded-2xl", accent)}>
                           {icon}
                         </span>
                         <div>
                           <p className="text-sm font-semibold text-[#0B1F3A]">{label}</p>
-                          <p className="mt-0.5 text-xs text-muted-foreground">{desc}</p>
+                          <p className="mt-0.5 text-xs font-medium text-slate-500">{desc}</p>
                         </div>
                       </CardContent>
                     </Card>
@@ -606,16 +606,16 @@ export default function AdminPage() {
 
                 {/* Export CSV — action card, no navigation */}
                 <Card
-                  className="h-full cursor-pointer border-slate-100/60 bg-white/80 shadow-xl shadow-slate-900/5 backdrop-blur-xl transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl"
+                  className="h-full cursor-pointer border-dashed border-slate-200 bg-white/60 shadow-lg shadow-slate-900/5 backdrop-blur-xl transition-all duration-200 hover:-translate-y-1 hover:border-slate-300 hover:shadow-xl"
                   onClick={downloadCsv}
                 >
-                  <CardContent className="flex flex-col gap-3 pb-5 pt-5">
-                    <span className="flex size-10 items-center justify-center rounded-2xl bg-slate-500/10 text-slate-600">
+                  <CardContent className="flex flex-col gap-4 pb-6 pt-6">
+                    <span className="flex size-12 items-center justify-center rounded-2xl bg-slate-500/10 text-slate-600">
                       <Download className="size-5" />
                     </span>
                     <div>
                       <p className="text-sm font-semibold text-[#0B1F3A]">Export Payments CSV</p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
+                      <p className="mt-0.5 text-xs font-medium text-slate-500">
                         Download all payment records
                       </p>
                     </div>

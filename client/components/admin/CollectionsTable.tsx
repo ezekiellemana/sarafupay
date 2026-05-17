@@ -42,7 +42,7 @@ export function CollectionsTable({ collections, onView }: CollectionsTableProps)
         </TableHeader>
         <TableBody>
           {collections.map((col) => (
-            <TableRow key={col._id} className="cursor-pointer">
+            <TableRow key={col._id} className="cursor-pointer" onClick={() => onView(col)}>
               <TableCell>
                 <div className="min-w-0">
                   <p className="truncate font-semibold text-[#0B1F3A]">{col.title}</p>
@@ -83,7 +83,7 @@ export function CollectionsTable({ collections, onView }: CollectionsTableProps)
                   variant="outline"
                   size="sm"
                   className="text-xs font-medium"
-                  onClick={() => onView(col)}
+                  onClick={(e) => { e.stopPropagation(); onView(col); }}
                 >
                   View
                 </Button>

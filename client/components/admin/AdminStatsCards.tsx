@@ -16,7 +16,7 @@ export function AdminStatsCards({ data }: { data: AdminDashboardData }) {
         <DashboardCard title="Total collected" value={formatMoney(data.totalCollected)} numericValue={data.totalCollected} formatValue={(v) => formatMoney(v)} icon={<WalletCards />} accent="gold" />
         <DashboardCard title="Completed payments" value={String(data.completedPayments)} numericValue={data.completedPayments} icon={<CheckCircle2 />} accent="green" />
         <DashboardCard title="Pending payments" value={String(data.pendingPayments)} numericValue={data.pendingPayments} icon={<Clock />} accent="purple" />
-        <DashboardCard title="Failed payments" value={String(data.failedPayments)} numericValue={data.failedPayments} icon={<XCircle />} accent="purple" />
+        <DashboardCard title="Failed payments" value={String(data.failedPayments)} numericValue={data.failedPayments} icon={<XCircle />} accent="red" />
       </div>
     </div>
   );
