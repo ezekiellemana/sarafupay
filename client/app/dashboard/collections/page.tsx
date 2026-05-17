@@ -63,7 +63,7 @@ export default function CollectionsPage() {
           }
         />
 
-        {loading && <LoadingState />}
+        {loading && <LoadingState variant="cards" />}
         {error && (
           <ErrorState
             message={error}

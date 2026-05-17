@@ -14,7 +14,7 @@ export default function RegisterPage() {
       {/* Logo bar */}
       <div className="mb-6 flex items-center">
         <Link href="/" className="flex items-center gap-3 rounded-2xl border border-white/70 bg-white/75 px-4 py-2 shadow-lg shadow-slate-900/5 backdrop-blur-xl">
-          <BrandLogo variant="light" height={30} />
+          <BrandLogo variant="light" height={38} />
           <GoldCoin size={20} animate={false} className="opacity-70" />
         </Link>
       </div>

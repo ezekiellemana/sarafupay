@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { SkeletonRows } from "@/components/shared/SkeletonRows";
 import {
   Check,
   CheckCircle2,
@@ -188,12 +189,7 @@ export default function AdminSettingsPage() {
         />
 
         {/* Loading (initial) */}
-        {loading && !settings && (
-          <div className="flex items-center gap-3 rounded-2xl bg-white/80 px-6 py-8 text-muted-foreground shadow">
-            <Loader2 className="size-5 animate-spin" />
-            <span className="text-sm">Loading settings…</span>
-          </div>
-        )}
+        {loading && !settings && <SkeletonRows rows={7} />}
 
         {/* Error */}
         {!loading && error && (

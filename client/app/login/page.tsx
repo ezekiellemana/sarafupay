@@ -23,7 +23,7 @@ export default function LoginPage() {
           <FloatingCoins count={4} opacity={0.12} />
 
           <Link href="/" className="relative z-10 flex items-center">
-            <BrandLogo variant="dark" height={36} />
+            <BrandLogo variant="dark" height={46} />
           </Link>
 
           <div className="relative z-10 mt-16 flex-1">
@@ -53,7 +53,7 @@ export default function LoginPage() {
         <div className="flex flex-col items-center justify-center p-6 md:p-10">
           <div className="mb-6 flex items-center lg:hidden">
             <Link href="/" className="flex items-center">
-              <BrandLogo variant="light" height={32} />
+              <BrandLogo variant="light" height={38} />
             </Link>
           </div>
           <Suspense>

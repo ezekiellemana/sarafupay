@@ -11,7 +11,7 @@ import { PaymentStatusCard } from "@/components/dashboard/PaymentStatusCard";
 import { RecentPaymentsTable } from "@/components/dashboard/RecentPaymentsTable";
 import { WalletSummary } from "@/components/dashboard/WalletSummary";
 import { ErrorState } from "@/components/shared/ErrorState";
-import { LoadingState } from "@/components/shared/LoadingState";
+import { SkeletonStatCards } from "@/components/shared/SkeletonStatCards";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { GradientButton } from "@/components/shared/GradientButton";
 import { CollectionCard } from "@/components/collections/CollectionCard";
@@ -102,7 +102,7 @@ export default function DashboardPage() {
         )}
 
         {/* Group contribution wallet */}
-        {loading && <LoadingState />}
+        {loading && <SkeletonStatCards />}
         {error && <ErrorState message={error} action={<Button className="rounded-2xl" variant="outline" onClick={() => window.location.reload()}>Retry</Button>} />}
         {data && (
           <section className="flex flex-col gap-4">

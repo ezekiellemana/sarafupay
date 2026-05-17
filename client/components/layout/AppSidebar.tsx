@@ -46,7 +46,7 @@ export function AppSidebar({ admin = false }: { admin?: boolean }) {
         href="/"
         className="mb-2 flex items-center rounded-2xl px-1 py-2 transition-opacity hover:opacity-80"
       >
-        <BrandLogo variant="dark" height={32} />
+        <BrandLogo variant="dark" height={40} />
       </Link>
 
       {/* Separator */}

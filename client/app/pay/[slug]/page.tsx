@@ -5,7 +5,8 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { Ban, CheckCircle2, Clock, LockKeyhole, ShieldCheck, Store, Users, WalletCards } from "lucide-react";
+import { Ban, CheckCircle2, Clock, LockKeyhole, ShieldCheck, Store, Users } from "lucide-react";
+import { BrandLogo } from "@/components/shared/BrandLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -77,9 +78,9 @@ export default function PublicPayPage({ params }: { params: Promise<{ slug: stri
     return (
       <main className="relative grid min-h-screen place-items-center overflow-hidden px-4 py-10">
         <FloatingBlobBackground />
-        <div className="flex flex-col items-center gap-4 text-muted-foreground">
-          <GoldCoin size={48} animate={true} />
-          <p>Loading collection…</p>
+        <div className="flex flex-col items-center gap-5">
+          <BrandLogo variant="light" height={42} />
+          <div className="size-6 animate-spin rounded-full border-2 border-emerald-200 border-t-emerald-500" />
         </div>
       </main>
     );
@@ -105,14 +106,8 @@ export default function PublicPayPage({ params }: { params: Promise<{ slug: stri
 
       {/* Logo */}
       <div className="mb-8 flex justify-center">
-        <Link href="/" className="flex items-center gap-2.5 rounded-2xl border border-white/70 bg-white/75 px-4 py-2 shadow-lg shadow-slate-900/5 backdrop-blur-xl">
-          <span className="flex size-8 items-center justify-center rounded-xl bg-[#071a0e] text-white">
-            <WalletCards className="size-4" />
-          </span>
-          <div className="flex flex-col leading-tight">
-            <span className="text-sm font-bold text-[#071a0e]">SarafuPay</span>
-            <span className="text-[9px] sarafu-gradient-text-gold font-semibold">Lipa kwa urahisi</span>
-          </div>
+        <Link href="/" className="flex items-center rounded-2xl border border-white/70 bg-white/75 px-4 py-2 shadow-lg shadow-slate-900/5 backdrop-blur-xl">
+          <BrandLogo variant="light" height={42} />
         </Link>
       </div>
 

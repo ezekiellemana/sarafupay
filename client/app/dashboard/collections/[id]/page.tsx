@@ -84,7 +84,7 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
           </Link>
         </div>
 
-        {loading && <LoadingState />}
+        {loading && <LoadingState variant="detail" />}
         {error && <ErrorState message={error} />}
 
         {summary && (

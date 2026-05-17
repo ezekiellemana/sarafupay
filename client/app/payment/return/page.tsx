@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
-import { Check, Clock3, Copy, Printer, WalletCards } from "lucide-react";
+import { Check, Clock3, Copy, Printer } from "lucide-react";
+import { BrandLogo } from "@/components/shared/BrandLogo";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -140,15 +141,7 @@ function PaymentReturnContent() {
           <div className="w-full rounded-3xl border border-slate-200 bg-white p-6 shadow-lg shadow-slate-900/5 print:rounded-none print:border-0 print:shadow-none">
             {/* Receipt header */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="flex size-8 items-center justify-center rounded-xl bg-[#071a0e] text-white print:rounded-lg">
-                  <WalletCards className="size-4" />
-                </div>
-                <div className="leading-tight">
-                  <p className="text-sm font-bold text-[#071a0e]">SarafuPay</p>
-                  <p className="text-[10px] font-semibold text-amber-600">Lipa kwa urahisi</p>
-                </div>
-              </div>
+              <BrandLogo variant="light" height={30} />
               <span className="text-xs font-semibold uppercase tracking-wider text-[#16a34a]">Receipt</span>
             </div>
 
