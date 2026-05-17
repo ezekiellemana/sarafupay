@@ -10,6 +10,7 @@
     "seed": "tsx src/scripts/seed.ts",
     "reset-admin-password": "tsx src/scripts/reset-admin-password.ts",
     "setup-admin": "tsx src/scripts/setup-admin.ts",
+    "verify-admin": "tsx src/scripts/verify-admin.ts",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],
