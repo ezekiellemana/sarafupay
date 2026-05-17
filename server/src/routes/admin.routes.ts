@@ -3,6 +3,7 @@ import {
   exportPaymentsCsv,
   getAdminCollection,
   getAdminCollections,
+  getAdminPayment,
   getMember,
   members,
   payments,
@@ -24,6 +25,7 @@ router.get("/collections", getAdminCollections);
 router.get("/collections/:id", getAdminCollection);
 router.patch("/collections/:id/status", updateAdminCollectionStatus);
 router.get("/payments", payments);
+router.get("/payments/:id", getAdminPayment);
 router.get("/summary", summary);
 router.get("/unpaid-members", unpaidMembers);
 router.get("/export/payments", exportPaymentsCsv);

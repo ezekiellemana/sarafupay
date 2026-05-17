@@ -160,6 +160,28 @@ export type AdminDashboardData = {
   latestCompletedPayments: Payment[];
 };
 
+export type AdminPaymentDetail = {
+  _id: string;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  snippeReference?: string;
+  externalReference: string;
+  paymentMethod?: string;
+  customerName?: string;
+  customerPhone?: string;
+  customerEmail?: string;
+  payerMessage?: string;
+  monthPaidFor: string;
+  paidAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  payer: { fullName: string; email: string; phoneNumber: string } | null;
+  collection: { title: string; slug?: string } | null;
+  collectionOwner: { fullName: string; email: string } | null;
+  webhookReceived: boolean;
+};
+
 export type AdminCollection = {
   _id: string;
   title: string;

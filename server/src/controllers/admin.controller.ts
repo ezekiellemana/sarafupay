@@ -192,6 +192,55 @@ export const updateAdminCollectionStatus = asyncHandler(async (req, res) => {
   });
 });
 
+export const getAdminPayment = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const payment = await Payment.findById(id).lean();
+  if (!payment) throw new AppError("Payment not found.", 404, "NOT_FOUND");
+
+  const [payer, project] = await Promise.all([
+    payment.userId
+      ? User.findById(payment.userId).select("fullName email phoneNumber").lean()
+      : Promise.resolve(null),
+    payment.projectId
+      ? Project.findById(payment.projectId).select("title slug ownerId").lean()
+      : Promise.resolve(null),
+  ]);
+
+  const collectionOwner = project?.ownerId
+    ? await User.findById(project.ownerId).select("fullName email").lean()
+    : null;
+
+  res.json({
+    success: true,
+    message: "Payment loaded.",
+    data: {
+      _id: payment._id.toString(),
+      amount: payment.amount,
+      currency: payment.currency,
+      status: payment.status,
+      snippeReference: payment.snippeReference,
+      externalReference: payment.externalReference,
+      paymentMethod: payment.paymentMethod,
+      customerName: payment.customerName,
+      customerPhone: payment.customerPhone,
+      customerEmail: payment.customerEmail,
+      payerMessage: payment.payerMessage,
+      monthPaidFor: payment.monthPaidFor,
+      paidAt: payment.paidAt,
+      createdAt: payment.createdAt,
+      updatedAt: payment.updatedAt,
+      payer: payer
+        ? { fullName: payer.fullName, email: payer.email, phoneNumber: payer.phoneNumber }
+        : null,
+      collection: project ? { title: project.title, slug: project.slug } : null,
+      collectionOwner: collectionOwner
+        ? { fullName: collectionOwner.fullName, email: collectionOwner.email }
+        : null,
+      webhookReceived: Boolean(payment.rawWebhookPayload),
+    },
+  });
+});
+
 export const payments = asyncHandler(async (req, res) => {
   const page = Math.max(1, parseInt(String(req.query.page ?? "1"), 10));
   const limit = Math.min(100, Math.max(1, parseInt(String(req.query.limit ?? "50"), 10)));
@@ -201,12 +250,38 @@ export const payments = asyncHandler(async (req, res) => {
   if (req.query.status) query.status = req.query.status;
   if (req.query.month) query.monthPaidFor = req.query.month;
   if (req.query.projectId) query.projectId = req.query.projectId;
+
+  if (req.query.dateFrom || req.query.dateTo) {
+    const dateFilter: Record<string, unknown> = {};
+    if (req.query.dateFrom) dateFilter.$gte = new Date(String(req.query.dateFrom));
+    if (req.query.dateTo) {
+      const to = new Date(String(req.query.dateTo));
+      to.setHours(23, 59, 59, 999);
+      dateFilter.$lte = to;
+    }
+    query.createdAt = dateFilter;
+  }
+
+  if (req.query.amountMin || req.query.amountMax) {
+    const amountFilter: Record<string, unknown> = {};
+    const min = parseFloat(String(req.query.amountMin ?? ""));
+    const max = parseFloat(String(req.query.amountMax ?? ""));
+    if (!isNaN(min) && min >= 0) amountFilter.$gte = min;
+    if (!isNaN(max) && max >= 0) amountFilter.$lte = max;
+    if (Object.keys(amountFilter).length) query.amount = amountFilter;
+  }
+
   if (req.query.search) {
+    const re = new RegExp(String(req.query.search), "i");
+    const matchingProjects = await Project.find({ title: re }).select("_id").lean();
     query.$or = [
-      { externalReference: new RegExp(String(req.query.search), "i") },
-      { snippeReference: new RegExp(String(req.query.search), "i") },
-      { customerName: new RegExp(String(req.query.search), "i") },
-      { customerEmail: new RegExp(String(req.query.search), "i") }
+      { externalReference: re },
+      { snippeReference: re },
+      { customerName: re },
+      { customerEmail: re },
+      ...(matchingProjects.length
+        ? [{ projectId: { $in: matchingProjects.map((p) => p._id) } }]
+        : []),
     ];
   }
 
