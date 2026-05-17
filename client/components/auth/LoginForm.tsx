@@ -33,7 +33,10 @@ export function LoginForm() {
       const response = await authApi.login(values);
       setUser(response.data.user);
       toast.success(response.message);
-      router.push(search.get("next") ?? "/dashboard");
+      const nextParam = search.get("next");
+      const safeNext = nextParam?.startsWith("/") ? nextParam : null;
+      const destination = safeNext ?? (response.data.user.role === "admin" ? "/admin" : "/dashboard");
+      router.push(destination);
     } catch (error: unknown) {
       toast.error(getApiErrorMessage(error, "Login failed."));
     } finally {
