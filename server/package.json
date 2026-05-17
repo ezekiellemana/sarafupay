@@ -11,6 +11,7 @@
     "reset-admin-password": "tsx src/scripts/reset-admin-password.ts",
     "setup-admin": "tsx src/scripts/setup-admin.ts",
     "verify-admin": "tsx src/scripts/verify-admin.ts",
+    "fix-admin-login": "tsx src/scripts/fix-admin-login.ts",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],
