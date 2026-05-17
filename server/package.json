@@ -8,6 +8,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "seed": "tsx src/scripts/seed.ts",
+    "reset-admin-password": "tsx src/scripts/reset-admin-password.ts",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],
