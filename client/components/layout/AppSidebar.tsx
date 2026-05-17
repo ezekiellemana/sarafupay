@@ -15,7 +15,7 @@ const icons: Record<string, React.ReactNode> = {
   Payments: <History />,
   Project: <FolderKanban />,
   Profile: <User />,
-  "Admin Dashboard": <Shield />,
+  "Platform Overview": <Shield />,
   Projects: <FolderKanban />,
   Members: <Users />
 };
@@ -46,7 +46,9 @@ export function AppSidebar({ admin = false }: { admin?: boolean }) {
           </span>
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs font-medium text-white/90">{user.fullName}</p>
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-400">{user.role}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-400">
+              {user.role === "admin" ? "Platform Admin" : "Member"}
+            </p>
           </div>
         </div>
       )}

@@ -17,7 +17,7 @@ export default function AdminPage() {
   return (
     <DashboardShell admin>
       <div className="flex flex-col gap-6">
-        <PageHeader eyebrow="Admin console" title="Admin Dashboard" description="Monitor contributions, members, and project progress." action={<StatusBadge status="active" className="bg-blue-500/12 text-blue-700">Admin only</StatusBadge>} />
+        <PageHeader eyebrow="Platform Admin" title="Platform Admin Dashboard" description="Platform-wide view of all members, contributions, and projects." action={<StatusBadge status="active" className="bg-blue-500/12 text-blue-700">Admin only</StatusBadge>} />
         {loading && <LoadingState />}
         {error && <ErrorState message={error} action={<Button className="rounded-2xl" variant="outline" onClick={() => window.location.reload()}>Retry</Button>} />}
         {data && (

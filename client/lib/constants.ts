@@ -10,7 +10,7 @@ export const memberNav = [
 ];
 
 export const adminNav = [
-  { href: "/admin", label: "Admin Dashboard" },
+  { href: "/admin", label: "Platform Overview" },
   { href: "/admin/projects", label: "Projects" },
   { href: "/admin/members", label: "Members" },
   { href: "/admin/payments", label: "Payments" }

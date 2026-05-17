@@ -14,11 +14,17 @@ export function DashboardShell({ children, admin = false }: { children: React.Re
   const { user, hydrated } = useAuth();
 
   useEffect(() => {
-    if (!hydrated || !admin) return;
+    if (!hydrated) return;
     if (!user) {
       router.replace("/login");
-    } else if (user.role !== "admin") {
+      return;
+    }
+    if (admin && user.role !== "admin") {
       router.replace("/dashboard");
+      return;
+    }
+    if (!admin && user.role === "admin") {
+      router.replace("/admin");
     }
   }, [admin, hydrated, router, user]);
 
@@ -34,7 +40,12 @@ export function DashboardShell({ children, admin = false }: { children: React.Re
     );
   }
 
-  if (admin && user?.role !== "admin") {
+  const shouldRedirect =
+    !user ||
+    (admin && user.role !== "admin") ||
+    (!admin && user.role === "admin");
+
+  if (shouldRedirect) {
     return (
       <div className="min-h-screen bg-background">
         <main className="pb-24 lg:ml-64 lg:pb-0">

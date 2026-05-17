@@ -13,7 +13,7 @@ const iconMap: Record<string, React.ReactNode> = {
   Payments: <History />,
   Project: <FolderKanban />,
   Profile: <User />,
-  "Admin Dashboard": <Shield />,
+  "Platform Overview": <Shield />,
   Projects: <FolderKanban />,
   Members: <User />
 };
@@ -51,7 +51,7 @@ export function MobileNav({ admin = false }: { admin?: boolean }) {
             >
               {iconMap[item.label]}
             </motion.span>
-            <span className="truncate">{item.label.replace("Admin ", "")}</span>
+            <span className="truncate">{item.label.replace("Platform ", "")}</span>
           </Link>
         );
       })}

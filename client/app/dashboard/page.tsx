@@ -33,9 +33,9 @@ export default function DashboardPage() {
     <DashboardShell>
       <div className="flex flex-col gap-8">
         <PageHeader
-          eyebrow="Member wallet"
+          eyebrow="My Dashboard"
           title={`Welcome back, ${user?.fullName?.split(" ")[0] ?? "member"}`}
-          description="Your contributions and collection overview."
+          description="Your personal collections, contributions, and payment history."
           action={
             <div className="flex flex-wrap gap-2">
               <Link href="/dashboard/collections/new">
