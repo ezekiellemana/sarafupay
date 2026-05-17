@@ -8,6 +8,7 @@ import {
   members,
   payments,
   summary,
+  systemAudit,
   unpaidMembers,
   updateAdminCollectionStatus,
   updateMemberStatus,
@@ -29,5 +30,6 @@ router.get("/payments/:id", getAdminPayment);
 router.get("/summary", summary);
 router.get("/unpaid-members", unpaidMembers);
 router.get("/export/payments", exportPaymentsCsv);
+router.get("/system-audit", systemAudit);
 
 export default router;

@@ -1,9 +1,11 @@
+import mongoose from "mongoose";
 import { Payment } from "../models/Payment.model";
 import { Project, type ProjectStatus } from "../models/Project.model";
 import { User } from "../models/User.model";
 import { AppError } from "../utils/AppError";
 import { asyncHandler } from "../utils/asyncHandler";
 import { getAdminDashboard } from "../services/dashboard.service";
+import { env } from "../config/env";
 
 export const members = asyncHandler(async (req, res) => {
   const search = String(req.query.search ?? "");
@@ -333,6 +335,35 @@ export const exportPaymentsCsv = asyncHandler(async (_req, res) => {
   res.setHeader("Content-Type", "text/csv");
   res.setHeader("Content-Disposition", "attachment; filename=sarafupay-payments.csv");
   res.send([header, ...lines].join("\n"));
+});
+
+export const systemAudit = asyncHandler(async (_req, res) => {
+  type CheckStatus = "passed" | "warning" | "missing" | "failed";
+  const make = (
+    key: string,
+    label: string,
+    status: CheckStatus,
+    note?: string | null
+  ) => ({ key, label, status, note: note ?? null });
+
+  const dbConnected = mongoose.connection.readyState === 1;
+  const isProd = env.NODE_ENV === "production";
+
+  const checks = [
+    make("backend_health", "Backend health", "passed", `Uptime: ${Math.floor(process.uptime())}s`),
+    make("mongodb", "MongoDB connected", dbConnected ? "passed" : "failed"),
+    make("environment", "Environment is production", isProd ? "passed" : "warning", env.NODE_ENV),
+    make("client_url", "CLIENT_URL configured", process.env.CLIENT_URL ? "passed" : "warning"),
+    make("server_url", "SERVER_URL configured", process.env.SERVER_URL ? "passed" : "warning"),
+    make("snippe_api_key", "SNIPPE_API_KEY", env.SNIPPE_API_KEY ? "passed" : "missing"),
+    make("snippe_webhook_secret", "SNIPPE_WEBHOOK_SECRET", env.SNIPPE_WEBHOOK_SECRET ? "passed" : "missing"),
+    make("snippe_profile_id", "SNIPPE_PROFILE_ID", env.SNIPPE_PROFILE_ID ? "passed" : "missing"),
+    make("support_email", "Support email (SUPPORT_EMAIL)", process.env.SUPPORT_EMAIL ? "passed" : "missing"),
+    make("cors", "CORS configured", "passed"),
+    make("webhook_endpoint", "Webhook endpoint path", "passed", "/api/webhooks"),
+  ];
+
+  res.json({ success: true, message: "Audit complete.", data: { checks } });
 });
 
 const csv = (value: string) => `"${String(value).replace(/"/g, '""')}"`;

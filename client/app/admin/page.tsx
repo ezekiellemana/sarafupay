@@ -28,6 +28,7 @@ import {
   Info,
   RefreshCw,
   Shield,
+  ShieldCheck,
   UserPlus,
   Users,
   XCircle,
@@ -297,6 +298,14 @@ const QUICK_ACTIONS = [
     desc: "Backend status and uptime",
     icon: <Shield className="size-5" />,
     accent: "bg-purple-500/10 text-purple-600",
+  },
+  {
+    kind: "link" as const,
+    href: "/admin/audit",
+    label: "System Audit",
+    desc: "Production readiness checklist",
+    icon: <ShieldCheck className="size-5" />,
+    accent: "bg-slate-500/10 text-slate-600",
   },
 ];
 

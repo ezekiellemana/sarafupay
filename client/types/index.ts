@@ -160,6 +160,19 @@ export type AdminDashboardData = {
   latestCompletedPayments: Payment[];
 };
 
+export type AuditCheckStatus = "passed" | "warning" | "missing" | "failed";
+
+export type AuditCheck = {
+  key: string;
+  label: string;
+  status: AuditCheckStatus;
+  note: string | null;
+};
+
+export type SystemAuditData = {
+  checks: AuditCheck[];
+};
+
 export type AdminPaymentDetail = {
   _id: string;
   amount: number;
