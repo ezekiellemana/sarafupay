@@ -23,13 +23,26 @@ export const useAdminDashboard = () => {
   const [data, setData] = useState<AdminDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     api<AdminDashboardData>("/api/dashboard/admin")
-      .then((res) => setData(res.data))
-      .catch((err: unknown) => setError(getApiErrorMessage(err, "Unable to load admin dashboard.")))
-      .finally(() => setLoading(false));
-  }, []);
+      .then((res) => {
+        setData(res.data);
+        setError("");
+        setLoading(false);
+      })
+      .catch((err: unknown) => {
+        setError(getApiErrorMessage(err, "Unable to load admin dashboard."));
+        setLoading(false);
+      });
+  }, [refreshKey]);
 
-  return { data, loading, error };
+  const refresh = () => {
+    setLoading(true);
+    setError("");
+    setRefreshKey((k) => k + 1);
+  };
+
+  return { data, loading, error, refresh };
 };

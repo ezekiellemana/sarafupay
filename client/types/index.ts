@@ -75,8 +75,9 @@ export type Project = {
   currency: string;
   startDate?: string;
   endDate?: string;
-  status: "active" | "paused" | "completed";
+  status: "active" | "paused" | "completed" | "closed" | "draft";
   rules?: string[];
+  createdAt?: string;
 };
 
 export type Payment = {
