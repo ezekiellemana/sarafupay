@@ -42,47 +42,47 @@ export function CollectionsTable({ collections, onView }: CollectionsTableProps)
         </TableHeader>
         <TableBody>
           {collections.map((col) => (
-            <TableRow key={col._id} className="cursor-pointer hover:bg-slate-50/60">
+            <TableRow key={col._id} className="cursor-pointer">
               <TableCell>
                 <div className="min-w-0">
-                  <p className="truncate font-medium text-[#0B1F3A]">{col.title}</p>
+                  <p className="truncate font-semibold text-[#0B1F3A]">{col.title}</p>
                   {col.slug && (
-                    <p className="truncate text-xs text-muted-foreground">/{col.slug}</p>
+                    <p className="truncate text-xs text-slate-500">/{col.slug}</p>
                   )}
                 </div>
               </TableCell>
               <TableCell>
                 {col.owner ? (
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-[#0B1F3A]">{col.owner.fullName}</p>
-                    <p className="truncate text-xs text-muted-foreground">{col.owner.email}</p>
+                    <p className="truncate text-sm font-semibold text-[#0B1F3A]">{col.owner.fullName}</p>
+                    <p className="truncate text-xs text-slate-500">{col.owner.email}</p>
                   </div>
                 ) : (
-                  <span className="text-xs text-muted-foreground">—</span>
+                  <span className="text-xs text-slate-400">—</span>
                 )}
               </TableCell>
               <TableCell>
                 <StatusBadge status={col.status}>{col.status}</StatusBadge>
               </TableCell>
-              <TableCell className="text-xs text-muted-foreground">
+              <TableCell className="text-xs text-slate-500">
                 {TYPE_LABELS[col.collectionType ?? ""] ?? col.collectionType ?? "—"}
               </TableCell>
-              <TableCell className="font-medium text-[#0B1F3A]">
+              <TableCell className="font-semibold text-[#0B1F3A]">
                 {formatMoney(col.totalCollected)}
               </TableCell>
               <TableCell>
-                <span className="inline-flex size-6 items-center justify-center rounded-full bg-blue-500/10 text-xs font-semibold text-blue-700">
+                <span className="inline-flex size-7 items-center justify-center rounded-full bg-blue-500/10 text-xs font-semibold text-blue-700">
                   {col.contributorCount}
                 </span>
               </TableCell>
-              <TableCell className="text-xs text-muted-foreground">
+              <TableCell className="text-xs text-slate-500">
                 {formatDate(col.createdAt)}
               </TableCell>
               <TableCell>
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  className="text-xs"
+                  className="text-xs font-medium"
                   onClick={() => onView(col)}
                 >
                   View

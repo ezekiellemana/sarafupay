@@ -27,7 +27,7 @@ function formatUptime(seconds: number) {
 function StatusRow({ label, value, ok }: { label: string; value: string; ok?: boolean }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</span>
+      <span className="text-xs font-bold uppercase tracking-wide text-slate-500">{label}</span>
       <span
         className={cn(
           "flex items-center gap-1.5 text-sm font-medium",
@@ -125,7 +125,7 @@ export function SystemHealthCard() {
           </div>
         )}
         {lastChecked && (
-          <p className="mt-4 text-xs text-muted-foreground">Last checked at {lastChecked.toLocaleTimeString()}</p>
+          <p className="mt-4 text-xs font-medium text-slate-500">Last checked at {lastChecked.toLocaleTimeString()}</p>
         )}
       </CardContent>
     </Card>

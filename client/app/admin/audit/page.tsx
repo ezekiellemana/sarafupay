@@ -63,9 +63,9 @@ function CheckRow({ check }: { check: AuditCheck }) {
         {cfg.icon}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-[#0B1F3A]">{check.label}</p>
+        <p className="text-sm font-semibold text-[#0B1F3A]">{check.label}</p>
         {check.note && (
-          <p className="mt-0.5 text-xs text-muted-foreground">{check.note}</p>
+          <p className="mt-0.5 text-xs text-slate-500">{check.note}</p>
         )}
       </div>
       <span
@@ -184,7 +184,7 @@ export default function AdminAuditPage() {
                 </div>
               )}
               {lastChecked && (
-                <p className="ml-auto text-xs text-muted-foreground">
+                <p className="ml-auto text-xs font-medium text-slate-500">
                   Last checked: {lastChecked.toLocaleTimeString()}
                 </p>
               )}
@@ -192,7 +192,7 @@ export default function AdminAuditPage() {
 
             {/* Check list */}
             <div className="overflow-hidden rounded-3xl border border-white/70 bg-white/80 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
-              <div className="divide-y divide-slate-50">
+              <div className="divide-y divide-slate-100">
                 {data.checks.map((check) => (
                   <CheckRow key={check.key} check={check} />
                 ))}

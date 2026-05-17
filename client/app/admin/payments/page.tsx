@@ -158,10 +158,10 @@ export default function AdminPaymentsPage() {
               key={f}
               onClick={() => handleStatusFilter(f)}
               className={cn(
-                "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                "rounded-full px-4 py-2 text-xs font-semibold transition-colors",
                 statusFilter === f
                   ? "bg-[#0B1F3A] text-white"
-                  : "bg-white text-muted-foreground ring-1 ring-slate-200 hover:bg-slate-50",
+                  : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-slate-800",
               )}
             >
               {STATUS_LABELS[f]}
@@ -172,7 +172,7 @@ export default function AdminPaymentsPage() {
         {/* Date + amount range row */}
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-muted-foreground">From</span>
+            <span className="text-xs font-semibold text-slate-600">From</span>
             <Input
               type="date"
               className="h-9 w-40 text-xs"
@@ -181,7 +181,7 @@ export default function AdminPaymentsPage() {
             />
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-muted-foreground">To</span>
+            <span className="text-xs font-semibold text-slate-600">To</span>
             <Input
               type="date"
               className="h-9 w-40 text-xs"
@@ -190,7 +190,7 @@ export default function AdminPaymentsPage() {
             />
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-muted-foreground">Min</span>
+            <span className="text-xs font-semibold text-slate-600">Min</span>
             <Input
               type="number"
               placeholder="0"
@@ -200,7 +200,7 @@ export default function AdminPaymentsPage() {
             />
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-muted-foreground">Max</span>
+            <span className="text-xs font-semibold text-slate-600">Max</span>
             <Input
               type="number"
               placeholder="∞"
@@ -218,7 +218,7 @@ export default function AdminPaymentsPage() {
                 setAmountMax("");
                 setPage(1);
               }}
-              className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+              className="text-xs font-medium text-slate-500 underline underline-offset-2 hover:text-slate-800"
             >
               Clear
             </button>
@@ -246,7 +246,7 @@ export default function AdminPaymentsPage() {
         {!loading && !error && payments.length > 0 && (
           <>
             <AdminPaymentsTable payments={payments} onView={(p) => setSelected(p)} />
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <div className="flex items-center justify-between text-sm font-medium text-slate-600">
               <span>{total.toLocaleString()} payment{total !== 1 ? "s" : ""} total</span>
               <div className="flex items-center gap-3">
                 <Button

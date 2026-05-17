@@ -25,15 +25,15 @@ export function MembersTable({ members, onView }: MembersTableProps) {
         </TableHeader>
         <TableBody>
           {members.map((member) => (
-            <TableRow key={member._id} className="cursor-pointer hover:bg-slate-50/60">
+            <TableRow key={member._id} className="cursor-pointer">
               <TableCell>
                 <div className="flex items-center gap-3">
-                  <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-blue-500/10 text-xs font-bold text-blue-600">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-blue-500/10 text-sm font-bold text-blue-600">
                     {member.fullName.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0">
-                    <p className="truncate font-medium text-[#0B1F3A]">{member.fullName}</p>
-                    <p className="truncate text-xs text-muted-foreground">{member.email}</p>
+                    <p className="truncate font-semibold text-[#0B1F3A]">{member.fullName}</p>
+                    <p className="truncate text-xs text-slate-500">{member.email}</p>
                   </div>
                 </div>
               </TableCell>
@@ -50,14 +50,14 @@ export function MembersTable({ members, onView }: MembersTableProps) {
                   {member.collectionsCount ?? 0}
                 </span>
               </TableCell>
-              <TableCell className="text-xs text-muted-foreground">
+              <TableCell className="text-xs text-slate-500">
                 {member.createdAt ? formatDate(member.createdAt) : "—"}
               </TableCell>
               <TableCell>
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  className="text-xs"
+                  className="text-xs font-medium"
                   onClick={() => onView(member)}
                 >
                   View

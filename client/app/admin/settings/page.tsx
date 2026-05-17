@@ -47,7 +47,7 @@ function CopyButton({ value }: { value: string }) {
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+    <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
       {children}
     </p>
   );
@@ -55,8 +55,8 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 
 function UrlRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center gap-3 py-3">
-      <span className="w-36 shrink-0 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+    <div className="flex items-center gap-3 py-3.5">
+      <span className="w-36 shrink-0 text-xs font-bold uppercase tracking-wide text-slate-600">
         {label}
       </span>
       <code className="flex-1 truncate rounded-lg bg-slate-50 px-3 py-1.5 font-mono text-xs text-[#0B1F3A]">
@@ -75,11 +75,11 @@ function ConfigRow({
   value: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-3 py-3">
-      <span className="w-36 shrink-0 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+    <div className="flex items-center gap-3 py-3.5">
+      <span className="w-36 shrink-0 text-xs font-bold uppercase tracking-wide text-slate-600">
         {label}
       </span>
-      <span className="text-sm text-[#0B1F3A]">{value}</span>
+      <span className="text-sm font-medium text-[#0B1F3A]">{value}</span>
     </div>
   );
 }
@@ -92,8 +92,8 @@ function SecretRow({
   configured: boolean;
 }) {
   return (
-    <div className="flex items-center gap-3 py-3">
-      <span className="w-48 shrink-0 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+    <div className="flex items-center gap-3 py-3.5">
+      <span className="w-48 shrink-0 text-xs font-bold uppercase tracking-wide text-slate-600">
         {label}
       </span>
       {configured ? (
@@ -264,7 +264,7 @@ export default function AdminSettingsPage() {
                   />
                 </CardBody>
               </Card>
-              <p className="mt-2 text-xs text-muted-foreground">
+              <p className="mt-2 text-xs font-medium text-slate-500">
                 Secret values are never returned by the API. Only their presence is checked.
               </p>
             </section>

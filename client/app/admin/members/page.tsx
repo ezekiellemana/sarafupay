@@ -84,10 +84,10 @@ export default function AdminMembersPage() {
                 key={f}
                 onClick={() => setStatusFilter(f)}
                 className={cn(
-                  "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                  "rounded-full px-4 py-2 text-xs font-semibold transition-colors",
                   statusFilter === f
                     ? "bg-[#0B1F3A] text-white"
-                    : "bg-white text-muted-foreground ring-1 ring-slate-200 hover:bg-slate-50",
+                    : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-slate-800",
                 )}
               >
                 {FILTER_LABELS[f]}
