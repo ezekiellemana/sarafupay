@@ -160,6 +160,36 @@ export type AdminDashboardData = {
   latestCompletedPayments: Payment[];
 };
 
+export type AdminCollection = {
+  _id: string;
+  title: string;
+  slug?: string;
+  description?: string;
+  collectionType?: CollectionType;
+  targetAmount?: number;
+  monthlyContributionAmount: number;
+  suggestedAmount?: number;
+  minimumAmount?: number;
+  currency: string;
+  allowCustomAmount: boolean;
+  startDate?: string;
+  endDate?: string;
+  status: "active" | "paused" | "completed" | "closed" | "draft";
+  visibility: "public" | "private";
+  coverImageUrl?: string;
+  publicPaymentLink?: string;
+  totalCollected: number;
+  contributorCount: number;
+  createdAt: string;
+  updatedAt: string;
+  owner: { _id: string; fullName: string; email: string } | null;
+};
+
+export type AdminCollectionDetail = {
+  collection: AdminCollection;
+  recentPayments: Payment[];
+};
+
 export type CollectionSummary = {
   collection: Collection;
   totalCollected: number;

@@ -1,47 +1,139 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect, useState } from "react";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { ProjectForm } from "@/components/admin/ProjectForm";
+import { CollectionsTable } from "@/components/admin/CollectionsTable";
+import { CollectionDetailDrawer } from "@/components/admin/CollectionDetailDrawer";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { LoadingState } from "@/components/shared/LoadingState";
-import { api, getApiErrorMessage } from "@/lib/api";
-import { formatMoney } from "@/lib/formatters";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { StatusBadge } from "@/components/shared/StatusBadge";
-import type { Project } from "@/types";
+import { api, getApiErrorMessage } from "@/lib/api";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { cn } from "@/lib/utils";
+import { FolderKanban } from "lucide-react";
+import type { AdminCollection } from "@/types";
+
+type StatusFilter = "all" | "active" | "paused" | "draft" | "closed";
+
+const FILTER_LABELS: Record<StatusFilter, string> = {
+  all: "All",
+  active: "Active",
+  paused: "Paused",
+  draft: "Draft",
+  closed: "Closed",
+};
 
 export default function AdminProjectsPage() {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [collections, setCollections] = useState<AdminCollection[]>([]);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const load = useCallback(() => {
-    api<{ projects: Project[] }>("/api/projects")
-      .then((res) => {
-        setProjects(res.data.projects);
-        setError("");
-      })
-      .catch((err: unknown) => setError(getApiErrorMessage(err, "Unable to load projects.")))
-      .finally(() => setLoading(false));
-  }, []);
+  const [selected, setSelected] = useState<AdminCollection | null>(null);
+  const debouncedSearch = useDebouncedValue(search);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (debouncedSearch) params.set("search", debouncedSearch);
+    if (statusFilter !== "all") params.set("status", statusFilter);
+    const path = `/api/admin/collections${params.toString() ? `?${params}` : ""}`;
+
+    api<{ collections: AdminCollection[] }>(path)
+      .then((res) => {
+        setCollections(res.data.collections);
+        setError("");
+        setLoading(false);
+      })
+      .catch((err: unknown) => {
+        setError(getApiErrorMessage(err, "Unable to load collections."));
+        setLoading(false);
+      });
+  }, [debouncedSearch, statusFilter]);
+
+  const handleStatusChange = (collectionId: string, status: AdminCollection["status"]) => {
+    setCollections((prev) =>
+      prev.map((c) => (c._id === collectionId ? { ...c, status } : c))
+    );
+    setSelected((prev) =>
+      prev?._id === collectionId ? { ...prev, status } : prev
+    );
+  };
 
   return (
     <DashboardShell admin>
       <div className="flex flex-col gap-6">
-        <PageHeader eyebrow="Contribution projects" title="Projects" description="Create and review contribution projects." />
-        <Card className="border-white/70 bg-white/80 shadow-xl shadow-slate-900/5 backdrop-blur-xl"><CardHeader><CardTitle>Create project</CardTitle></CardHeader><CardContent><ProjectForm onCreated={load} /></CardContent></Card>
-        {loading && <LoadingState label="Loading projects..." />}
-        {error && <ErrorState message={error} action={<Button className="rounded-2xl" variant="outline" onClick={() => window.location.reload()}>Retry</Button>} />}
-        <div className="grid gap-4 md:grid-cols-2">
-          {projects.map((project) => <Card key={project._id} className="border-white/70 bg-white/80 shadow-xl shadow-slate-900/5 backdrop-blur-xl"><CardHeader><div className="flex items-start justify-between gap-3"><CardTitle>{project.title}</CardTitle><StatusBadge status={project.status} /></div></CardHeader><CardContent><p className="text-sm text-muted-foreground">{project.description}</p><p className="mt-3 text-lg font-bold text-[#0B1F3A]">{formatMoney(project.monthlyContributionAmount)} monthly</p></CardContent></Card>)}
+        <PageHeader
+          eyebrow="Platform collections"
+          title="Collections"
+          description="Search, filter, and manage all platform collections."
+        />
+
+        {/* Search + filter row */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+          <Input
+            className="max-w-md"
+            placeholder="Search by title, slug, or owner"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <div className="flex items-center gap-2">
+            {(Object.keys(FILTER_LABELS) as StatusFilter[]).map((f) => (
+              <button
+                key={f}
+                onClick={() => setStatusFilter(f)}
+                className={cn(
+                  "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                  statusFilter === f
+                    ? "bg-[#0B1F3A] text-white"
+                    : "bg-white text-muted-foreground ring-1 ring-slate-200 hover:bg-slate-50",
+                )}
+              >
+                {FILTER_LABELS[f]}
+              </button>
+            ))}
+          </div>
         </div>
-        {!loading && !error && !projects.length && <EmptyState title="No projects yet." description="Create the first contribution project above." />}
+
+        {loading && <LoadingState label="Loading collections…" />}
+        {error && (
+          <ErrorState
+            message={error}
+            action={
+              <Button className="rounded-2xl" variant="outline" onClick={() => window.location.reload()}>
+                Retry
+              </Button>
+            }
+          />
+        )}
+        {!loading && !error && collections.length === 0 && (
+          <EmptyState
+            icon={<FolderKanban />}
+            title="No collections found."
+            description={
+              statusFilter !== "all"
+                ? `No ${statusFilter} collections match your search.`
+                : "Platform collections will appear here."
+            }
+          />
+        )}
+        {!loading && !error && collections.length > 0 && (
+          <CollectionsTable
+            collections={collections}
+            onView={(col) => setSelected(col)}
+          />
+        )}
       </div>
+
+      {/* Detail drawer — always mounted for smooth animation */}
+      <CollectionDetailDrawer
+        collection={selected}
+        open={selected !== null}
+        onClose={() => setSelected(null)}
+        onStatusChange={handleStatusChange}
+      />
     </DashboardShell>
   );
 }

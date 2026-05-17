@@ -1,11 +1,14 @@
 import { Router } from "express";
 import {
   exportPaymentsCsv,
+  getAdminCollection,
+  getAdminCollections,
   getMember,
   members,
   payments,
   summary,
   unpaidMembers,
+  updateAdminCollectionStatus,
   updateMemberStatus,
 } from "../controllers/admin.controller";
 import { requireAdmin } from "../middleware/admin.middleware";
@@ -17,6 +20,9 @@ router.use(protect, requireAdmin);
 router.get("/members", members);
 router.get("/members/:id", getMember);
 router.patch("/members/:id/status", updateMemberStatus);
+router.get("/collections", getAdminCollections);
+router.get("/collections/:id", getAdminCollection);
+router.patch("/collections/:id/status", updateAdminCollectionStatus);
 router.get("/payments", payments);
 router.get("/summary", summary);
 router.get("/unpaid-members", unpaidMembers);

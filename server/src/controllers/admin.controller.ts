@@ -1,5 +1,5 @@
 import { Payment } from "../models/Payment.model";
-import { Project } from "../models/Project.model";
+import { Project, type ProjectStatus } from "../models/Project.model";
 import { User } from "../models/User.model";
 import { AppError } from "../utils/AppError";
 import { asyncHandler } from "../utils/asyncHandler";
@@ -92,6 +92,103 @@ export const updateMemberStatus = asyncHandler(async (req, res) => {
     success: true,
     message: `Member ${isActive ? "activated" : "deactivated"} successfully.`,
     data: { user: plain }
+  });
+});
+
+export const getAdminCollections = asyncHandler(async (req, res) => {
+  const search = String(req.query.search ?? "").trim();
+  const status = req.query.status as string | undefined;
+
+  const filter: Record<string, unknown> = {};
+  if (status && status !== "all") filter.status = status;
+
+  const projects = await Project.find(filter).sort({ createdAt: -1 }).lean();
+
+  const ownerIdSet = new Set(
+    projects.filter((p) => p.ownerId).map((p) => p.ownerId!.toString())
+  );
+  const owners = ownerIdSet.size
+    ? await User.find({ _id: { $in: [...ownerIdSet] } })
+        .select("fullName email")
+        .lean()
+    : [];
+  const ownerMap = new Map(
+    owners.map((o) => [
+      o._id.toString(),
+      { _id: o._id.toString(), fullName: o.fullName, email: o.email },
+    ])
+  );
+
+  type OwnerInfo = { _id: string; fullName: string; email: string };
+  let enriched = projects.map((p) => ({
+    ...p,
+    owner: p.ownerId ? (ownerMap.get(p.ownerId.toString()) ?? null) : null as OwnerInfo | null,
+  }));
+
+  if (search) {
+    const re = new RegExp(search, "i");
+    enriched = enriched.filter(
+      (p) =>
+        re.test(p.title) ||
+        re.test(p.slug ?? "") ||
+        re.test(p.owner?.fullName ?? "") ||
+        re.test(p.owner?.email ?? "")
+    );
+  }
+
+  res.json({ success: true, message: "Collections loaded.", data: { collections: enriched } });
+});
+
+export const getAdminCollection = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const [project, recentPayments] = await Promise.all([
+    Project.findById(id).lean(),
+    Payment.find({ projectId: id })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate("userId", "fullName email")
+      .lean(),
+  ]);
+  if (!project) throw new AppError("Collection not found.", 404, "NOT_FOUND");
+
+  const owner = project.ownerId
+    ? await User.findById(project.ownerId).select("fullName email").lean()
+    : null;
+
+  res.json({
+    success: true,
+    message: "Collection loaded.",
+    data: {
+      collection: {
+        ...project,
+        owner: owner
+          ? { _id: owner._id.toString(), fullName: owner.fullName, email: owner.email }
+          : null,
+      },
+      recentPayments,
+    },
+  });
+});
+
+export const updateAdminCollectionStatus = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body as { status: unknown };
+
+  const allowed: ProjectStatus[] = ["active", "paused", "closed"];
+  if (!allowed.includes(status as ProjectStatus)) {
+    throw new AppError("Invalid status. Allowed: active, paused, closed.", 400, "INVALID_INPUT");
+  }
+
+  const project = await Project.findById(id);
+  if (!project) throw new AppError("Collection not found.", 404, "NOT_FOUND");
+
+  project.status = status as ProjectStatus;
+  await project.save();
+
+  res.json({
+    success: true,
+    message: `Collection ${status} successfully.`,
+    data: { collection: project.toObject() as unknown as Record<string, unknown> },
   });
 });
 
