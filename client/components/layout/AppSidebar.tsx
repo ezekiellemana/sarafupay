@@ -13,12 +13,12 @@ import {
   Shield,
   User,
   Users,
-  WalletCards,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { adminNav, memberNav } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { BrandLogo } from "@/components/shared/BrandLogo";
 
 const icons: Record<string, React.ReactNode> = {
   Dashboard: <BarChart3 />,
@@ -44,17 +44,9 @@ export function AppSidebar({ admin = false }: { admin?: boolean }) {
       {/* ── Brand / Logo ── */}
       <Link
         href="/"
-        className="mb-2 flex items-center gap-3 rounded-2xl px-1 py-2 transition-opacity hover:opacity-80"
+        className="mb-2 flex items-center rounded-2xl px-1 py-2 transition-opacity hover:opacity-80"
       >
-        <span className="relative flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary coin-glow">
-          <WalletCards className="size-6 text-white" />
-        </span>
-        <div className="flex flex-col leading-tight">
-          <span className="text-base font-extrabold tracking-tight text-white">SarafuPay</span>
-          <span className="text-[11px] sarafu-gradient-text-gold font-semibold tracking-wide">
-            Lipa kwa urahisi
-          </span>
-        </div>
+        <BrandLogo variant="dark" height={32} />
       </Link>
 
       {/* Separator */}

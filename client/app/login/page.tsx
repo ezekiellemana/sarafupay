@@ -1,8 +1,8 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { WalletCards } from "lucide-react";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { FloatingBlobBackground } from "@/components/shared/FloatingBlobBackground";
+import { BrandLogo } from "@/components/shared/BrandLogo";
 import { CoinStack } from "@/components/shared/illustrations/CoinStack";
 import { FloatingCoins } from "@/components/shared/illustrations/FloatingCoins";
 import { GoldCoin } from "@/components/shared/illustrations/GoldCoin";
@@ -22,14 +22,8 @@ export default function LoginPage() {
 
           <FloatingCoins count={4} opacity={0.12} />
 
-          <Link href="/" className="relative z-10 flex items-center gap-2.5 text-lg font-semibold">
-            <span className="flex size-11 items-center justify-center rounded-2xl bg-white/10 coin-glow">
-              <WalletCards />
-            </span>
-            <div className="flex flex-col leading-tight">
-              <span className="font-bold">SarafuPay</span>
-              <span className="text-[10px] sarafu-gradient-text-gold font-semibold">Lipa kwa urahisi</span>
-            </div>
+          <Link href="/" className="relative z-10 flex items-center">
+            <BrandLogo variant="dark" height={36} />
           </Link>
 
           <div className="relative z-10 mt-16 flex-1">
@@ -57,12 +51,9 @@ export default function LoginPage() {
 
         {/* Right panel — form */}
         <div className="flex flex-col items-center justify-center p-6 md:p-10">
-          <div className="mb-6 flex items-center gap-2 font-semibold text-[#071a0e] lg:hidden">
-            <Link href="/" className="flex items-center gap-2">
-              <span className="flex size-10 items-center justify-center rounded-2xl bg-[#071a0e] text-white coin-glow">
-                <WalletCards />
-              </span>
-              SarafuPay
+          <div className="mb-6 flex items-center lg:hidden">
+            <Link href="/" className="flex items-center">
+              <BrandLogo variant="light" height={32} />
             </Link>
           </div>
           <Suspense>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { WalletCards } from "lucide-react";
+import { BrandLogo } from "@/components/shared/BrandLogo";
 
 export function Footer() {
   return (
@@ -9,14 +9,8 @@ export function Footer() {
 
           {/* Brand */}
           <div className="flex flex-col items-center gap-2 md:items-start">
-            <Link href="/" className="flex items-center gap-2.5">
-              <span className="flex size-8 items-center justify-center rounded-xl bg-white/10">
-                <WalletCards className="size-4 text-amber-400" />
-              </span>
-              <div className="flex flex-col leading-tight">
-                <span className="text-sm font-bold">SarafuPay</span>
-                <span className="text-[10px] font-semibold text-amber-400 tracking-wide">Lipa kwa urahisi</span>
-              </div>
+            <Link href="/" className="flex items-center">
+              <BrandLogo variant="dark" height={32} />
             </Link>
             <p className="mt-1 max-w-[220px] text-center text-xs text-white/40 md:text-left">
               Simple, secure payment collection for events, groups, and projects.

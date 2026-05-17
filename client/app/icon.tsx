@@ -11,22 +11,38 @@ export default function Icon() {
           width: 32,
           height: 32,
           borderRadius: 8,
-          background: "linear-gradient(135deg, #052e16 0%, #16a34a 100%)",
+          background: "linear-gradient(135deg, #071a0e 0%, #0d3a1f 100%)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          position: "relative",
         }}
       >
+        {/* Gold accent dot */}
         <div
           style={{
-            width: 18,
-            height: 18,
+            position: "absolute",
+            top: 5,
+            right: 5,
+            width: 7,
+            height: 7,
             borderRadius: "50%",
-            background: "linear-gradient(135deg, #f59e0b 0%, #fcd34d 100%)",
-            border: "2.5px solid rgba(255,255,255,0.35)",
-            boxShadow: "0 0 8px rgba(245,158,11,0.6)",
+            background: "#F59E0B",
+            boxShadow: "0 0 6px rgba(245,158,11,0.8)",
           }}
         />
+        {/* S lettermark */}
+        <span
+          style={{
+            color: "#4ade80",
+            fontSize: 20,
+            fontWeight: 900,
+            lineHeight: 1,
+            fontFamily: "sans-serif",
+          }}
+        >
+          S
+        </span>
       </div>
     ),
     { ...size }
