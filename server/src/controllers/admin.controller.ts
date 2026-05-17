@@ -337,6 +337,31 @@ export const exportPaymentsCsv = asyncHandler(async (_req, res) => {
   res.send([header, ...lines].join("\n"));
 });
 
+export const platformSettings = asyncHandler(async (_req, res) => {
+  const webhookEndpoint = "/api/webhooks";
+  res.json({
+    success: true,
+    message: "Settings loaded.",
+    data: {
+      clientUrl: env.CLIENT_URL,
+      serverUrl: env.SERVER_URL,
+      snippeBaseUrl: env.SNIPPE_BASE_URL,
+      webhookUrl: `${env.SERVER_URL}${webhookEndpoint}`,
+      returnUrl: `${env.CLIENT_URL}/payment/return`,
+      webhookEndpoint,
+      environment: env.NODE_ENV,
+      cookieName: env.COOKIE_NAME,
+      jwtExpiresIn: env.JWT_EXPIRES_IN,
+      supportEmail: process.env.SUPPORT_EMAIL || null,
+      appVersion: process.env.APP_VERSION || null,
+      jwtSecretConfigured: Boolean(env.JWT_SECRET && env.JWT_SECRET.length >= 24),
+      snippeApiKeyConfigured: Boolean(env.SNIPPE_API_KEY),
+      snippeWebhookSecretConfigured: Boolean(env.SNIPPE_WEBHOOK_SECRET),
+      mongoConfigured: true,
+    },
+  });
+});
+
 export const systemAudit = asyncHandler(async (_req, res) => {
   type CheckStatus = "passed" | "warning" | "missing" | "failed";
   const make = (

@@ -160,6 +160,24 @@ export type AdminDashboardData = {
   latestCompletedPayments: Payment[];
 };
 
+export type PlatformSettings = {
+  clientUrl: string;
+  serverUrl: string;
+  snippeBaseUrl: string;
+  webhookUrl: string;
+  returnUrl: string;
+  webhookEndpoint: string;
+  environment: string;
+  cookieName: string;
+  jwtExpiresIn: string;
+  supportEmail: string | null;
+  appVersion: string | null;
+  jwtSecretConfigured: boolean;
+  snippeApiKeyConfigured: boolean;
+  snippeWebhookSecretConfigured: boolean;
+  mongoConfigured: boolean;
+};
+
 export type AuditCheckStatus = "passed" | "warning" | "missing" | "failed";
 
 export type AuditCheck = {

@@ -7,6 +7,7 @@ import {
   getMember,
   members,
   payments,
+  platformSettings,
   summary,
   systemAudit,
   unpaidMembers,
@@ -30,6 +31,7 @@ router.get("/payments/:id", getAdminPayment);
 router.get("/summary", summary);
 router.get("/unpaid-members", unpaidMembers);
 router.get("/export/payments", exportPaymentsCsv);
+router.get("/settings", platformSettings);
 router.get("/system-audit", systemAudit);
 
 export default router;

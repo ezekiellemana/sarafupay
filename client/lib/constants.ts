@@ -13,5 +13,6 @@ export const adminNav = [
   { href: "/admin", label: "Platform Overview" },
   { href: "/admin/projects", label: "Projects" },
   { href: "/admin/members", label: "Members" },
-  { href: "/admin/payments", label: "Payments" }
+  { href: "/admin/payments", label: "Payments" },
+  { href: "/admin/settings", label: "Settings" },
 ];

@@ -27,6 +27,7 @@ import {
   History,
   Info,
   RefreshCw,
+  Settings,
   Shield,
   ShieldCheck,
   UserPlus,
@@ -306,6 +307,14 @@ const QUICK_ACTIONS = [
     desc: "Production readiness checklist",
     icon: <ShieldCheck className="size-5" />,
     accent: "bg-slate-500/10 text-slate-600",
+  },
+  {
+    kind: "link" as const,
+    href: "/admin/settings",
+    label: "Platform Settings",
+    desc: "Config, URLs, and secret status",
+    icon: <Settings className="size-5" />,
+    accent: "bg-indigo-500/10 text-indigo-600",
   },
 ];
 

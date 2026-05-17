@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Folders, FolderKanban, History, LogOut, Shield, User, Users, WalletCards } from "lucide-react";
+import { BarChart3, Folders, FolderKanban, History, LogOut, Settings, Shield, User, Users, WalletCards } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WalletIllustration } from "@/components/shared/illustrations/WalletIllustration";
 import { adminNav, memberNav } from "@/lib/constants";
@@ -17,7 +17,8 @@ const icons: Record<string, React.ReactNode> = {
   Profile: <User />,
   "Platform Overview": <Shield />,
   Projects: <FolderKanban />,
-  Members: <Users />
+  Members: <Users />,
+  Settings: <Settings />
 };
 
 export function AppSidebar({ admin = false }: { admin?: boolean }) {
