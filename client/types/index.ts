@@ -28,12 +28,21 @@ export type User = {
   businessName?: string;
   bio?: string;
   avatarUrl?: string;
+  createdAt?: string;
 };
 
 export type Member = User & {
   _id: string;
   totalPaid?: number;
   paidMonths?: string[];
+  collectionsCount?: number;
+};
+
+export type MemberDetail = {
+  user: Member;
+  collections: Project[];
+  totalCollectedByCollections: number;
+  recentPayments: Payment[];
 };
 
 export type Collection = {

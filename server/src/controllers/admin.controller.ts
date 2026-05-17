@@ -1,5 +1,7 @@
 import { Payment } from "../models/Payment.model";
+import { Project } from "../models/Project.model";
 import { User } from "../models/User.model";
+import { AppError } from "../utils/AppError";
 import { asyncHandler } from "../utils/asyncHandler";
 import { getAdminDashboard } from "../services/dashboard.service";
 
@@ -13,20 +15,84 @@ export const members = asyncHandler(async (req, res) => {
       { phoneNumber: new RegExp(search, "i") }
     ];
   }
+  if (req.query.isActive === "true") query.isActive = true;
+  if (req.query.isActive === "false") query.isActive = false;
 
-  const users = await User.find(query).select("-passwordHash").sort({ createdAt: -1 }).lean();
-  const payments = await Payment.aggregate([
-    { $match: { status: "completed" } },
-    { $group: { _id: "$userId", totalPaid: { $sum: "$amount" }, paidMonths: { $addToSet: "$monthPaidFor" } } }
+  const [users, payments, collectionsCounts] = await Promise.all([
+    User.find(query).select("-passwordHash").sort({ createdAt: -1 }).lean(),
+    Payment.aggregate([
+      { $match: { status: "completed" } },
+      { $group: { _id: "$userId", totalPaid: { $sum: "$amount" }, paidMonths: { $addToSet: "$monthPaidFor" } } }
+    ]),
+    Project.aggregate([{ $group: { _id: "$ownerId", count: { $sum: 1 } } }])
   ]);
-  const paymentMap = new Map(payments.map((payment) => [String(payment._id), payment]));
+
+  const paymentMap = new Map(payments.map((p) => [String(p._id), p]));
+  const collectionsMap = new Map(collectionsCounts.map((c) => [String(c._id), c.count as number]));
+
   const enriched = users.map((user) => ({
     ...user,
     totalPaid: paymentMap.get(user._id.toString())?.totalPaid ?? 0,
-    paidMonths: paymentMap.get(user._id.toString())?.paidMonths ?? []
+    paidMonths: paymentMap.get(user._id.toString())?.paidMonths ?? [],
+    collectionsCount: collectionsMap.get(user._id.toString()) ?? 0
   }));
 
   res.json({ success: true, message: "Members loaded.", data: { members: enriched } });
+});
+
+export const getMember = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const [user, collections, recentPayments] = await Promise.all([
+    User.findById(id).select("-passwordHash").lean(),
+    Project.find({ ownerId: id }).sort({ createdAt: -1 }).lean(),
+    Payment.find({ userId: id })
+      .sort({ createdAt: -1 })
+      .limit(3)
+      .populate("projectId", "title")
+      .lean()
+  ]);
+  if (!user) throw new AppError("Member not found.", 404, "NOT_FOUND");
+
+  const totalCollectedByCollections = collections.reduce(
+    (sum, p) => sum + (p.totalCollected ?? 0),
+    0
+  );
+
+  res.json({
+    success: true,
+    message: "Member loaded.",
+    data: { user, collections, totalCollectedByCollections, recentPayments }
+  });
+});
+
+export const updateMemberStatus = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { isActive } = req.body as { isActive: unknown };
+
+  if (typeof isActive !== "boolean") {
+    throw new AppError("isActive must be a boolean.", 400, "INVALID_INPUT");
+  }
+  if (req.user!._id.toString() === id) {
+    throw new AppError("You cannot change your own account status.", 403, "SELF_ACTION");
+  }
+
+  const target = await User.findById(id);
+  if (!target) throw new AppError("Member not found.", 404, "NOT_FOUND");
+  if (target.role === "admin") {
+    throw new AppError("Cannot change the status of an admin account.", 403, "ADMIN_PROTECTED");
+  }
+
+  target.isActive = isActive;
+  await target.save();
+
+  const plain = target.toObject() as unknown as Record<string, unknown>;
+  delete plain.passwordHash;
+
+  res.json({
+    success: true,
+    message: `Member ${isActive ? "activated" : "deactivated"} successfully.`,
+    data: { user: plain }
+  });
 });
 
 export const payments = asyncHandler(async (req, res) => {

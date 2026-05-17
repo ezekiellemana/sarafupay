@@ -1,20 +1,68 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatMoney } from "@/lib/formatters";
+import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { formatDate, formatMoney } from "@/lib/formatters";
 import type { Member } from "@/types";
 
-export function MembersTable({ members }: { members: Member[] }) {
+interface MembersTableProps {
+  members: Member[];
+  onView: (member: Member) => void;
+}
+
+export function MembersTable({ members, onView }: MembersTableProps) {
   return (
     <div className="overflow-hidden rounded-3xl border border-white/70 bg-white/80 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
       <Table>
-        <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Email</TableHead><TableHead>Phone</TableHead><TableHead>Total paid</TableHead><TableHead>Paid months</TableHead></TableRow></TableHeader>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Member</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Total paid</TableHead>
+            <TableHead>Collections</TableHead>
+            <TableHead>Joined</TableHead>
+            <TableHead className="w-24" />
+          </TableRow>
+        </TableHeader>
         <TableBody>
           {members.map((member) => (
-            <TableRow key={member._id}>
-              <TableCell>{member.fullName}</TableCell>
-              <TableCell>{member.email}</TableCell>
-              <TableCell>{member.phoneNumber}</TableCell>
-              <TableCell>{formatMoney(member.totalPaid ?? 0)}</TableCell>
-              <TableCell>{member.paidMonths?.length ?? 0}</TableCell>
+            <TableRow key={member._id} className="cursor-pointer hover:bg-slate-50/60">
+              <TableCell>
+                <div className="flex items-center gap-3">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-blue-500/10 text-xs font-bold text-blue-600">
+                    {member.fullName.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-[#0B1F3A]">{member.fullName}</p>
+                    <p className="truncate text-xs text-muted-foreground">{member.email}</p>
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell>
+                <StatusBadge status={member.isActive ? "active" : "closed"}>
+                  {member.isActive ? "Active" : "Inactive"}
+                </StatusBadge>
+              </TableCell>
+              <TableCell className="font-medium text-[#0B1F3A]">
+                {formatMoney(member.totalPaid ?? 0)}
+              </TableCell>
+              <TableCell>
+                <span className="inline-flex size-6 items-center justify-center rounded-full bg-amber-500/10 text-xs font-semibold text-amber-700">
+                  {member.collectionsCount ?? 0}
+                </span>
+              </TableCell>
+              <TableCell className="text-xs text-muted-foreground">
+                {member.createdAt ? formatDate(member.createdAt) : "—"}
+              </TableCell>
+              <TableCell>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => onView(member)}
+                >
+                  View
+                </Button>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
