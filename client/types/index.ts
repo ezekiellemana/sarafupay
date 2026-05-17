@@ -160,6 +160,20 @@ export type AdminDashboardData = {
   latestCompletedPayments: Payment[];
 };
 
+export type ActivityEventType = "user_registered" | "collection_created" | "payment_completed";
+
+export type ActivityEvent = {
+  id: string;
+  type: ActivityEventType;
+  timestamp: string;
+  description: string;
+  meta: Record<string, unknown>;
+};
+
+export type ActivityFeedData = {
+  events: ActivityEvent[];
+};
+
 export type PlatformSettings = {
   clientUrl: string;
   serverUrl: string;

@@ -337,6 +337,89 @@ export const exportPaymentsCsv = asyncHandler(async (_req, res) => {
   res.send([header, ...lines].join("\n"));
 });
 
+export const activityFeed = asyncHandler(async (_req, res) => {
+  const FETCH_LIMIT = 50;
+
+  const [recentUsers, recentProjects, recentPayments] = await Promise.all([
+    User.find({ role: "member" })
+      .select("fullName email createdAt")
+      .sort({ createdAt: -1 })
+      .limit(FETCH_LIMIT)
+      .lean(),
+    Project.find()
+      .select("title slug ownerId createdAt")
+      .sort({ createdAt: -1 })
+      .limit(FETCH_LIMIT)
+      .lean(),
+    Payment.find({ status: "completed" })
+      .select("amount currency customerName paidAt createdAt projectId userId")
+      .sort({ paidAt: -1, createdAt: -1 })
+      .limit(FETCH_LIMIT)
+      .populate("userId", "fullName")
+      .populate("projectId", "title")
+      .lean(),
+  ]);
+
+  // Gather project owner IDs and batch-fetch names
+  const ownerIds = [...new Set(recentProjects.filter((p) => p.ownerId).map((p) => p.ownerId!.toString()))];
+  const owners = ownerIds.length
+    ? await User.find({ _id: { $in: ownerIds } }).select("fullName").lean()
+    : [];
+  const ownerMap = new Map(owners.map((o) => [o._id.toString(), o.fullName]));
+
+  type EventType = "user_registered" | "collection_created" | "payment_completed";
+  type Event = { id: string; type: EventType; timestamp: Date; description: string; meta: Record<string, unknown> };
+
+  const events: Event[] = [];
+
+  for (const user of recentUsers) {
+    events.push({
+      id: `user-${user._id}`,
+      type: "user_registered",
+      timestamp: user.createdAt,
+      description: `${user.fullName} registered`,
+      meta: { email: user.email },
+    });
+  }
+
+  for (const project of recentProjects) {
+    const ownerName = project.ownerId ? (ownerMap.get(project.ownerId.toString()) ?? "Unknown") : "Unknown";
+    events.push({
+      id: `project-${project._id}`,
+      type: "collection_created",
+      timestamp: project.createdAt,
+      description: `${ownerName} created collection "${project.title}"`,
+      meta: { title: project.title, slug: project.slug ?? null },
+    });
+  }
+
+  for (const payment of recentPayments) {
+    const payerName =
+      payment.userId && typeof payment.userId === "object" && "fullName" in payment.userId
+        ? (payment.userId as { fullName: string }).fullName
+        : (payment.customerName ?? "Anonymous");
+    const projectTitle =
+      payment.projectId && typeof payment.projectId === "object" && "title" in payment.projectId
+        ? (payment.projectId as { title: string }).title
+        : "—";
+    events.push({
+      id: `payment-${payment._id}`,
+      type: "payment_completed",
+      timestamp: payment.paidAt ?? payment.createdAt,
+      description: `${payerName} paid ${payment.currency} ${payment.amount.toLocaleString()} → ${projectTitle}`,
+      meta: { amount: payment.amount, currency: payment.currency },
+    });
+  }
+
+  events.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+
+  res.json({
+    success: true,
+    message: "Activity feed loaded.",
+    data: { events: events.slice(0, FETCH_LIMIT) },
+  });
+});
+
 export const platformSettings = asyncHandler(async (_req, res) => {
   const webhookEndpoint = "/api/webhooks";
   res.json({

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Folders, FolderKanban, History, LogOut, Settings, Shield, User, Users, WalletCards } from "lucide-react";
+import { Activity, BarChart3, Folders, FolderKanban, History, LogOut, Settings, Shield, User, Users, WalletCards } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WalletIllustration } from "@/components/shared/illustrations/WalletIllustration";
 import { adminNav, memberNav } from "@/lib/constants";
@@ -18,6 +18,7 @@ const icons: Record<string, React.ReactNode> = {
   "Platform Overview": <Shield />,
   Projects: <FolderKanban />,
   Members: <Users />,
+  Activity: <Activity />,
   Settings: <Settings />
 };
 

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  activityFeed,
   exportPaymentsCsv,
   getAdminCollection,
   getAdminCollections,
@@ -31,6 +32,7 @@ router.get("/payments/:id", getAdminPayment);
 router.get("/summary", summary);
 router.get("/unpaid-members", unpaidMembers);
 router.get("/export/payments", exportPaymentsCsv);
+router.get("/activity", activityFeed);
 router.get("/settings", platformSettings);
 router.get("/system-audit", systemAudit);
 

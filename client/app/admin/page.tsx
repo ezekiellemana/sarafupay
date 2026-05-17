@@ -16,6 +16,7 @@ import { formatDate, formatMoney } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { apiUrl } from "@/lib/api";
 import {
+  Activity,
   AlertTriangle,
   BookOpen,
   Calendar,
@@ -315,6 +316,14 @@ const QUICK_ACTIONS = [
     desc: "Config, URLs, and secret status",
     icon: <Settings className="size-5" />,
     accent: "bg-indigo-500/10 text-indigo-600",
+  },
+  {
+    kind: "link" as const,
+    href: "/admin/activity",
+    label: "Activity Feed",
+    desc: "Latest platform events",
+    icon: <Activity className="size-5" />,
+    accent: "bg-teal-500/10 text-teal-600",
   },
 ];
 
