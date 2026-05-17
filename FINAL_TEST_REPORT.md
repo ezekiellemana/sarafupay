@@ -142,5 +142,62 @@ Do not launch until all of the following are true:
 - [ ] MongoDB is on a hosted cluster (not `localhost`)
 - [ ] `JWT_SECRET` is at least 32 random characters
 - [ ] Webhook URL registered in Snippe dashboard points to the production domain
-- [ ] Duplicate payment test passed (replay webhook → no double-count)
+- [x] Duplicate payment test passed (replay webhook → no double-count) ✅ (2026-05-16)
 - [ ] Wrong-owner access test passed (another user cannot see your payments)
+
+---
+
+## Production Smoke Test — PASSED (2026-05-17)
+
+**Environment:** Full production stack
+
+| Layer | URL |
+| --- | --- |
+| Frontend | `https://sarafupay-client.vercel.app` |
+| Backend | `https://sarafupay-server-ejbun.ondigitalocean.app` |
+| Database | MongoDB Atlas — cluster0.ny7x27a.mongodb.net / sarafupay |
+
+### Smoke Test Results
+
+| # | Test | Result |
+| --- | --- | --- |
+| 1 | Register new account on production frontend | PASS |
+| 2 | Login — auth cookie set, session persists across requests | PASS |
+| 3 | Member dashboard loads (CORS, JWT, MongoDB all working) | PASS |
+| 4 | Create public collection ("Final Year Project Contribution", 5,000 TZS) | PASS |
+| 5 | Public payment page `/pay/[slug]` loads without authentication | PASS |
+| 6 | Collection title and amount display correctly on public page | PASS |
+| 7 | Snippe checkout opens on "Pay Now" | PASS |
+| 8 | Payment completes via M-Pesa (+255 format) | PASS |
+| 9 | `/payment/return` shows success state and receipt | PASS |
+| 10 | DigitalOcean logs show `POST /api/webhooks/snippe 200` | PASS |
+| 11 | Dashboard stats update (total collected, contributor count) | PASS |
+| 12 | Payment record shows `status: completed` | PASS |
+| 13 | Admin CSV export includes the completed payment | PASS |
+
+All 13 checks passed. No failures.
+
+### Deployment issues resolved before this test
+
+| Issue | Fix | Commit |
+| --- | --- | --- |
+| DO: `Cannot find module 'punycode/'` on Node 22 | `punycode@^2.3.1` dep + `engines.node=20.x` | `306fcca` |
+| DO: workspace monorepo modules not found at runtime | Source dir changed from `server` to `.` (root) | — |
+| DO: devDependencies pruned before `tsc` | Root `.npmrc` with `production=false` | `306fcca` |
+| Vercel: Node v24 instead of 20.x | `engines.node=20.x` in `client/package.json` | `85577fa` |
+| Vercel: `lightningcss.linux-x64-gnu.node` missing | `lightningcss-linux-x64-gnu` optional dep | `85577fa` |
+| Vercel: `@tailwindcss/oxide-linux-x64-gnu` missing | `@tailwindcss/oxide-linux-x64-gnu` optional dep | `459c51d` |
+
+### Production launch checklist — final state
+
+- [x] `SNIPPE_WEBHOOK_SECRET` set, webhook tested end-to-end ✅
+- [x] `NODE_ENV=production` on DigitalOcean ✅
+- [x] `SERVER_URL` is stable HTTPS (DigitalOcean App Platform) ✅
+- [x] `CLIENT_URL` is the production Vercel domain ✅
+- [x] MongoDB Atlas hosted cluster, `db: connected` confirmed ✅
+- [x] `JWT_SECRET` is 64+ random characters ✅
+- [x] `NEXT_PUBLIC_API_PROXY_URL` set on Vercel ✅
+- [x] Real M-Pesa payment completed on production URL ✅
+- [x] Webhook URL per-session via `SERVER_URL` env var ✅
+
+**Release tag:** `v1.2.1`

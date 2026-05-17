@@ -91,7 +91,7 @@ You will need:
 
    > **Why root, not `server`?** This is an npm workspaces monorepo. When the source directory is set to `server`, DigitalOcean packages only `server/` for the container, but npm installs shared dependencies to the **root** `node_modules/`. At runtime the app cannot find those modules. Setting the source directory to `.` (root) ensures the root `node_modules/` is included in the deployed artifact. The build command targets only the `server` workspace so client dependencies are not installed.
    >
-   > **Why `--include=dev`?** DigitalOcean sets `NODE_ENV=production` before running the build command, which causes npm to skip devDependencies automatically. The TypeScript compiler (`tsc`) requires `@types/node`, `@types/express`, and the other `@types/*` packages listed in `server/package.json` devDependencies to compile successfully. The `--include=dev` flag installs them for the build step only — they have no effect at runtime since `node server/dist/server.js` executes plain compiled JavaScript.
+   > **Why does TypeScript compilation work despite `NODE_ENV=production`?** DigitalOcean sets `NODE_ENV=production` during the build, which causes npm to skip devDependencies by default. The root `.npmrc` file contains `production=false`, which overrides this behaviour — npm reads `.npmrc` before any install and always installs devDependencies. The TypeScript compiler (`tsc`) requires `@types/node`, `@types/express`, and the other `@types/*` packages from devDependencies to compile successfully. They have no effect at runtime since `node server/dist/server.js` executes plain compiled JavaScript.
 4. Click **Next** and skip to **Environment Variables** — add all the backend variables from the table below.
 5. Choose a plan: **Basic → $12/mo** is sufficient for MVP.
 6. Click **Create Resources** and wait for the first deploy to finish.
@@ -335,3 +335,24 @@ Specific limiters are additive on top of the global limit. A login attempt consu
 
 > **Production launch is blocked until `SNIPPE_WEBHOOK_SECRET` is set and the webhook test passes.**
 > See [FINAL_TEST_REPORT.md](./FINAL_TEST_REPORT.md) for the exact webhook test procedure.
+
+---
+
+## Production Deployment Status
+
+| Item | Status | Detail |
+| --- | --- | --- |
+| MongoDB Atlas | **Live** | Cluster connected, `db: "connected"` confirmed |
+| DigitalOcean App Platform | **Live** | `https://sarafupay-server-ejbun.ondigitalocean.app` |
+| Vercel Frontend | **Live** | `https://sarafupay-client.vercel.app` |
+| Auth (register + login) | **Verified** | Cookie/session works across Vercel → DigitalOcean |
+| Public payment page | **Verified** | `/pay/[slug]` loads without login |
+| Snippe checkout | **Verified** | Checkout opens, M-Pesa payment completes |
+| Webhook delivery | **Verified** | `POST /api/webhooks/snippe` → 200, payload stored |
+| Return page + receipt | **Verified** | `/payment/return` shows success and receipt |
+| Dashboard stats | **Verified** | Total collected and contributor count update after webhook |
+| CSV export | **Verified** | Admin export includes completed payment |
+
+Full smoke test log: [FINAL_TEST_REPORT.md](./FINAL_TEST_REPORT.md)
+
+**Release tag:** `v1.2.1` — production deployment confirmed live.
