@@ -2,8 +2,6 @@
 
 import { motion } from "framer-motion";
 import { ChartNoAxesCombined, ClipboardList, Download, History, ShieldCheck, Smartphone } from "lucide-react";
-import { GoldCoin } from "@/components/shared/illustrations/GoldCoin";
-import { MoneyBag } from "@/components/shared/illustrations/MoneyBag";
 
 const features = [
   {
@@ -13,7 +11,7 @@ const features = [
     tint: "bg-amber-50/80 border-amber-200/50",
     iconBg: "bg-linear-to-br from-amber-400/20 to-yellow-300/15",
     iconColor: "text-amber-600",
-    illustration: <GoldCoin size={22} animate={false} />,
+    illustration: null,
   },
   {
     title: "Owner Dashboard",
@@ -49,7 +47,7 @@ const features = [
     tint: "bg-sky-50/70 border-sky-200/50",
     iconBg: "bg-linear-to-br from-sky-500/15 to-cyan-400/10",
     iconColor: "text-sky-600",
-    illustration: <MoneyBag size={22} animate={false} />,
+    illustration: null,
   },
   {
     title: "CSV Export",
@@ -66,8 +64,8 @@ export function FeaturesSection() {
   return (
     <section id="features" className="border-y border-white/70 bg-white/55 backdrop-blur-xl">
       <div className="mx-auto max-w-6xl px-4 py-16">
-        <div className="flex items-center gap-3">
-          <GoldCoin size={28} animate={false} />
+        <div className="flex items-center gap-2">
+          <span className="size-2 rounded-full bg-amber-400" />
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-600">Built for collections</p>
         </div>
         <h2 className="mt-2 text-3xl font-bold text-[#071a0e]">Everything you need to collect and track</h2>

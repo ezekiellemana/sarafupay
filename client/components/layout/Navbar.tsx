@@ -11,7 +11,7 @@ export function Navbar() {
     <header className="sticky top-0 z-40 border-b border-white/60 bg-white/80 backdrop-blur-2xl">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         <Link href="/" className="flex items-center">
-          <BrandLogo variant="light" height={44} />
+          <BrandLogo variant="light" height={48} />
         </Link>
         <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
           <Link href="/#features" className="hover:text-[#0B1F3A] transition-colors">Features</Link>

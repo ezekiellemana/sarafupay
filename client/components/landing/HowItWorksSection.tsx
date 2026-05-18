@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { GoldCoin } from "@/components/shared/illustrations/GoldCoin";
 
 const steps = [
   { label: "Join or login", tint: "bg-blue-50/80 border-blue-200/50", desc: "Create your account or log in to your SarafuPay wallet." },
@@ -21,8 +20,8 @@ const stepCoinBg = [
 export function HowItWorksSection() {
   return (
     <section id="how" className="mx-auto max-w-6xl px-4 py-16">
-      <div className="flex items-center gap-3">
-        <GoldCoin size={28} animate={false} />
+      <div className="flex items-center gap-2">
+        <span className="size-2 rounded-full bg-amber-400" />
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-600">Four clear steps</p>
       </div>
       <h2 className="mt-2 text-3xl font-bold text-[#071a0e]">How it works</h2>
@@ -41,20 +40,9 @@ export function HowItWorksSection() {
           >
             <div className={`relative z-10 flex size-11 items-center justify-center rounded-full ${stepCoinBg[index]} text-sm font-bold text-white shadow-lg`}>
               {index + 1}
-              {/* Small coin shine */}
-              <span className="absolute inset-0 rounded-full bg-white/20 mask-[radial-gradient(circle_at_30%_30%,white,transparent)]" />
             </div>
             <p className={`mt-4 font-semibold ${stepColors[index]}`}>{label}</p>
             <p className="mt-2 text-xs leading-5 text-muted-foreground">{desc}</p>
-            {index === 1 && (
-              <motion.div
-                className="absolute -right-2 -top-3"
-                animate={{ y: [0, -6, 0], rotate: [0, 10, 0] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <GoldCoin size={22} animate={false} />
-              </motion.div>
-            )}
           </motion.div>
         ))}
       </div>

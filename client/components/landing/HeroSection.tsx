@@ -7,18 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AnimatedProgressBar } from "@/components/shared/AnimatedProgressBar";
 import { GradientButton } from "@/components/shared/GradientButton";
-import { CoinStack } from "@/components/shared/illustrations/CoinStack";
 import { GoldCoin } from "@/components/shared/illustrations/GoldCoin";
-import { FloatingCoins } from "@/components/shared/illustrations/FloatingCoins";
 
 export function HeroSection() {
   return (
     <section className="relative mx-auto grid max-w-6xl gap-10 px-4 py-14 md:grid-cols-[1fr_0.9fr] md:items-center md:py-20">
-      <FloatingCoins count={5} opacity={0.18} />
-
       <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="flex flex-col gap-6">
         <div className="inline-flex items-center gap-2 self-start rounded-full border border-amber-200/60 bg-amber-50/80 px-4 py-1.5 text-xs font-semibold text-amber-700 backdrop-blur-sm">
-          <GoldCoin size={16} />
+          <Coins className="size-3.5 text-amber-600" />
           Tanzania&apos;s group contribution platform
         </div>
         <div className="flex flex-col gap-4">
@@ -62,29 +58,6 @@ export function HeroSection() {
         transition={{ delay: 0.1, duration: 0.45 }}
         className="relative"
       >
-        {/* Floating coin decorations around the card */}
-        <motion.div
-          className="absolute -right-6 -top-8 z-10"
-          animate={{ y: [0, -10, 0], rotate: [0, 8, 0] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <CoinStack size={70} animate={false} />
-        </motion.div>
-        <motion.div
-          className="absolute -bottom-4 -left-4 z-10"
-          animate={{ y: [0, -7, 0] }}
-          transition={{ duration: 5, delay: 1, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <GoldCoin size={36} animate={false} />
-        </motion.div>
-        <motion.div
-          className="absolute -right-3 bottom-10 z-10"
-          animate={{ y: [0, -8, 0], rotate: [0, -5, 0] }}
-          transition={{ duration: 3.5, delay: 0.5, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <GoldCoin size={26} animate={false} />
-        </motion.div>
-
         <Card className="glass-premium border-0 shadow-2xl shadow-slate-900/12">
           <CardContent className="flex flex-col gap-5 p-6">
             <div className="flex items-center justify-between">
