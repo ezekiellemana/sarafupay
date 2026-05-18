@@ -5,15 +5,12 @@ import { Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import { Check, Clock3, Copy, Printer } from "lucide-react";
 import { BrandLogo } from "@/components/shared/BrandLogo";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PaymentStatusBadge } from "@/components/payments/PaymentStatusBadge";
 import { FloatingBlobBackground } from "@/components/shared/FloatingBlobBackground";
 import { SuccessAnimation } from "@/components/shared/SuccessAnimation";
 import { GradientButton } from "@/components/shared/GradientButton";
-import { CoinStack } from "@/components/shared/illustrations/CoinStack";
-import { FloatingCoins } from "@/components/shared/illustrations/FloatingCoins";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { formatDate, formatMoney } from "@/lib/formatters";
@@ -80,24 +77,9 @@ function PaymentReturnContent() {
       <div className="print:hidden">
         <FloatingBlobBackground />
       </div>
-      {isSuccess && (
-        <div className="print:hidden">
-          <FloatingCoins count={6} opacity={0.22} />
-        </div>
-      )}
-
       <div className="flex w-full max-w-lg flex-col gap-4">
         {/* Status card — hidden on print, receipt below takes over */}
         <Card className="glass-premium relative overflow-hidden border-0 text-center shadow-2xl shadow-slate-900/10 print:hidden">
-          {isSuccess && (
-            <motion.div
-              className="absolute -right-4 -top-6 opacity-60"
-              animate={{ y: [0, -8, 0], rotate: [0, 8, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <CoinStack size={80} animate={false} />
-            </motion.div>
-          )}
 
           <CardHeader className="relative gap-4">
             <SuccessAnimation state={state} />
@@ -138,29 +120,35 @@ function PaymentReturnContent() {
 
         {/* Receipt — visible on screen and on print */}
         {isSuccess && payment && (
-          <div className="w-full rounded-3xl border border-slate-200 bg-white p-6 shadow-lg shadow-slate-900/5 print:rounded-none print:border-0 print:shadow-none">
+          <div className="w-full overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-900/5 print:rounded-none print:border-0 print:shadow-none">
             {/* Receipt header */}
-            <div className="flex items-center justify-between">
-              <BrandLogo variant="light" height={30} />
-              <span className="text-xs font-semibold uppercase tracking-wider text-[#16a34a]">Receipt</span>
+            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+              <BrandLogo variant="light" height={28} />
+              <div className="flex items-center gap-2">
+                <span className="inline-flex size-5 items-center justify-center rounded-full bg-emerald-500">
+                  <Check className="size-3 text-white" strokeWidth={3} />
+                </span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-emerald-600">Receipt</span>
+              </div>
             </div>
-
-            <div className="my-4 border-t border-dashed border-slate-200" />
 
             {/* Prominent amount */}
-            <div className="mb-4 text-center">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">Amount paid</p>
-              <p className="mt-1 text-3xl font-bold text-[#071a0e]">{formatMoney(payment.amount, payment.currency)}</p>
+            <div className="bg-slate-50/60 px-6 py-5 text-center">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Amount paid</p>
+              <p className="mt-1.5 text-4xl font-bold text-[#071a0e]">{formatMoney(payment.amount, payment.currency)}</p>
             </div>
 
+            <div className="border-t border-dashed border-slate-200" />
+
             {/* Receipt rows */}
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-slate-100 px-6">
               <ReceiptRow label="Status" value={<PaymentStatusBadge status={status} />} />
               {payment.customerName && <ReceiptRow label="Payer" value={payment.customerName} />}
               {collectionTitle && <ReceiptRow label="Collection" value={collectionTitle} />}
+              <ReceiptRow label="Date" value={formatDate(payment.createdAt)} />
 
               {/* Reference row with copy button */}
-              <div className="flex items-start justify-between gap-4 py-1.5 text-sm">
+              <div className="flex items-start justify-between gap-4 py-2.5 text-sm">
                 <span className="shrink-0 text-muted-foreground">Reference</span>
                 <div className="flex items-center gap-1.5">
                   <span className="break-all font-mono text-xs font-medium text-[#071a0e]">{paymentRef}</span>
@@ -176,14 +164,12 @@ function PaymentReturnContent() {
                   </button>
                 </div>
               </div>
-
-              <ReceiptRow label="Date" value={formatDate(payment.createdAt)} />
             </div>
 
-            <div className="my-4 border-t border-dashed border-slate-200" />
+            <div className="border-t border-dashed border-slate-200" />
 
-            <p className="text-center text-xs text-muted-foreground">
-              Payment processed securely through Snippe.
+            <p className="px-6 py-4 text-center text-xs text-muted-foreground">
+              Payment processed securely through Snippe · SarafuPay
             </p>
           </div>
         )}
@@ -193,7 +179,7 @@ function PaymentReturnContent() {
           <div className="flex justify-center print:hidden">
             <Button
               variant="outline"
-              className="gap-2 rounded-2xl border-white/70 bg-white/80 backdrop-blur-sm"
+              className="h-11 gap-2 rounded-2xl border-white/70 bg-white/80 px-6 backdrop-blur-sm hover:bg-white"
               onClick={() => window.print()}
             >
               <Printer className="size-4" /> Print / Save as PDF

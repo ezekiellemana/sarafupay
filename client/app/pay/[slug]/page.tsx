@@ -5,13 +5,12 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { Ban, CheckCircle2, Clock, LockKeyhole, ShieldCheck, Store, Users } from "lucide-react";
+import { ArrowRight, Ban, CheckCircle2, Clock, Loader2, LockKeyhole, ShieldCheck, Store, Users } from "lucide-react";
 import { BrandLogo } from "@/components/shared/BrandLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AnimatedProgressBar } from "@/components/shared/AnimatedProgressBar";
-import { GoldCoin } from "@/components/shared/illustrations/GoldCoin";
 import { FloatingBlobBackground } from "@/components/shared/FloatingBlobBackground";
 import { collectionsApi, COLLECTION_TYPE_EMOJIS, COLLECTION_TYPE_LABELS } from "@/lib/collections";
 import { getApiErrorMessage } from "@/lib/api";
@@ -222,28 +221,28 @@ export default function PublicPayPage({ params }: { params: Promise<{ slug: stri
             <p className="mt-1 text-sm text-muted-foreground">Enter your details and pay securely.</p>
 
             <form method="post" onSubmit={handleSubmit(onSubmit)} className="mt-5 flex flex-col gap-4">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="payerName">Full name *</Label>
-                <Input id="payerName" placeholder="John Doe" className="rounded-2xl" {...register("payerName", { required: "Full name is required." })} />
-                {errors.payerName && <p className="text-sm text-destructive">{errors.payerName.message}</p>}
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="payerName" className="text-sm font-semibold text-[#0B1F3A]">Full name *</Label>
+                <Input id="payerName" placeholder="John Doe" className="h-11 rounded-2xl" {...register("payerName", { required: "Full name is required." })} />
+                {errors.payerName && <p className="text-xs font-medium text-destructive">{errors.payerName.message}</p>}
               </div>
 
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="payerPhone">Phone number *</Label>
-                <Input id="payerPhone" type="tel" placeholder="0712345678" className="rounded-2xl" {...register("payerPhone", { required: "Phone number is required." })} />
-                {errors.payerPhone && <p className="text-sm text-destructive">{errors.payerPhone.message}</p>}
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="payerPhone" className="text-sm font-semibold text-[#0B1F3A]">Phone number *</Label>
+                <Input id="payerPhone" type="tel" placeholder="0712345678" className="h-11 rounded-2xl" {...register("payerPhone", { required: "Phone number is required." })} />
+                {errors.payerPhone && <p className="text-xs font-medium text-destructive">{errors.payerPhone.message}</p>}
               </div>
 
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="payerEmail">Email <span className="text-muted-foreground">(optional)</span></Label>
-                <Input id="payerEmail" type="email" placeholder="john@example.com" className="rounded-2xl" {...register("payerEmail")} />
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="payerEmail" className="text-sm font-semibold text-[#0B1F3A]">Email <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                <Input id="payerEmail" type="email" placeholder="john@example.com" className="h-11 rounded-2xl" {...register("payerEmail")} />
               </div>
 
               {/* Amount */}
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="amount">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="amount" className="text-sm font-semibold text-[#0B1F3A]">
                   Amount ({collection.currency}) *
-                  {!collection.allowCustomAmount && <span className="ml-2 text-xs text-muted-foreground">Fixed amount</span>}
+                  {!collection.allowCustomAmount && <span className="ml-2 font-normal text-xs text-muted-foreground">Fixed</span>}
                 </Label>
                 {collection.allowCustomAmount ? (
                   <div className="flex flex-col gap-2">
@@ -254,10 +253,10 @@ export default function PublicPayPage({ params }: { params: Promise<{ slug: stri
                             key={amt}
                             type="button"
                             onClick={() => setValue("amount", String(amt))}
-                            className={`rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors ${
+                            className={`rounded-xl border px-3.5 py-2 text-sm font-semibold transition-colors ${
                               amountValue === String(amt)
-                                ? "border-[#16a34a] bg-green-50 text-[#16a34a]"
-                                : "border-white/70 bg-white/60 text-muted-foreground hover:border-[#16a34a]/50"
+                                ? "border-[#16a34a] bg-green-50 text-[#16a34a] shadow-sm"
+                                : "border-slate-200 bg-white/80 text-slate-600 hover:border-[#16a34a]/50 hover:text-[#16a34a]"
                             }`}
                           >
                             {formatMoney(amt, collection.currency)}
@@ -269,7 +268,7 @@ export default function PublicPayPage({ params }: { params: Promise<{ slug: stri
                       id="amount"
                       type="number"
                       placeholder="Enter amount"
-                      className="rounded-2xl"
+                      className="h-11 rounded-2xl"
                       {...register("amount", {
                         required: "Amount is required.",
                         min: { value: 1, message: "Amount must be at least 1." }
@@ -278,34 +277,37 @@ export default function PublicPayPage({ params }: { params: Promise<{ slug: stri
                   </div>
                 ) : (
                   <>
-                    {/* Hidden registered field so react-hook-form includes amount in submit values */}
                     <input type="hidden" {...register("amount", { required: true })} />
-                    <div className="rounded-2xl border border-amber-200/60 bg-amber-50/80 px-4 py-3">
-                      <p className="text-xl font-bold sarafu-gradient-text-gold">
-                        {formatMoney(collection.suggestedAmount ?? 0, collection.currency)}
-                      </p>
+                    <div className="flex items-center gap-3 rounded-2xl border border-amber-200/60 bg-amber-50/80 px-4 py-3.5">
+                      <div className="flex size-8 items-center justify-center rounded-xl bg-amber-400/15">
+                        <ShieldCheck className="size-4 text-amber-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-amber-700/70">Fixed contribution</p>
+                        <p className="text-xl font-bold sarafu-gradient-text-gold leading-tight">
+                          {formatMoney(collection.suggestedAmount ?? 0, collection.currency)}
+                        </p>
+                      </div>
                     </div>
                   </>
                 )}
-                {errors.amount && <p className="text-sm text-destructive">{errors.amount.message}</p>}
+                {errors.amount && <p className="text-xs font-medium text-destructive">{errors.amount.message}</p>}
               </div>
 
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="payerMessage">Message <span className="text-muted-foreground">(optional)</span></Label>
-                <Input id="payerMessage" placeholder="Any message for the owner..." className="rounded-2xl" {...register("payerMessage")} />
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="payerMessage" className="text-sm font-semibold text-[#0B1F3A]">Message <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                <Input id="payerMessage" placeholder="Any message for the organizer…" className="h-11 rounded-2xl" {...register("payerMessage")} />
               </div>
 
               <button
                 type="submit"
                 disabled={paying}
-                className="mt-1 flex h-12 items-center justify-center gap-2 rounded-2xl bg-linear-to-r from-amber-500 via-yellow-400 to-amber-300 text-sm font-bold text-amber-900 shadow-lg shadow-amber-500/30 transition-all hover:brightness-105 disabled:opacity-60"
+                className="mt-1 flex h-12 items-center justify-center gap-2 rounded-2xl bg-linear-to-r from-amber-500 via-yellow-400 to-amber-300 text-sm font-bold text-amber-900 shadow-lg shadow-amber-500/30 transition-[filter,opacity] hover:brightness-105 disabled:opacity-60"
               >
-                {paying ? "Creating payment…" : (
-                  <>
-                    <GoldCoin size={20} animate={false} />
-                    Pay Now →
-                  </>
-                )}
+                {paying
+                  ? <><Loader2 className="size-4 animate-spin" /> Creating payment…</>
+                  : <>Pay Now <ArrowRight className="size-4" /></>
+                }
               </button>
 
               <p className="text-center text-xs text-muted-foreground">
