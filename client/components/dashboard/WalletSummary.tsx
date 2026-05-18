@@ -1,12 +1,9 @@
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { ArrowUpRight, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AnimatedNumber } from "@/components/shared/AnimatedNumber";
 import { AnimatedProgressBar } from "@/components/shared/AnimatedProgressBar";
-import { CoinStack } from "@/components/shared/illustrations/CoinStack";
-import { FloatingCoins } from "@/components/shared/illustrations/FloatingCoins";
 import { formatMoney } from "@/lib/formatters";
 
 export function WalletSummary({ totalPaid, remainingAmount, progress = 0 }: { totalPaid: number; remainingAmount: number; progress?: number }) {
@@ -18,18 +15,6 @@ export function WalletSummary({ totalPaid, remainingAmount, progress = 0 }: { to
       <div className="absolute -right-20 -top-20 size-80 rounded-full bg-[#4ade80]/25 blur-3xl" />
       <div className="absolute -bottom-20 left-1/4 size-72 rounded-full bg-[#F59E0B]/12 blur-3xl" />
       <div className="absolute -left-10 top-1/2 size-56 rounded-full bg-[#F59E0B]/8 blur-3xl" />
-
-      {/* Floating background coins (very subtle) */}
-      <FloatingCoins count={3} opacity={0.08} className="z-0" />
-
-      {/* Coin stack decoration — top right */}
-      <motion.div
-        className="absolute -right-2 -top-6 z-10 opacity-70"
-        animate={{ y: [0, -8, 0], rotate: [0, 3, 0] }}
-        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-      >
-        <CoinStack size={90} animate={false} />
-      </motion.div>
 
       <CardContent className="relative z-10 flex flex-col gap-7 p-6 md:flex-row md:items-center md:justify-between md:p-8">
         <div className="max-w-xl">
@@ -67,13 +52,11 @@ export function WalletSummary({ totalPaid, remainingAmount, progress = 0 }: { to
           </div>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row md:flex-col">
-          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-            <Link href="/payment/start">
-              <Button className="h-11 w-full rounded-2xl bg-linear-to-r from-amber-500 to-yellow-400 text-amber-900 font-semibold shadow-lg shadow-amber-500/30 hover:brightness-105">
-                Pay This Month <ArrowUpRight data-icon="inline-end" />
-              </Button>
-            </Link>
-          </motion.div>
+          <Link href="/payment/start">
+            <Button className="h-11 w-full rounded-2xl bg-linear-to-r from-amber-500 to-yellow-400 font-semibold text-amber-900 shadow-lg shadow-amber-500/30 transition-[filter] hover:brightness-105">
+              Pay This Month <ArrowUpRight className="ml-1 size-4" />
+            </Button>
+          </Link>
           <Link href="/dashboard/payments">
             <Button className="h-11 w-full rounded-2xl border-white/20 bg-white/5 text-white hover:bg-white/10" variant="outline">
               View History

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -96,25 +97,25 @@ export function CollectionForm({
   return (
     <form method="post" onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
       {/* Title */}
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="title">Project/Event title *</Label>
-        <Input id="title" placeholder="e.g. Wedding of John & Anna" {...register("title", { required: "Title is required." })} className="rounded-2xl" />
-        {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="title" className="text-sm font-semibold text-[#0B1F3A]">Project/Event title *</Label>
+        <Input id="title" placeholder="e.g. Wedding of John & Anna" {...register("title", { required: "Title is required." })} className="h-11 rounded-2xl" />
+        {errors.title && <p className="text-xs font-medium text-destructive">{errors.title.message}</p>}
       </div>
 
       {/* Description */}
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="description">Description</Label>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="description" className="text-sm font-semibold text-[#0B1F3A]">Description</Label>
         <textarea id="description" rows={3} placeholder="Tell contributors what this is about..." {...register("description")}
-          className="rounded-2xl border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none" />
+          className="rounded-2xl border border-input bg-background px-3 py-2.5 text-sm shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none" />
       </div>
 
       {/* Collection type */}
-      <div className="flex flex-col gap-2">
-        <Label>Collection Type *</Label>
+      <div className="flex flex-col gap-1.5">
+        <Label className="text-sm font-semibold text-[#0B1F3A]">Collection Type *</Label>
         <Controller name="collectionType" control={control} render={({ field }) => (
           <Select value={field.value} onValueChange={field.onChange}>
-            <SelectTrigger className="rounded-2xl"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-11 rounded-2xl"><SelectValue /></SelectTrigger>
             <SelectContent className="rounded-2xl">
               {COLLECTION_TYPES.map((type) => (
                 <SelectItem key={type} value={type}>
@@ -128,27 +129,27 @@ export function CollectionForm({
 
       {/* Amounts grid */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="targetAmount">Target Amount (optional)</Label>
-          <Input id="targetAmount" type="number" placeholder="e.g. 500000" {...register("targetAmount")} className="rounded-2xl" />
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="targetAmount" className="text-sm font-semibold text-[#0B1F3A]">Target Amount <span className="font-normal text-muted-foreground">(optional)</span></Label>
+          <Input id="targetAmount" type="number" placeholder="e.g. 500000" {...register("targetAmount")} className="h-11 rounded-2xl" />
         </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="suggestedAmount">Suggested Amount</Label>
-          <Input id="suggestedAmount" type="number" placeholder="e.g. 10000" {...register("suggestedAmount")} className="rounded-2xl" />
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="suggestedAmount" className="text-sm font-semibold text-[#0B1F3A]">Suggested Amount</Label>
+          <Input id="suggestedAmount" type="number" placeholder="e.g. 10000" {...register("suggestedAmount")} className="h-11 rounded-2xl" />
         </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="minimumAmount">Minimum Amount</Label>
-          <Input id="minimumAmount" type="number" placeholder="e.g. 1000" {...register("minimumAmount")} className="rounded-2xl" />
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="minimumAmount" className="text-sm font-semibold text-[#0B1F3A]">Minimum Amount</Label>
+          <Input id="minimumAmount" type="number" placeholder="e.g. 1000" {...register("minimumAmount")} className="h-11 rounded-2xl" />
         </div>
       </div>
 
       {/* Currency + visibility */}
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="flex flex-col gap-2">
-          <Label>Currency</Label>
+        <div className="flex flex-col gap-1.5">
+          <Label className="text-sm font-semibold text-[#0B1F3A]">Currency</Label>
           <Controller name="currency" control={control} render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger className="rounded-2xl"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-11 rounded-2xl"><SelectValue /></SelectTrigger>
               <SelectContent className="rounded-2xl">
                 <SelectItem value="TZS">TZS — Tanzanian Shilling</SelectItem>
                 <SelectItem value="USD">USD — US Dollar</SelectItem>
@@ -158,11 +159,11 @@ export function CollectionForm({
             </Select>
           )} />
         </div>
-        <div className="flex flex-col gap-2">
-          <Label>Visibility</Label>
+        <div className="flex flex-col gap-1.5">
+          <Label className="text-sm font-semibold text-[#0B1F3A]">Visibility</Label>
           <Controller name="visibility" control={control} render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger className="rounded-2xl"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-11 rounded-2xl"><SelectValue /></SelectTrigger>
               <SelectContent className="rounded-2xl">
                 <SelectItem value="public">🌍 Public — anyone with link can pay</SelectItem>
                 <SelectItem value="private">🔒 Private — link only for trusted people</SelectItem>
@@ -173,60 +174,60 @@ export function CollectionForm({
       </div>
 
       {/* Allow custom amount toggle */}
-      <div className="flex items-center gap-3 rounded-2xl border border-white/70 bg-white/60 p-4 backdrop-blur-sm">
+      <div className="flex items-start gap-3 rounded-2xl border border-white/70 bg-white/60 p-4 backdrop-blur-sm">
         <input
           id="allowCustomAmount"
           type="checkbox"
           {...register("allowCustomAmount")}
-          className="size-4 rounded accent-[#16a34a]"
+          className="mt-0.5 size-4 rounded accent-[#16a34a]"
         />
         <div>
-          <Label htmlFor="allowCustomAmount" className="cursor-pointer font-medium">Allow custom amount</Label>
-          <p className="text-xs text-muted-foreground">Payers can enter their own amount. If off, the suggested amount is fixed.</p>
+          <Label htmlFor="allowCustomAmount" className="cursor-pointer text-sm font-semibold text-[#0B1F3A]">Allow custom amount</Label>
+          <p className="mt-0.5 text-xs text-muted-foreground">Payers can enter their own amount. If off, the suggested amount is fixed.</p>
         </div>
       </div>
 
       {/* Show contributors toggle */}
-      <div className="flex items-center gap-3 rounded-2xl border border-white/70 bg-white/60 p-4 backdrop-blur-sm">
+      <div className="flex items-start gap-3 rounded-2xl border border-white/70 bg-white/60 p-4 backdrop-blur-sm">
         <input
           id="showContributors"
           type="checkbox"
           {...register("showContributors")}
-          className="size-4 rounded accent-[#16a34a]"
+          className="mt-0.5 size-4 rounded accent-[#16a34a]"
         />
         <div>
-          <Label htmlFor="showContributors" className="cursor-pointer font-medium">Show recent contributors publicly</Label>
-          <p className="text-xs text-muted-foreground">Only first name + last initial and amount are shown — never phone or email.</p>
+          <Label htmlFor="showContributors" className="cursor-pointer text-sm font-semibold text-[#0B1F3A]">Show recent contributors publicly</Label>
+          <p className="mt-0.5 text-xs text-muted-foreground">Only first name + last initial and amount are shown — never phone or email.</p>
         </div>
       </div>
 
       {/* Dates */}
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="startDate">Start Date</Label>
-          <Input id="startDate" type="date" {...register("startDate")} className="rounded-2xl" />
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="startDate" className="text-sm font-semibold text-[#0B1F3A]">Start Date</Label>
+          <Input id="startDate" type="date" {...register("startDate")} className="h-11 rounded-2xl" />
         </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="endDate">End Date</Label>
-          <Input id="endDate" type="date" {...register("endDate")} className="rounded-2xl" />
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="endDate" className="text-sm font-semibold text-[#0B1F3A]">End Date</Label>
+          <Input id="endDate" type="date" {...register("endDate")} className="h-11 rounded-2xl" />
         </div>
       </div>
 
       {/* Payment purpose */}
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="paymentPurpose">Payment Purpose / Description for payers</Label>
-        <Input id="paymentPurpose" placeholder="e.g. Contribution towards our wedding celebration" {...register("paymentPurpose")} className="rounded-2xl" />
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="paymentPurpose" className="text-sm font-semibold text-[#0B1F3A]">Payment purpose <span className="font-normal text-muted-foreground">— shown to payers</span></Label>
+        <Input id="paymentPurpose" placeholder="e.g. Contribution towards our wedding celebration" {...register("paymentPurpose")} className="h-11 rounded-2xl" />
       </div>
 
       {/* Thank you message */}
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="thankYouMessage">Thank-you message (shown after payment)</Label>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="thankYouMessage" className="text-sm font-semibold text-[#0B1F3A]">Thank-you message <span className="font-normal text-muted-foreground">(shown after payment)</span></Label>
         <textarea
           id="thankYouMessage"
           rows={2}
           placeholder="e.g. Thank you for your generous support — it means the world to us!"
           {...register("thankYouMessage")}
-          className="rounded-2xl border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+          className="rounded-2xl border border-input bg-background px-3 py-2.5 text-sm shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
         />
       </div>
 
@@ -235,7 +236,9 @@ export function CollectionForm({
         disabled={loading}
         className="h-12 rounded-2xl bg-linear-to-r from-[#052e16] via-[#16a34a] to-[#4ade80] text-white shadow-lg shadow-green-700/20 hover:brightness-105"
       >
-        {loading ? (isEdit ? "Saving..." : "Creating...") : (isEdit ? "Save Changes" : "Create Project/Event")}
+        {loading
+          ? <><Loader2 className="mr-2 size-4 animate-spin" />{isEdit ? "Saving…" : "Creating…"}</>
+          : (isEdit ? "Save Changes" : "Create Project/Event")}
       </Button>
     </form>
   );

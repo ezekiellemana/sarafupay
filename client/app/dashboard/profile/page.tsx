@@ -84,21 +84,21 @@ export default function ProfilePage() {
               </div>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="fullName">Full name *</Label>
-                <Input id="fullName" placeholder="John Doe" className="rounded-2xl" {...form.register("fullName")} />
-                {form.formState.errors.fullName && <p className="text-sm text-destructive">{form.formState.errors.fullName.message}</p>}
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="fullName" className="text-sm font-semibold text-[#0B1F3A]">Full name *</Label>
+                <Input id="fullName" placeholder="John Doe" className="h-11 rounded-2xl" {...form.register("fullName")} />
+                {form.formState.errors.fullName && <p className="text-xs font-medium text-destructive">{form.formState.errors.fullName.message}</p>}
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="phoneNumber">Phone number *</Label>
-                  <Input id="phoneNumber" type="tel" placeholder="0712345678" className="rounded-2xl" {...form.register("phoneNumber")} />
-                  {form.formState.errors.phoneNumber && <p className="text-sm text-destructive">Use a valid Tanzanian phone number.</p>}
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="phoneNumber" className="text-sm font-semibold text-[#0B1F3A]">Phone number *</Label>
+                  <Input id="phoneNumber" type="tel" placeholder="0712345678" className="h-11 rounded-2xl" {...form.register("phoneNumber")} />
+                  {form.formState.errors.phoneNumber && <p className="text-xs font-medium text-destructive">Use a valid Tanzanian phone number.</p>}
                 </div>
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="email">Email *</Label>
-                  <Input id="email" type="email" placeholder="you@example.com" className="rounded-2xl" {...form.register("email")} />
-                  {form.formState.errors.email && <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>}
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="email" className="text-sm font-semibold text-[#0B1F3A]">Email *</Label>
+                  <Input id="email" type="email" placeholder="you@example.com" className="h-11 rounded-2xl" {...form.register("email")} />
+                  {form.formState.errors.email && <p className="text-xs font-medium text-destructive">{form.formState.errors.email.message}</p>}
                 </div>
               </div>
             </CardContent>
@@ -116,38 +116,38 @@ export default function ProfilePage() {
               </p>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="businessName">Display / Business name</Label>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="businessName" className="text-sm font-semibold text-[#0B1F3A]">Display / Business name</Label>
                 <Input
                   id="businessName"
                   placeholder="e.g. Juma wa Mama Events, Chama cha Matumaini"
-                  className="rounded-2xl"
+                  className="h-11 rounded-2xl"
                   {...form.register("businessName")}
                 />
                 <p className="text-xs text-muted-foreground">Shown as &quot;Organized by &hellip;&quot; on public payment pages.</p>
-                {form.formState.errors.businessName && <p className="text-sm text-destructive">{form.formState.errors.businessName.message}</p>}
+                {form.formState.errors.businessName && <p className="text-xs font-medium text-destructive">{form.formState.errors.businessName.message}</p>}
               </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="bio">Short description</Label>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="bio" className="text-sm font-semibold text-[#0B1F3A]">Short description</Label>
                 <textarea
                   id="bio"
                   rows={3}
                   placeholder="e.g. We organize group savings and events for families in Dar es Salaam."
                   {...form.register("bio")}
-                  className="rounded-2xl border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+                  className="rounded-2xl border border-input bg-background px-3 py-2.5 text-sm shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
                 />
-                {form.formState.errors.bio && <p className="text-sm text-destructive">{form.formState.errors.bio.message}</p>}
+                {form.formState.errors.bio && <p className="text-xs font-medium text-destructive">{form.formState.errors.bio.message}</p>}
               </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="avatarUrl">Avatar / Logo URL <span className="text-muted-foreground">(optional)</span></Label>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="avatarUrl" className="text-sm font-semibold text-[#0B1F3A]">Avatar / Logo URL <span className="font-normal text-muted-foreground">(optional)</span></Label>
                 <Input
                   id="avatarUrl"
                   type="url"
                   placeholder="https://example.com/logo.png"
-                  className="rounded-2xl"
+                  className="h-11 rounded-2xl"
                   {...form.register("avatarUrl")}
                 />
-                {form.formState.errors.avatarUrl && <p className="text-sm text-destructive">{form.formState.errors.avatarUrl.message}</p>}
+                {form.formState.errors.avatarUrl && <p className="text-xs font-medium text-destructive">{form.formState.errors.avatarUrl.message}</p>}
               </div>
 
               {/* Preview */}

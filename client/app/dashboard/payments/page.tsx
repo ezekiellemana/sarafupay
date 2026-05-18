@@ -52,13 +52,44 @@ export default function PaymentsPage() {
       <div className="flex flex-col gap-6">
         <PageHeader eyebrow="Wallet activity" title="Payment history" description="Filter by status, month, or reference." action={<a href="/payment/start"><GradientButton>Pay Contribution</GradientButton></a>} />
         <div className="grid gap-3 rounded-3xl border border-white/70 bg-white/75 p-4 shadow-xl shadow-slate-900/5 backdrop-blur md:grid-cols-4">
-          <Input placeholder="Search reference" value={search} onChange={(event) => setSearch(event.target.value)} />
-          <Input type="month" value={month} onChange={(event) => setMonth(event.target.value)} />
+          <Input
+            placeholder="Search reference…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-11 rounded-2xl"
+          />
+          <Input
+            type="month"
+            value={month}
+            onChange={(e) => setMonth(e.target.value)}
+            className="h-11 rounded-2xl"
+          />
           <Select value={status} onValueChange={(value) => setStatus(value ?? "all")}>
-            <SelectTrigger className="w-full"><SelectValue placeholder="Status" /></SelectTrigger>
-            <SelectContent><SelectGroup>{["all", "pending", "completed", "failed", "expired", "cancelled"].map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectGroup></SelectContent>
+            <SelectTrigger className="h-11 w-full rounded-2xl">
+              <SelectValue placeholder="All statuses" />
+            </SelectTrigger>
+            <SelectContent className="rounded-2xl">
+              <SelectGroup>
+                {[
+                  { value: "all", label: "All statuses" },
+                  { value: "pending", label: "Pending" },
+                  { value: "completed", label: "Completed" },
+                  { value: "failed", label: "Failed" },
+                  { value: "expired", label: "Expired" },
+                  { value: "cancelled", label: "Cancelled" },
+                ].map(({ value, label }) => (
+                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
           </Select>
-          <Button variant="outline" onClick={() => { setSearch(""); setMonth(""); setStatus("all"); }}>Reset</Button>
+          <Button
+            variant="outline"
+            className="h-11 rounded-2xl"
+            onClick={() => { setSearch(""); setMonth(""); setStatus("all"); }}
+          >
+            Reset filters
+          </Button>
         </div>
         {loading && <LoadingState />}
         {error && <ErrorState message={error} action={<Button className="rounded-2xl" variant="outline" onClick={() => window.location.reload()}>Retry</Button>} />}

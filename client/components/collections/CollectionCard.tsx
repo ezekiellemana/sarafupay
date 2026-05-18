@@ -76,17 +76,17 @@ export function CollectionCard({ collection }: { collection: Collection }) {
           )}
 
           {/* Actions */}
-          <div className="flex gap-2 pt-1">
-            <Button size="sm" variant="ghost" className="h-8 rounded-xl px-3 text-xs text-muted-foreground hover:text-[#16a34a]" onClick={copyLink}>
-              <Copy className="mr-1 size-3" /> Copy Link
+          <div className="flex items-center gap-2 border-t border-slate-100/60 pt-3">
+            <Button size="sm" variant="ghost" className="h-8 flex-1 rounded-xl px-2 text-xs text-muted-foreground hover:bg-green-50 hover:text-[#16a34a]" onClick={copyLink}>
+              <Copy className="mr-1 size-3" /> Copy link
             </Button>
             <Link href={`/dashboard/collections/${collection._id}`} className="flex-1">
-              <Button size="sm" variant="ghost" className="h-8 w-full rounded-xl px-3 text-xs hover:text-[#16a34a]">
+              <Button size="sm" variant="outline" className="h-8 w-full rounded-xl px-2 text-xs font-semibold hover:border-[#16a34a]/30 hover:bg-green-50 hover:text-[#16a34a]">
                 <Eye className="mr-1 size-3" /> View
               </Button>
             </Link>
             <Link href={`/dashboard/collections/${collection._id}/edit`}>
-              <Button size="sm" variant="ghost" className="h-8 rounded-xl px-3 text-xs hover:text-amber-600">
+              <Button size="sm" variant="ghost" className="h-8 rounded-xl px-2.5 text-xs hover:bg-amber-50 hover:text-amber-600">
                 <Pencil className="size-3" />
               </Button>
             </Link>
