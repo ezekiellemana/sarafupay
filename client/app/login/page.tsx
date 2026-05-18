@@ -1,11 +1,9 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { ShieldCheck } from "lucide-react";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { FloatingBlobBackground } from "@/components/shared/FloatingBlobBackground";
 import { BrandLogo } from "@/components/shared/BrandLogo";
-import { CoinStack } from "@/components/shared/illustrations/CoinStack";
-import { FloatingCoins } from "@/components/shared/illustrations/FloatingCoins";
-import { GoldCoin } from "@/components/shared/illustrations/GoldCoin";
 
 export default function LoginPage() {
   return (
@@ -19,8 +17,6 @@ export default function LoginPage() {
           <div className="absolute -right-10 -top-10 size-48 rounded-full bg-[#4ade80]/15 blur-3xl" />
           <div className="absolute -bottom-10 left-1/4 size-40 rounded-full bg-[#F59E0B]/12 blur-3xl" />
           <div className="absolute bottom-1/4 -left-8 size-32 rounded-full bg-[#F59E0B]/10 blur-2xl" />
-
-          <FloatingCoins count={4} opacity={0.12} />
 
           <Link href="/" className="relative z-10 flex items-center">
             <BrandLogo variant="dark" height={46} />
@@ -37,16 +33,12 @@ export default function LoginPage() {
               <p className="text-sm text-amber-800/80 font-medium">Secure contributions</p>
               <p className="mt-2 text-3xl font-bold sarafu-gradient-text-gold">Per project</p>
               <div className="mt-3 flex items-center gap-2">
-                <GoldCoin size={18} animate={false} />
+                <ShieldCheck className="size-4 text-amber-600" />
                 <span className="text-xs text-amber-700/70">Webhook-verified payments</span>
               </div>
             </div>
           </div>
 
-          {/* Coin stack at the bottom */}
-          <div className="relative z-10 flex justify-center pt-6">
-            <CoinStack size={100} animate={true} />
-          </div>
         </div>
 
         {/* Right panel — form */}

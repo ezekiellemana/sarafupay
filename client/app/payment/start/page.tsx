@@ -2,15 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { LockKeyhole, ShieldCheck, Sparkles } from "lucide-react";
-import { motion } from "framer-motion";
+import { CalendarDays, LockKeyhole, Loader2, ShieldCheck, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { GradientButton } from "@/components/shared/GradientButton";
-import { CoinStack } from "@/components/shared/illustrations/CoinStack";
-import { GoldCoin } from "@/components/shared/illustrations/GoldCoin";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { formatMoney, currentMonth } from "@/lib/formatters";
 import type { Project } from "@/types";
@@ -63,20 +60,12 @@ export default function PaymentStartPage() {
 
           <CardContent className="relative flex flex-col gap-5">
             {/* Amount banner */}
-            <div className="relative flex items-center justify-between overflow-hidden rounded-3xl bg-[#071a0e] p-5 text-white">
+            <div className="relative overflow-hidden rounded-3xl bg-[#071a0e] p-5 text-white">
               <div className="absolute -right-6 -top-6 size-28 rounded-full bg-amber-400/10 blur-2xl" />
-              <div>
-                <p className="text-sm text-white/60">Monthly amount</p>
-                <p className="mt-1 text-4xl font-bold sarafu-gradient-text-gold">
-                  {selected ? formatMoney(selected.monthlyContributionAmount) : "—"}
-                </p>
-              </div>
-              <motion.div
-                animate={{ y: [0, -8, 0], rotate: [0, 5, 0] }}
-                transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <CoinStack size={72} animate={false} />
-              </motion.div>
+              <p className="text-sm text-white/60">Monthly amount</p>
+              <p className="mt-1 text-4xl font-bold sarafu-gradient-text-gold">
+                {selected ? formatMoney(selected.monthlyContributionAmount) : "—"}
+              </p>
             </div>
 
             <div className="grid gap-2">
@@ -97,7 +86,7 @@ export default function PaymentStartPage() {
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex items-center gap-3 rounded-2xl border border-white/60 bg-white/60 p-4 backdrop-blur-sm">
-                <GoldCoin size={28} animate={false} />
+                <CalendarDays className="size-5 shrink-0 text-amber-600" />
                 <div>
                   <p className="text-xs text-muted-foreground">Contribution month</p>
                   <p className="mt-0.5 font-semibold text-[#071a0e]">{currentMonth()}</p>
@@ -113,7 +102,7 @@ export default function PaymentStartPage() {
             </div>
 
             <GradientButton btnVariant="gold" disabled={!projectId || loading} onClick={startPayment} className="w-full">
-              {loading ? "Creating session..." : "Continue to Snippe Payment"}
+              {loading ? <><Loader2 className="mr-2 size-4 animate-spin" />Creating session…</> : "Continue to Snippe Payment"}
             </GradientButton>
 
             <p className="inline-flex items-center gap-2 text-xs text-muted-foreground">
