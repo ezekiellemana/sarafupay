@@ -145,7 +145,7 @@ export default function AdminPaymentsPage() {
 
         {/* Search row */}
         <Input
-          className="max-w-md"
+          className="h-11 max-w-md rounded-2xl"
           placeholder="Search by payer, reference, or collection title"
           value={search}
           onChange={(e) => handleSearchChange(e.target.value)}
@@ -158,7 +158,7 @@ export default function AdminPaymentsPage() {
               key={f}
               onClick={() => handleStatusFilter(f)}
               className={cn(
-                "rounded-full px-4 py-2 text-xs font-semibold transition-colors",
+                "rounded-full px-4 py-2.5 text-xs font-semibold transition-colors",
                 statusFilter === f
                   ? "bg-[#0B1F3A] text-white"
                   : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-slate-800",
@@ -169,42 +169,42 @@ export default function AdminPaymentsPage() {
           ))}
         </div>
 
-        {/* Date + amount range row */}
-        <div className="flex flex-wrap items-center gap-3">
+        {/* Date + amount range row — 2-col grid on mobile, inline on sm+ */}
+        <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-600">From</span>
+            <span className="shrink-0 text-xs font-semibold text-slate-600">From</span>
             <Input
               type="date"
-              className="h-9 w-40 text-xs"
+              className="h-9 min-w-0 flex-1 text-xs sm:w-36 sm:flex-none"
               value={dateFrom}
               onChange={(e) => handleDateFrom(e.target.value)}
             />
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-600">To</span>
+            <span className="shrink-0 text-xs font-semibold text-slate-600">To</span>
             <Input
               type="date"
-              className="h-9 w-40 text-xs"
+              className="h-9 min-w-0 flex-1 text-xs sm:w-36 sm:flex-none"
               value={dateTo}
               onChange={(e) => handleDateTo(e.target.value)}
             />
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-600">Min</span>
+            <span className="shrink-0 text-xs font-semibold text-slate-600">Min</span>
             <Input
               type="number"
               placeholder="0"
-              className="h-9 w-28 text-xs"
+              className="h-9 min-w-0 flex-1 text-xs sm:w-24 sm:flex-none"
               value={amountMin}
               onChange={(e) => setAmountMin(e.target.value)}
             />
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-600">Max</span>
+            <span className="shrink-0 text-xs font-semibold text-slate-600">Max</span>
             <Input
               type="number"
               placeholder="∞"
-              className="h-9 w-28 text-xs"
+              className="h-9 min-w-0 flex-1 text-xs sm:w-24 sm:flex-none"
               value={amountMax}
               onChange={(e) => setAmountMax(e.target.value)}
             />

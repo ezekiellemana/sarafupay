@@ -181,7 +181,7 @@ export default function AdminActivityPage() {
               key={key}
               onClick={() => setTypeFilter(key)}
               className={cn(
-                "rounded-full px-4 py-2 text-xs font-semibold transition-colors",
+                "rounded-full px-4 py-2.5 text-xs font-semibold transition-colors",
                 typeFilter === key
                   ? "bg-[#0B1F3A] text-white"
                   : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-slate-800",

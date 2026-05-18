@@ -73,18 +73,18 @@ export default function AdminMembersPage() {
         {/* Search + filter row */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
           <Input
-            className="max-w-md"
+            className="h-11 max-w-md rounded-2xl"
             placeholder="Search by name, email, or phone"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {(Object.keys(FILTER_LABELS) as StatusFilter[]).map((f) => (
               <button
                 key={f}
                 onClick={() => setStatusFilter(f)}
                 className={cn(
-                  "rounded-full px-4 py-2 text-xs font-semibold transition-colors",
+                  "rounded-full px-4 py-2.5 text-xs font-semibold transition-colors",
                   statusFilter === f
                     ? "bg-[#0B1F3A] text-white"
                     : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-slate-800",

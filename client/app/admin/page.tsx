@@ -367,7 +367,7 @@ export default function AdminPage() {
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
               Platform Admin
             </p>
-            <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-[#0B1F3A] md:text-4xl">
+            <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#0B1F3A] sm:text-3xl md:text-4xl">
               Platform Admin Dashboard
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
@@ -572,7 +572,7 @@ export default function AdminPage() {
             {/* ── Latest Completed Payments ── */}
             <section className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-[#0B1F3A]">Latest completed payments</h2>
+                <h2 className="text-xl font-bold text-[#0B1F3A] md:text-2xl">Latest completed payments</h2>
                 <Link href="/admin/payments">
                   <Button variant="outline" size="sm" className="rounded-2xl text-xs">
                     View all
@@ -598,7 +598,7 @@ export default function AdminPage() {
 
             {/* ── Quick Actions ── */}
             <section className="flex flex-col gap-4">
-              <h2 className="text-2xl font-bold text-[#0B1F3A]">Quick actions</h2>
+              <h2 className="text-xl font-bold text-[#0B1F3A] md:text-2xl">Quick actions</h2>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {QUICK_ACTIONS.map(({ href, label, desc, icon, accent }) => (
                   <Link key={href} href={href}>
@@ -673,7 +673,7 @@ export default function AdminPage() {
 
             {/* ── System Health ── */}
             <section id="health" className="flex flex-col gap-4">
-              <h2 className="text-2xl font-bold text-[#0B1F3A]">System health</h2>
+              <h2 className="text-xl font-bold text-[#0B1F3A] md:text-2xl">System health</h2>
               <SystemHealthCard />
             </section>
           </>
