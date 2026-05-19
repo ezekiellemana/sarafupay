@@ -3,38 +3,57 @@ import { BrandLogo } from "@/components/shared/BrandLogo";
 
 export function Footer() {
   return (
-    <footer className="border-t border-emerald-900/40 bg-[#071a0e] text-white">
-      <div className="mx-auto max-w-6xl px-4 py-10">
-        <div className="flex flex-col items-center gap-8 md:flex-row md:items-start md:justify-between">
+    <footer className="border-t border-[#035034]/20 bg-[#035034] text-white">
+      <div className="mx-auto max-w-6xl px-4 py-12">
+        <div className="grid gap-10 md:grid-cols-[1.5fr_1fr_1fr_1fr] md:gap-8">
 
-          {/* Brand */}
-          <div className="flex flex-col items-center gap-2 md:items-start">
-            <Link href="/" className="flex items-center">
+          {/* Brand column */}
+          <div className="flex flex-col gap-4">
+            <Link href="/" className="inline-flex">
               <BrandLogo variant="dark" height={38} />
             </Link>
-            <p className="mt-1 max-w-[220px] text-center text-xs text-white/40 md:text-left">
-              Simple, secure payment collection for events, groups, and projects.
+            <p className="max-w-55 text-sm leading-6 text-white/50">
+              Simple, secure payment collection for groups, events, and projects across Tanzania.
             </p>
-          </div>
-
-          {/* Navigation */}
-          <nav className="flex flex-col items-center gap-3 text-sm md:items-start">
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-white/30">Company</span>
-            <Link href="/about" className="text-white/60 transition-colors hover:text-amber-400">About</Link>
-            <Link href="/terms" className="text-white/60 transition-colors hover:text-amber-400">Terms of Service</Link>
-            <Link href="/privacy" className="text-white/60 transition-colors hover:text-amber-400">Privacy Policy</Link>
-          </nav>
-
-          {/* Right column */}
-          <div className="flex flex-col items-center gap-3 md:items-end">
-            <span className="rounded-full border border-emerald-800/60 bg-emerald-950/60 px-3 py-1 text-xs text-emerald-400">
-              Payments powered by Snippe
-            </span>
             <p className="text-xs text-white/30">
               © {new Date().getFullYear()} SarafuPay. All rights reserved.
             </p>
           </div>
 
+          {/* Product links */}
+          <div className="flex flex-col gap-3">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-white/35">Product</p>
+            <Link href="#features" className="text-sm text-white/60 transition-colors hover:text-[#F2D37A]">Features</Link>
+            <Link href="#how" className="text-sm text-white/60 transition-colors hover:text-[#F2D37A]">How it works</Link>
+            <Link href="#uses" className="text-sm text-white/60 transition-colors hover:text-[#F2D37A]">Use cases</Link>
+          </div>
+
+          {/* Account links */}
+          <div className="flex flex-col gap-3">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-white/35">Account</p>
+            <Link href="/login" className="text-sm text-white/60 transition-colors hover:text-[#F2D37A]">Login</Link>
+            <Link href="/register" className="text-sm text-white/60 transition-colors hover:text-[#F2D37A]">Create Account</Link>
+            <Link href="/dashboard" className="text-sm text-white/60 transition-colors hover:text-[#F2D37A]">Dashboard</Link>
+          </div>
+
+          {/* Company links */}
+          <div className="flex flex-col gap-3">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-white/35">Company</p>
+            <Link href="/about" className="text-sm text-white/60 transition-colors hover:text-[#F2D37A]">About</Link>
+            <Link href="/terms" className="text-sm text-white/60 transition-colors hover:text-[#F2D37A]">Terms of Service</Link>
+            <Link href="/privacy" className="text-sm text-white/60 transition-colors hover:text-[#F2D37A]">Privacy Policy</Link>
+          </div>
+
+        </div>
+
+        {/* Bottom bar */}
+        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-white/8 pt-6 sm:flex-row">
+          <span className="rounded-full border border-[#C4A237]/40 bg-[#C4A237]/10 px-3 py-1 text-xs font-medium text-[#F2D37A]">
+            Payments powered by Snippe
+          </span>
+          <p className="text-xs text-white/30">
+            Powering Payments. Empowering People.
+          </p>
         </div>
       </div>
     </footer>
