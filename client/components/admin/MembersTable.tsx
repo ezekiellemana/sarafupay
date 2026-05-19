@@ -95,16 +95,16 @@ export function MembersTable({ members, onView }: MembersTableProps) {
             </div>
             <div className="mt-3 grid grid-cols-2 gap-3">
               <div>
-                <p className="text-xs text-slate-400">Total paid</p>
+                <p className="text-xs font-medium text-slate-600">Total paid</p>
                 <p className="text-sm font-semibold text-[#0B1F3A]">{formatMoney(member.totalPaid ?? 0)}</p>
               </div>
               <div>
-                <p className="text-xs text-slate-400">Collections</p>
+                <p className="text-xs font-medium text-slate-600">Collections</p>
                 <p className="text-sm font-semibold text-amber-700">{member.collectionsCount ?? 0}</p>
               </div>
             </div>
             {member.createdAt && (
-              <p className="mt-2 text-xs text-slate-400">Joined {formatDate(member.createdAt)}</p>
+              <p className="mt-2 text-xs font-medium text-slate-500">Joined {formatDate(member.createdAt)}</p>
             )}
           </div>
         ))}

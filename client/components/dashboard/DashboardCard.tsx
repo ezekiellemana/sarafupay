@@ -40,7 +40,7 @@ export function DashboardCard({
       <Card className={cn("border shadow-xl shadow-slate-900/5 backdrop-blur-xl transition-shadow hover:shadow-2xl", styles.card, className)}>
         <CardHeader className="flex-row items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <CardTitle className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">{title}</CardTitle>
+            <CardTitle className="text-xs font-bold uppercase tracking-[0.12em] text-slate-600">{title}</CardTitle>
             <p className={cn("mt-2 text-2xl font-bold tracking-tight text-[#0B1F3A]", accent === "gold" && "sarafu-gradient-text-gold")}>
               {typeof numericValue === "number" ? <AnimatedNumber value={numericValue} format={formatValue} /> : value}
             </p>

@@ -171,7 +171,7 @@ export function MobileNav({ admin = false }: { admin?: boolean }) {
                             : "text-slate-700 hover:bg-slate-50",
                         )}
                       >
-                        <span className={cn("shrink-0", active ? "text-[#035034]" : "text-slate-400")}>
+                        <span className={cn("shrink-0", active ? "text-[#035034]" : "text-slate-500")}>
                           {item.icon}
                         </span>
                         {item.label}

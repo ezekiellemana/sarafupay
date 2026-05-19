@@ -106,16 +106,16 @@ export function AdminPaymentsTable({ payments, onView }: AdminPaymentsTableProps
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
               <div>
-                <p className="text-slate-400">Date</p>
+                <p className="font-medium text-slate-600">Date</p>
                 <p className="font-medium text-[#0B1F3A]">{formatDate(p.paidAt ?? p.createdAt)}</p>
               </div>
               <div>
-                <p className="text-slate-400">Method</p>
+                <p className="font-medium text-slate-600">Method</p>
                 <p className="font-medium text-[#0B1F3A]">{p.paymentMethod ?? "—"}</p>
               </div>
             </div>
             {(p.snippeReference ?? p.externalReference) && (
-              <p className="mt-2 truncate text-xs font-mono text-slate-400">
+              <p className="mt-2 truncate text-xs font-mono text-slate-500">
                 Ref: {p.snippeReference ?? p.externalReference}
               </p>
             )}

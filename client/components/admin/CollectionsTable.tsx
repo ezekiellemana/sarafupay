@@ -107,29 +107,29 @@ export function CollectionsTable({ collections, onView }: CollectionsTableProps)
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="truncate font-semibold text-[#0B1F3A]">{col.title}</p>
-                {col.slug && <p className="truncate text-xs text-slate-400">/{col.slug}</p>}
+                {col.slug && <p className="truncate text-xs text-slate-500">/{col.slug}</p>}
                 {col.owner && (
                   <p className="mt-0.5 truncate text-xs text-slate-500">{col.owner.fullName}</p>
                 )}
               </div>
               <div className="shrink-0 text-right">
                 <StatusBadge status={col.status}>{col.status}</StatusBadge>
-                <p className="mt-1 text-[10px] text-slate-400">
+                <p className="mt-1 text-[11px] font-medium text-slate-500">
                   {TYPE_LABELS[col.collectionType ?? ""] ?? col.collectionType ?? ""}
                 </p>
               </div>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
               <div>
-                <p className="text-xs text-slate-400">Total collected</p>
+                <p className="text-xs font-medium text-slate-600">Total collected</p>
                 <p className="font-semibold text-[#0B1F3A]">{formatMoney(col.totalCollected)}</p>
               </div>
               <div>
-                <p className="text-xs text-slate-400">Contributors</p>
+                <p className="text-xs font-medium text-slate-600">Contributors</p>
                 <p className="font-semibold text-blue-700">{col.contributorCount}</p>
               </div>
             </div>
-            <p className="mt-2 text-xs text-slate-400">Created {formatDate(col.createdAt)}</p>
+            <p className="mt-2 text-xs font-medium text-slate-500">Created {formatDate(col.createdAt)}</p>
           </div>
         ))}
       </div>

@@ -69,9 +69,9 @@ export default function DashboardPage() {
               ].map((stat, i) => (
                 <motion.div key={stat.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
                   className={`rounded-3xl border px-5 py-4 shadow-xl shadow-slate-900/5 backdrop-blur-xl ${stat.color}`}>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{stat.label}</p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-600">{stat.label}</p>
                   <p className="mt-2 text-2xl font-bold">{stat.value}</p>
-                  <p className="text-xs text-muted-foreground">{stat.sub}</p>
+                  <p className="text-xs font-medium text-slate-600">{stat.sub}</p>
                 </motion.div>
               ))}
             </div>
