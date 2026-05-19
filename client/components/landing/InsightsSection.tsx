@@ -129,7 +129,11 @@ function LegendRow({ name, value, color }: { name: string; value: number; color:
 // ─── Section ──────────────────────────────────────────────────────────────────
 
 export function InsightsSection() {
-  const totalRef       = useCountUp(312000, 1.8);
+  const prefersReducedMotion =
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const totalRef        = useCountUp(312000, 1.8);
   const contributorsRef = useCountUp(24, 1.4, "plain");
 
   return (
@@ -257,6 +261,7 @@ export function InsightsSection() {
                       fill="url(#goldGradient)"
                       dot={{ fill: "#C4A237", r: 3.5, strokeWidth: 0 }}
                       activeDot={{ r: 5.5, fill: "#035034", strokeWidth: 2, stroke: "#C4A237" }}
+                      isAnimationActive={!prefersReducedMotion}
                       animationBegin={200}
                       animationDuration={1500}
                       animationEasing="ease-out"
@@ -297,6 +302,7 @@ export function InsightsSection() {
                         outerRadius={56}
                         dataKey="value"
                         paddingAngle={3}
+                        isAnimationActive={!prefersReducedMotion}
                         animationBegin={500}
                         animationDuration={1300}
                         animationEasing="ease-out"
