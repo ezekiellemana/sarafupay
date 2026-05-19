@@ -3,6 +3,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { FeaturesSection } from "@/components/landing/FeaturesSection";
+import { InsightsSection } from "@/components/landing/InsightsSection";
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { UseCasesSection } from "@/components/landing/UseCasesSection";
 import { FloatingBlobBackground } from "@/components/shared/FloatingBlobBackground";
@@ -14,6 +15,7 @@ export default function Home() {
       <Navbar />
       <HeroSection />
       <FeaturesSection />
+      <InsightsSection />
       <HowItWorksSection />
       <UseCasesSection />
 
