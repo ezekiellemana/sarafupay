@@ -9,7 +9,7 @@ import { FloatingBlobBackground } from "@/components/shared/FloatingBlobBackgrou
 
 export default function Home() {
   return (
-    <main className="relative overflow-x-hidden">
+    <main className="relative">
       <FloatingBlobBackground />
       <Navbar />
       <HeroSection />
