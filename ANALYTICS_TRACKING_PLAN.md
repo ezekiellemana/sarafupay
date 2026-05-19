@@ -1,274 +1,518 @@
-# SarafuPay — Analytics & Traffic Tracking Plan
+# SarafuPay — Analytics & Traffic Tracking Plan (Revised)
+
+Phase 1 complete. This document covers the tool decision, privacy safeguards, and phased implementation plan for Phases 2–7.
 
 ---
 
-## Recommended Tool: Plausible Analytics
+## Option A vs Option B — Head-to-Head
 
-### Why Plausible
+### Option A — Plausible Analytics
 
-| Requirement | Plausible | PostHog | Umami (self-hosted) | Custom MongoDB |
-|---|---|---|---|---|
-| Low cost | ✅ $9/mo (10K views) | ✅ Free up to 1M events | ✅ Free (server cost) | ✅ Free |
-| Next.js integration | ✅ `next-plausible` package | ✅ | Manual | Manual |
-| Privacy-first (no cookies) | ✅ | ⚠️ Cookies by default | ✅ | ✅ |
-| Real-time dashboard | ✅ | ✅ | ✅ | ❌ (build it yourself) |
-| Custom event tracking | ✅ | ✅ | ✅ | ✅ |
-| Traffic source / UTM | ✅ | ✅ | ✅ | ❌ (build it yourself) |
-| Funnel/goal tracking | ✅ | ✅ | ⚠️ Limited | ❌ |
-| Country/device breakdown | ✅ | ✅ | ✅ | ❌ |
-| Embed stats in admin | ✅ Plausible Embed API | ⚠️ Possible | ⚠️ Possible | ✅ |
-| Backend complexity | None | Low | Medium (host DB) | High |
-| GDPR/privacy compliant | ✅ No consent banner needed | ⚠️ Needs config | ✅ | ✅ |
+**What it is:** Privacy-first, cookieless, aggregate-only website analytics.
 
-**Decision: Plausible Analytics**
+**Strengths:**
 
-Reasons:
-- Cookieless — no consent banner required in Tanzania or EU context
-- `next-plausible` package makes Next.js integration a 10-minute task
-- Plausible's Embed API allows embedding live stats directly in `/admin/analytics`
-- $9/month is acceptable for an MVP; scales based on pageviews, not events
-- No backend required — zero infrastructure overhead
-- Real-time dashboard out of the box
+- No cookies — no consent banner required
+- Truly anonymous — no individual session tracking, no person profiles
+- Embed API lets you put a live chart in `/admin/analytics` with one iframe
+- $9/month for 10K pageviews — very low cost
+
+**Critical gaps for SarafuPay's requirements:**
+
+- ❌ No individual session tracking — cannot see what a specific user is currently doing
+- ❌ No live active sessions count
+- ❌ No user path analysis (what pages did this session visit in order)
+- ❌ No funnel drop-off detail — only goal counts, not step-by-step conversion with percentages
+- ❌ No cohort analysis (e.g. "users who registered this week and paid within 3 days")
+- ❌ No session replay — cannot watch how a confused user navigated
+- ❌ No product event properties — cannot attach `{ collection_type: "wedding" }` to events and filter by it
+- ❌ Traffic source → action correlation is weak (you can see visitors from TikTok, but not whether they registered)
+
+**Verdict:** Plausible is excellent for traffic analytics. It is not a product analytics tool. It cannot answer "how many users from Instagram actually completed a payment?" without heavy manual work.
 
 ---
 
-## Cost Expectation
+### Option B — PostHog
 
-| Tier | Price | Pageviews/month |
-|---|---|---|
-| Starter | $9/mo | up to 10,000 |
-| Growth | $19/mo | up to 100,000 |
-| Business | $49/mo | up to 1,000,000 |
+**What it is:** Full product analytics suite — event tracking, funnels, user paths, session replay, cohorts, feature flags.
 
-For MVP: $9/month is very low risk.
+**Strengths relevant to SarafuPay:**
 
----
+- ✅ Free tier: **1 million events/month** — enough for SarafuPay MVP for many months
+- ✅ Free tier: **5,000 session recordings/month** — sufficient for UX review
+- ✅ Real-time live events feed — see events as they happen
+- ✅ Live sessions count — see "8 users on site right now"
+- ✅ Full funnel visualization: Landing → Register → Dashboard → Collection → Payment, with drop-off %
+- ✅ User paths: exactly what pages/actions preceded or followed any event
+- ✅ Traffic source → action correlation: "TikTok visitors converted to registration at 12%"
+- ✅ Social media source performance with event depth (not just referrer counts)
+- ✅ Custom event properties: `{ collection_type, source, device }` — filterable
+- ✅ Session replay with **input masking** and **URL blocking**
+- ✅ PostHog identifies users by a safe internal ID — no email/phone/name required
+- ✅ GDPR-compliant with proper configuration
+- ✅ `posthog-js` has a React/Next.js provider
+- ✅ PostHog Shared Dashboard embed — embeds live charts in our admin panel
 
-## What to Track
+**Cost reality:**
 
-### Page Views (automatic with Plausible)
-- All page routes — tracked automatically
-- Traffic sources (referrer, UTM params)
-- Device type (mobile/tablet/desktop)
-- Browser
-- Country (from IP geolocation — no GPS, no PII)
-- Entry page / exit page
+| Usage | Price |
+| --- | --- |
+| Up to 1M events/month | **$0 (free forever)** |
+| 1M–2M events/month | ~$0.00031/event over 1M (~$310 for the extra million) |
+| Up to 5,000 session recordings/month | **$0** |
+| Beyond 5,000 recordings | $0.005 per recording |
 
-### Custom Events (manually instrumented)
+For SarafuPay MVP (< 5,000 active users), estimated events: ~200K–500K/month. **Cost: $0/month for a very long time.**
 
-#### Landing & Auth funnel
-| Event name | Where | Trigger |
-|---|---|---|
-| `hero_cta_clicked` | `/` HeroSection | Click "Get Started" or "Pay Now" |
-| `register_clicked` | `/` Navbar | Click "Get Started" button |
-| `login_clicked` | `/login` | Page loaded |
-| `google_login_clicked` | `/login` or `/register` | Click Google auth button |
-| `account_registered` | After successful register | Registration success |
-| `account_logged_in` | After successful login | Login success |
+**Gaps:**
 
-#### Dashboard funnel
-| Event name | Where | Trigger |
-|---|---|---|
-| `dashboard_viewed` | `/dashboard` | Page loaded |
-| `admin_dashboard_viewed` | `/admin` | Page loaded |
-
-#### Collection funnel
-| Event name | Where | Trigger |
-|---|---|---|
-| `collection_create_clicked` | `/dashboard` | Click "Create Project" |
-| `collection_created` | Collection form submit | Successful save |
-| `collection_link_copied` | Collection detail page | Click "Copy link" |
-| `whatsapp_share_clicked` | Collection detail page | Click WhatsApp share |
-| `qr_downloaded` | Collection detail page | Click QR download |
-
-#### Payment funnel
-| Event name | Where | Trigger |
-|---|---|---|
-| `public_payment_page_viewed` | `/pay/[slug]` | Page loaded |
-| `payment_started` | `/pay/[slug]` | Click pay / submit amount |
-| `payment_return_viewed` | `/payment/return` | Page loaded |
-| `payment_completed` | `/payment/return` | Status is "completed" |
-| `receipt_print_clicked` | Receipt dialog | Click print |
+- Uses first-party cookies by default (can be configured cookieless, but consent may be needed in EU context)
+- Requires more careful privacy configuration than Plausible
+- More setup complexity (worth it for the capability gap)
 
 ---
 
-## What NOT to Track
+## Final Recommendation: PostHog
 
-- Passwords, tokens, JWT values
-- Snippe API keys or webhook secrets
-- Full payment credentials (card numbers, MPesa secrets)
-- Private user PII beyond userId (no emails, phone numbers, names in event metadata)
-- Typed form values (no input recording, no session replay enabled)
-- Sensitive query params (payment references in URLs should be excluded)
-- Session tokens or cookie values
-- Private collection details (amounts, member lists) for non-admin views
+**Use PostHog.** The product analytics capabilities Plausible lacks are exactly what SarafuPay needs at this stage: funnel conversion, live sessions, user paths, traffic source → action correlation, and session replay for UX debugging. The free tier is extremely generous — SarafuPay will not pay for analytics for a long time.
+
+The privacy risks are real but fully manageable with the safeguards described below.
 
 ---
 
-## Privacy Implications
+## Privacy Rules & Safeguards
 
-- Plausible does not use cookies → no consent banner required
-- Plausible hashes IP+UA daily to count unique visitors — no raw IP stored
-- Country detection is server-side from anonymized IP — complies with GDPR
-- Custom events must NOT include PII in event properties
-- For logged-in users: do NOT pass userId to Plausible (they are anonymous in analytics)
-- All tracking is aggregate — no individual user session profiles
+### Hard Rules — Never Violate
 
-### Privacy Policy Update Required
-When analytics is live, add a section to `/privacy` covering:
-- "We use Plausible Analytics, a cookieless, privacy-preserving analytics tool"
-- "We collect anonymous usage data: page views, traffic sources, button clicks"
-- "No personal data is stored in analytics. No cookies are used."
-- "You can review Plausible's data policy at plausible.io/data-policy"
+- Never send passwords, tokens, JWT values, or Snippe secrets in any event property
+- Never send email, phone number, or full name in event properties
+- Never record form input values — mask ALL inputs in session replay
+- Never capture the contents of payment amount inputs, reference fields, or credential fields
+- Never send `externalReference`, `snippeReference`, or webhook payloads to PostHog
+- Never identify users by email — only by an internal MongoDB `userId` string
+
+### PostHog Configuration Safeguards
+
+#### 1. Disable Autocapture — Use Manual Events Only
+
+```javascript
+posthog.init(POSTHOG_KEY, {
+  autocapture: false,  // critical — prevents accidental capture of form data
+  capture_pageview: false,  // manage pageviews manually per route
+})
+```
+
+Autocapture clicks on everything by default. Disabling it means only explicitly coded `posthog.capture(...)` calls fire. This is the single most important safety setting.
+
+#### 2. Mask All Inputs in Session Replay
+
+```javascript
+posthog.init(POSTHOG_KEY, {
+  session_recording: {
+    maskAllInputs: true,           // masks every <input>, <textarea>, <select>
+    maskInputOptions: {
+      password: true,              // redundant with maskAllInputs but explicit
+      text: true,
+      email: true,
+      number: true,
+      tel: true,
+    },
+    blockSelector: '.ph-no-capture',  // any element with this class is fully blocked
+  },
+})
+```
+
+#### 3. Block Session Replay on Sensitive Pages — URL-Level Config
+
+Configure PostHog to never record on:
+
+- `/pay/*` — public payment page (shows payer name, amount fields)
+- `/payment/return` — shows payment status + payer details
+- `/payment/start` — payment initiation
+- `/dashboard/profile` — shows personal info form
+
+```javascript
+posthog.init(POSTHOG_KEY, {
+  session_recording: {
+    maskAllInputs: true,
+    urlBlocklist: [
+      '/pay/',
+      '/payment/',
+      '/dashboard/profile',
+    ],
+  },
+})
+```
+
+Additionally, in those page components, call programmatically:
+
+```javascript
+// In sensitive page components:
+useEffect(() => {
+  posthog.stopSessionRecording()
+  // no cleanup needed — page unmount or navigation will not restart it
+  // until posthog.startSessionRecording() is called on a safe page
+}, [])
+```
+
+#### 4. Session Replay — Where It IS Allowed
+
+- `/` (landing page) — fully safe, no user data
+- `/dashboard` (main dashboard) — safe with input masking
+- `/dashboard/collections` — safe
+- `/dashboard/collections/new` — safe (no sensitive form data, just collection metadata)
+- `/admin/*` — safe for admin review
+
+#### 5. User Identification — Safe Pattern
+
+```javascript
+// Only after confirmed login — use internal ID, never PII:
+posthog.identify(user._id)  // MongoDB ObjectId string — no name/email/phone
+
+// Set safe properties only:
+posthog.people.set({
+  role: user.role,          // "member" or "admin"
+  // NO email, NO phone, NO name
+})
+```
+
+For non-logged-in visitors (landing page, `/pay/[slug]`): do NOT call `identify()`. PostHog assigns an anonymous ID automatically.
+
+#### 6. Person Profiles Mode
+
+Set `person_profiles: 'identified_only'` so anonymous events never create permanent person records:
+
+```javascript
+posthog.init(POSTHOG_KEY, {
+  person_profiles: 'identified_only',  // only create profiles after identify()
+})
+```
+
+---
+
+## Traffic Source Tracking
+
+PostHog automatically captures `$referrer`, `$referring_domain`, `$initial_referrer`, and all UTM parameters. No extra code needed for referrer tracking. UTM params are captured from the URL on page load.
+
+### Source-Specific Notes
+
+| Source | How PostHog captures it | What you must do |
+| --- | --- | --- |
+| **Google (organic)** | `google.com` in `$referring_domain` | Nothing — automatic |
+| **Google (paid)** | `utm_source=google&utm_medium=cpc` | Add UTM to all Google Ads links |
+| **Facebook** | `l.facebook.com` in referrer OR UTMs | Add `utm_source=facebook` to all Facebook posts/ads |
+| **Instagram** | Instagram strips referrer headers | **Must** add `utm_source=instagram&utm_medium=social` to every link in bio / stories |
+| **TikTok** | TikTok strips referrer headers | **Must** add `utm_source=tiktok&utm_medium=social` to every TikTok link |
+| **WhatsApp** | WhatsApp strips all referrers | **Must** add `utm_source=whatsapp&utm_medium=social` to every link shared via WhatsApp |
+| **Direct** | No referrer, no UTM | PostHog marks as `direct` automatically |
+
+### Recommended UTM Template for Social Posts
+
+```
+https://sarafupay.com/?utm_source=tiktok&utm_medium=social&utm_campaign=launch-2026
+https://sarafupay.com/?utm_source=instagram&utm_medium=social&utm_campaign=launch-2026
+https://sarafupay.com/?utm_source=whatsapp&utm_medium=referral&utm_campaign=launch-2026
+```
+
+### Traffic Source → Action Correlation
+
+With PostHog, you can build a funnel filtered by `utm_source=tiktok` and see:
+
+- How many TikTok visitors landed → registered → created a collection → completed a payment
+- This is not possible in Plausible
+
+---
+
+## Product Event Tracking
+
+### Events to Instrument (Manual — No Autocapture)
+
+Properties noted `safe` contain no PII. All properties must be verified before shipping.
+
+#### Landing & Auth
+
+| Event | Trigger | Safe properties |
+| --- | --- | --- |
+| `landing_viewed` | `/` page load | `{ source: $referring_domain, utm_source }` — captured automatically |
+| `hero_cta_clicked` | Click main CTA button on hero | `{ cta_label: "Get Started" }` |
+| `register_clicked` | Click register in navbar | (no properties needed) |
+| `login_clicked` | Click login in navbar | (no properties needed) |
+| `google_login_clicked` | Click Google auth button | (no properties needed) |
+| `account_registered` | Successful registration response | `{ method: "email" or "google" }` |
+| `account_logged_in` | Successful login response | `{ method: "email" or "google" }` |
+
+#### Dashboard & Collections
+
+| Event | Trigger | Safe properties |
+| --- | --- | --- |
+| `dashboard_viewed` | `/dashboard` page load | (none — user already identified) |
+| `admin_dashboard_viewed` | `/admin` page load | (none) |
+| `collection_create_clicked` | Click "Create Project" button | (none) |
+| `collection_created` | Successful collection save | `{ collection_type: "wedding" }` — type only, no title/amount |
+| `collection_link_copied` | Click "Copy link" | `{ collection_type }` — type only |
+| `whatsapp_share_clicked` | Click WhatsApp share button | `{ collection_type }` |
+| `qr_downloaded` | Click QR download | (none) |
+
+#### Payment Funnel
+
+| Event | Trigger | Safe properties |
+| --- | --- | --- |
+| `public_payment_page_viewed` | `/pay/[slug]` load | `{ collection_type }` — from public page metadata, not payment data |
+| `payment_started` | Click pay / submit amount form | (no amount, no name — just the fact it started) |
+| `payment_return_viewed` | `/payment/return` load | `{ status: "completed" or "pending" or "failed" }` — status only |
+| `payment_completed` | Return page shows completed status | (no properties beyond the status — amount must NOT be sent) |
+| `receipt_print_clicked` | Click print in receipt dialog | (none) |
+
+### What NOT to Send as Event Properties
+
+```
+❌ amount, currency, payment_amount
+❌ email, phone, fullName, customerName
+❌ snippeReference, externalReference, webhookPayload
+❌ monthPaidFor (if it contains user-identifiable info)
+❌ jwtToken, cookieValue, sessionToken
+❌ collection title (if it contains a person's name, e.g. "Juma's Wedding Fund")
+❌ any form field value
+```
+
+---
+
+## Session Replay — Allowed vs Blocked Pages
+
+| Page | Session Replay | Reason |
+| --- | --- | --- |
+| `/` (landing) | ✅ Allowed | Public, no user data |
+| `/register` | ✅ Allowed (inputs masked) | Onboarding flow — valuable for UX review |
+| `/login` | ✅ Allowed (inputs masked) | Auth flow — valuable for UX review |
+| `/dashboard` | ✅ Allowed | Main dashboard — safe |
+| `/dashboard/collections` | ✅ Allowed | Collections list — safe |
+| `/dashboard/collections/new` | ✅ Allowed (inputs masked) | Collection form — useful for UX but mask all inputs |
+| `/dashboard/payments` | ✅ Allowed | Payment list — amounts visible but no credential risk |
+| `/admin/*` | ✅ Allowed (inputs masked) | Admin only — safe for internal review |
+| `/dashboard/profile` | ❌ Blocked | Shows name, phone, email, bio — personal info |
+| `/pay/[slug]` | ❌ Blocked | Shows payer name field, amount field — payment sensitive |
+| `/payment/start` | ❌ Blocked | Payment initiation |
+| `/payment/return` | ❌ Blocked | Shows payment result, potentially payer name |
+
+---
+
+## `/admin/analytics` Dashboard Design
+
+### Approach: PostHog Shared Dashboard Embed + Custom Sections
+
+PostHog allows creating a "Shared Dashboard" — a public-share link you can embed as an iframe. This gives us the PostHog analytics UI inside our admin panel without building custom charts for everything.
+
+For the payment funnel section, we will build a custom view using data from our own MongoDB (since payment data is in our DB and we don't send amounts to PostHog).
+
+### Layout
+
+```
+/admin/analytics
+│
+├── HEADER
+│   "Analytics · SarafuPay Platform"
+│   [date range selector] [Powered by PostHog]
+│
+├── ROW 1 — KPI Summary chips (4 across)
+│   Unique Visitors | Total Sessions | Registrations | Payments Completed
+│   (first 3 from PostHog, last from our own DB)
+│
+├── ROW 2 — Traffic (2 columns, lg:grid-cols-[3fr_2fr])
+│   LEFT:  Visitors over time — area chart, green gradient, 30-day view
+│   RIGHT: Top Sources — ranked horizontal bars
+│          1. TikTok     (gold bar, #1 rank)
+│          2. Instagram  (emerald)
+│          3. WhatsApp   (emerald)
+│          4. Facebook   (slate)
+│          5. Google     (slate)
+│          6. Direct     (slate)
+│
+├── ROW 3 — User funnel (full-width step cards)
+│   [Landing] → [Register clicked] → [Registered] → [Dashboard] →
+│   [Collection created] → [Link shared] → [Payment started] → [Payment completed]
+│   Each step: count + conversion % from previous step
+│
+├── ROW 4 — Session breakdown (2 columns)
+│   LEFT:  Device breakdown — mobile / desktop / tablet pill bars
+│   RIGHT: Active right now — "X users on site" + recent page paths
+│          (from PostHog Live Events if supported by embed, or manual fetch)
+│
+├── ROW 5 — Recent Live Events feed (full-width)
+│   Animated feed: last 20 events from PostHog (event name + page + time)
+│   Colors: blue for auth, amber for collection, green for payment
+│
+├── ROW 6 — Payment funnel (from our MongoDB, not PostHog)
+│   "Payment Data (from platform database)"
+│   This week: X started → Y completed → Z%
+│   Revenue per source (if UTM data is available)
+│
+└── FOOTER
+    "Analytics via PostHog · Session replay masked · No PII stored"
+```
+
+### Implementation Approach for Embed
+
+```tsx
+// Phase 6 — PostHog embed placeholder
+<iframe
+  src="https://us.posthog.com/shared_dashboard/TOKEN"
+  width="100%"
+  height="1400"
+  frameBorder="0"
+  loading="lazy"
+/>
+```
+
+Custom sections (funnel, payment data) will be built as React components using data from `/api/dashboard/admin` and PostHog's REST API (with API key stored only in server env).
+
+---
+
+## Privacy Policy Update Required (Phase 7)
+
+Before production launch with analytics enabled, add to `/privacy`:
+
+```
+Analytics & Product Data
+
+SarafuPay uses PostHog to understand how people use our platform.
+This helps us improve the product and fix issues.
+
+What we collect:
+- Page views and navigation paths (anonymous)
+- Button clicks and feature interactions (anonymous)
+- Session recordings on safe pages to review UX — all form inputs are masked
+- Traffic source (where you came from — referrer or UTM parameter)
+- Device type and browser (no GPS, no precise location)
+
+What we do NOT collect:
+- Passwords, payment credentials, or financial details
+- Your name, email, or phone number in analytics
+- Form input values (all inputs are masked)
+- Payment references or Snippe transaction data
+
+PostHog is GDPR-compliant. Data is processed anonymously where possible.
+Review PostHog's data policy at posthog.com/privacy.
+```
 
 ---
 
 ## Frontend Files to Instrument
 
-| File | Events |
-|---|---|
-| `client/app/layout.tsx` (or `_app`) | Add `PlausibleProvider` wrapper |
-| `client/components/landing/HeroSection.tsx` | `hero_cta_clicked` |
-| `client/components/layout/Navbar.tsx` | `register_clicked` |
-| `client/app/login/page.tsx` | `login_clicked` |
-| `client/app/register/page.tsx` | `account_registered` |
-| `client/components/auth/GoogleAuthButton.tsx` | `google_login_clicked` |
-| `client/app/dashboard/page.tsx` | `dashboard_viewed` |
-| `client/app/admin/page.tsx` | `admin_dashboard_viewed` |
-| `client/app/dashboard/collections/new/page.tsx` | `collection_create_clicked` |
-| `client/components/collections/PaymentLinkCard.tsx` | `collection_link_copied`, `whatsapp_share_clicked`, `qr_downloaded` |
-| `client/app/pay/[slug]/page.tsx` | `public_payment_page_viewed`, `payment_started` |
-| `client/app/payment/return/page.tsx` | `payment_return_viewed`, `payment_completed` |
-| `client/components/payments/PaymentReceiptDialog.tsx` | `receipt_print_clicked` |
-
----
-
-## Backend Events to Instrument
-
-Plausible is frontend-only. No backend instrumentation needed.
-
-If we later add server-side event tracking (e.g., webhook-confirmed payments), we can use Plausible's **server-side Events API**:
-```
-POST https://plausible.io/api/event
-```
-This would be for:
-- `payment_completed` — confirmed by webhook (more reliable than client-side)
-- `account_registered` — server confirms user creation
-
-These are Phase 4+ additions.
-
----
-
-## Admin Dashboard Design Plan — `/admin/analytics`
-
-### Layout
-```
-/admin/analytics
-├── Header: "Analytics" | "Powered by Plausible" | date range selector
-├── Row 1: KPI chips — Total Visitors | Unique Visitors | Pageviews | Bounce Rate
-├── Row 2 (2-col):
-│   ├── Left: Visitors over time — area chart (green gradient, same as revenue chart style)
-│   └── Right: Top Sources — ranked horizontal bars (gold #1, emerald #2–3, slate rest)
-├── Row 3 (2-col):
-│   ├── Left: Top Pages — ranked list with visit count
-│   └── Right: Device Breakdown — simple bar or pill breakdown (mobile/desktop/tablet)
-├── Row 4: Payment Funnel — step cards
-│   Landing → Register → Login → Create Collection → Share Link → Payment Started → Completed
-├── Row 5: Recent Live Events — animated feed (last 10 custom events)
-└── Footer: "Data via Plausible Analytics · cookieless · privacy-first"
-```
-
-### Embedding Plausible Stats
-Plausible provides an Embed API:
-```tsx
-<iframe
-  plausible-embed
-  src="https://plausible.io/share/sarafupay.com?auth=TOKEN&embed=true&theme=light"
-  scrolling="no"
-  frameborder="0"
-  loading="lazy"
-  style={{ width: '1px', minWidth: '100%', height: '1600px' }}
-/>
-```
-This embeds the full Plausible dashboard. Use it for the initial admin analytics page until the custom-built version is ready.
-
----
-
-## Database / Schema Plan
-
-**Not needed.** Plausible handles all storage. No MongoDB schema changes required for analytics.
-
-If we ever switch to a custom tracking solution (Phase 6+), we would add:
-```typescript
-// AnalyticsEvent model (hypothetical, not in scope now)
-{
-  event: string,           // event name
-  path: string,            // page path
-  referrer?: string,       // traffic source
-  utm_source?: string,
-  device?: string,         // mobile/desktop
-  country?: string,
-  sessionId: string,       // anonymous (hashed)
-  userId?: ObjectId,       // only if logged-in and safe
-  createdAt: Date
-}
-```
+| File | Events | Notes |
+| --- | --- | --- |
+| `client/app/layout.tsx` | PostHog provider init + route change capture | Wrap once at root |
+| `client/components/landing/HeroSection.tsx` | `hero_cta_clicked` | |
+| `client/components/layout/Navbar.tsx` | `register_clicked` | |
+| `client/app/login/page.tsx` | `login_clicked` | |
+| `client/app/register/page.tsx` | `account_registered` | Method only |
+| `client/components/auth/GoogleAuthButton.tsx` | `google_login_clicked` | |
+| `client/app/dashboard/page.tsx` | `dashboard_viewed` | Post-identify |
+| `client/app/admin/page.tsx` | `admin_dashboard_viewed` | Post-identify |
+| `client/app/dashboard/collections/new/page.tsx` | `collection_create_clicked` | |
+| `client/components/collections/PaymentLinkCard.tsx` | `collection_link_copied`, `whatsapp_share_clicked`, `qr_downloaded` | Type only |
+| `client/app/pay/[slug]/page.tsx` | `public_payment_page_viewed`, `payment_started` | Disable replay |
+| `client/app/payment/return/page.tsx` | `payment_return_viewed`, `payment_completed` | Disable replay |
+| `client/components/payments/PaymentReceiptDialog.tsx` | `receipt_print_clicked` | |
+| `client/app/dashboard/profile/page.tsx` | (none — no events needed) | Disable replay |
+| `client/app/payment/start/page.tsx` | (none) | Disable replay |
 
 ---
 
 ## Phased Implementation Plan
 
-### Phase 1 — Text contrast/readability polish ✅ COMPLETE
-- Fix `text-slate-400` → `text-slate-500/600` across mobile cards
-- Fix `text-[10px]` → `text-[11px]` for type labels
-- Improve `font-medium`/`font-semibold` on field labels
-- DashboardCard title: `text-slate-500` → `text-slate-600`
-- MobileNav More sheet: inactive icon `text-slate-400` → `text-slate-500`
+### Phase 1 — Text Contrast / Readability Polish
 
-### Phase 2 — Analytics tool setup
-- Sign up for Plausible Analytics at plausible.io
-- Add site domain (e.g. `sarafupay.com`)
-- Get embed share token for `/admin/analytics`
-- Install `next-plausible` package: `npm install next-plausible`
-- Add `NEXT_PUBLIC_PLAUSIBLE_DOMAIN=sarafupay.com` to `.env.local`
-- Wrap `client/app/layout.tsx` with `<PlausibleProvider domain={...}>`
+Status: ✅ Complete
 
-### Phase 3 — Basic pageview + traffic source tracking
-- Plausible auto-tracks all pageviews on install
-- Add UTM param support (automatic in Plausible)
-- Verify referrers show TikTok / Instagram / WhatsApp / Google
-- Test with UTM links: `?utm_source=instagram&utm_medium=social&utm_campaign=launch`
+### Phase 2 — PostHog Account + SDK Setup (est. 30 min)
 
-### Phase 4 — Product event tracking
-- Instrument each frontend file listed above
-- Use `usePlausible()` hook from `next-plausible`
-- Test funnel: landing → register → dashboard → collection → payment
-- Verify events appear in Plausible dashboard
+1. Create PostHog account at `us.posthog.com` (US cloud — GDPR-compliant)
+2. Create project for "SarafuPay"
+3. Get `NEXT_PUBLIC_POSTHOG_KEY` and `NEXT_PUBLIC_POSTHOG_HOST`
+4. Install: `npm install posthog-js`
+5. Add env vars to `.env.local` (client prefix required for Next.js)
+6. Create `client/lib/posthog.ts` — singleton init with privacy config
+7. Create `client/components/providers/PostHogProvider.tsx` — React context wrapper
+8. Add `PostHogProvider` to `client/app/layout.tsx`
+9. Verify pageviews appear in PostHog dashboard
 
-### Phase 5 — /admin/analytics dashboard
+Privacy config applied at init:
+
+```javascript
+posthog.init(key, {
+  api_host: host,
+  autocapture: false,           // disable all auto-click capture
+  capture_pageview: false,      // manual pageview per route
+  capture_pageleave: true,      // safe — just "left page" event
+  person_profiles: 'identified_only',
+  session_recording: {
+    maskAllInputs: true,
+    urlBlocklist: ['/pay/', '/payment/', '/dashboard/profile'],
+  },
+})
+```
+
+### Phase 3 — Route-Based Pageview Tracking + Traffic Sources (est. 1–2 hours)
+
+- Instrument `layout.tsx` with Next.js router `usePathname` to fire `posthog.capture('$pageview')` on route change
+- UTM params auto-captured by PostHog on first page load
+- Verify: TikTok / Instagram / WhatsApp links with UTMs show as distinct sources
+- Test from multiple devices — verify mobile/desktop breakdown
+
+### Phase 4 — Product Event Instrumentation (est. 2–4 hours)
+
+- Instrument each file in the table above
+- Add `posthog.identify(user._id)` in `useAuth` after confirmed login
+- Add `posthog.reset()` in logout function (already in `useAuth.ts`)
+- Test full funnel: landing → register → dashboard → collection → payment
+- Verify all 12+ events appear in PostHog Live Events feed
+- Verify no PII in event properties (audit each event in PostHog UI)
+
+### Phase 5 — Session Replay Audit (est. 1 hour)
+
+- Enable session replay on safe pages
+- Confirm replay is blocked on `/pay/`, `/payment/`, `/dashboard/profile`
+- Watch 3–5 recordings on landing page and dashboard to verify masking works
+- Confirm all inputs show `***` in recordings
+
+### Phase 6 — `/admin/analytics` Dashboard (est. 4–8 hours)
+
 - Create `client/app/admin/analytics/page.tsx`
-- Embed Plausible shared dashboard via iframe (fast, zero backend work)
-- Build custom funnel visualization using tracked event counts
-- Add to admin sidebar nav and mobile More menu
+- Add to `adminNav` in `client/lib/constants.ts`
+- Add to admin sidebar + mobile More menu
+- Phase 6a: Embed PostHog shared dashboard iframe (fast, immediate value)
+- Phase 6b: Build custom sections (top sources bar chart, payment funnel from MongoDB, live events feed from PostHog REST API)
+- Use Recharts for custom charts — consistent with existing revenue chart style
 
-### Phase 6 — Privacy policy update
-- Update `client/app/privacy/page.tsx` with Plausible disclosure section
-- Keep it short: cookieless, anonymous, no PII, aggregate only
+### Phase 7 — Privacy Policy Update (est. 30 min)
 
----
-
-## Traffic Sources to Verify
-
-| Source | How it appears in Plausible |
-|---|---|
-| TikTok | `tiktok.com` referrer or `utm_source=tiktok` |
-| Instagram | `l.instagram.com` referrer or `utm_source=instagram` |
-| WhatsApp | `utm_source=whatsapp` (WhatsApp strips referrers by default) |
-| Facebook | `l.facebook.com` or `utm_source=facebook` |
-| Google organic | `google.com` referrer |
-| Direct | No referrer |
-| SarafuPay referral | Internal links across the app |
+- Update `client/app/privacy/page.tsx` with PostHog disclosure
+- Keep it plain language: what is collected, what is NOT collected, how to opt out
 
 ---
 
-*Written: 2026-05-19 | Status: Phase 1 complete, Phases 2–6 pending approval*
+## Comparison Summary
+
+| Capability | Plausible | PostHog | SarafuPay needs |
+| --- | --- | --- | --- |
+| Pageview tracking | ✅ | ✅ | ✅ |
+| Traffic sources + UTM | ✅ | ✅ | ✅ |
+| Social source performance | ⚠️ referrers only | ✅ with UTMs + event depth | ✅ |
+| Live active sessions | ❌ | ✅ | ✅ |
+| Recent live events feed | ❌ | ✅ | ✅ |
+| Funnel conversion with % | ⚠️ goals only | ✅ full funnel | ✅ |
+| Traffic source → action | ❌ | ✅ | ✅ |
+| User paths | ❌ | ✅ | ✅ |
+| Session replay | ❌ | ✅ (masked) | ✅ |
+| Custom event properties | ⚠️ limited | ✅ | ✅ |
+| User identification | ❌ | ✅ (safe ID only) | needed |
+| Embed in admin panel | ✅ | ✅ | ✅ |
+| Free tier | ❌ $9/mo min | ✅ $0 up to 1M events | ✅ |
+| Privacy-safe by default | ✅ | ⚠️ needs config | configurable |
+| Cookieless by default | ✅ | ❌ (configurable) | acceptable |
+
+Final decision: **PostHog — configured safely as documented above.**
+
+---
+
+> Revised: 2026-05-19 | Phase 1 complete | Phases 2–7 pending approval to implement
