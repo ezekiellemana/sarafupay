@@ -57,18 +57,18 @@ const useCases = [
 ];
 
 const chips = [
-  "🎓 School Fees",
-  "🎉 Harambee",
-  "💒 Weddings",
-  "⛪ Church Funds",
-  "📚 Final Year Projects",
-  "🆘 Emergency Relief",
-  "💼 Chama Collections",
-  "🎂 Birthday Funds",
-  "🏫 School Events",
-  "🤝 Community Projects",
-  "🏥 Medical Support",
-  "🌍 Diaspora Collections",
+  { emoji: "🎓", label: "School Fees", desc: "Uniforms, trips & supplies" },
+  { emoji: "🎉", label: "Harambee", desc: "Events & celebrations" },
+  { emoji: "💒", label: "Weddings", desc: "Contributions & gifts" },
+  { emoji: "⛪", label: "Church Funds", desc: "Offerings & building" },
+  { emoji: "📚", label: "Final Year Projects", desc: "Group budgets & costs" },
+  { emoji: "🆘", label: "Emergency Relief", desc: "Medical & urgent causes" },
+  { emoji: "💼", label: "Chama Collections", desc: "Savings clubs & investments" },
+  { emoji: "🎂", label: "Birthday Funds", desc: "Surprise contributions" },
+  { emoji: "🏫", label: "School Events", desc: "Sports days & concerts" },
+  { emoji: "🤝", label: "Community Projects", desc: "Boreholes & clean-up" },
+  { emoji: "🏥", label: "Medical Support", desc: "Hospital bills & recovery" },
+  { emoji: "🌍", label: "Diaspora Collections", desc: "Remote group giving" },
 ];
 
 const mockPayments = [
@@ -86,7 +86,7 @@ function PhoneMockup() {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.55, delay: 0.08 }}
-      className="flex justify-center lg:justify-end"
+      className="flex justify-center"
     >
       <motion.div
         animate={{ y: [0, -10, 0] }}
@@ -94,17 +94,17 @@ function PhoneMockup() {
         className="relative"
       >
         {/* Ambient glow */}
-        <div className="absolute -inset-8 rounded-[4rem] bg-[#035034]/12 blur-3xl" />
+        <div className="absolute -inset-10 rounded-[4rem] bg-[#035034]/14 blur-3xl" />
 
         {/* Phone frame */}
-        <div className="relative w-[232px] overflow-hidden rounded-[2.8rem] bg-gradient-to-b from-slate-700 to-slate-900 p-[9px] shadow-[0_30px_80px_rgba(3,80,52,0.38)] sm:w-[252px]">
+        <div className="relative w-[262px] overflow-hidden rounded-[3.2rem] bg-gradient-to-b from-slate-700 to-slate-900 p-[12px] shadow-[0_40px_100px_rgba(3,80,52,0.42)] sm:w-[290px]">
           {/* Side buttons */}
-          <div className="absolute -left-[3px] top-24 h-8 w-[3px] rounded-l-full bg-slate-600" />
-          <div className="absolute -left-[3px] top-36 h-12 w-[3px] rounded-l-full bg-slate-600" />
-          <div className="absolute -right-[3px] top-28 h-10 w-[3px] rounded-r-full bg-slate-600" />
+          <div className="absolute -left-[5px] top-24 h-8 w-[5px] rounded-l-full bg-slate-600" />
+          <div className="absolute -left-[5px] top-36 h-12 w-[5px] rounded-l-full bg-slate-600" />
+          <div className="absolute -right-[5px] top-28 h-10 w-[5px] rounded-r-full bg-slate-600" />
 
           {/* Screen */}
-          <div className="relative flex h-full flex-col overflow-hidden rounded-[2.2rem] bg-slate-50">
+          <div className="relative flex h-full flex-col overflow-hidden rounded-[2.6rem] bg-slate-50">
 
             {/* Shimmer sweep */}
             <motion.div
@@ -114,16 +114,16 @@ function PhoneMockup() {
             />
 
             {/* Status bar */}
-            <div className="bg-[#035034] px-4 pb-0 pt-3">
-              <div className="flex items-center justify-between text-[9px] text-white/60">
+            <div className="bg-[#035034] px-4 pb-0 pt-3.5">
+              <div className="flex items-center justify-between text-[11px] text-white/70">
                 <span className="font-semibold">9:41</span>
-                <div className="flex items-center gap-1">
-                  <div className="flex gap-px">
+                <div className="flex items-center gap-1.5">
+                  <div className="flex items-end gap-px">
                     {[1, 2, 3, 4].map((b) => (
-                      <div key={b} className={`w-[3px] rounded-sm bg-white/70`} style={{ height: b * 2.5 + 2 }} />
+                      <div key={b} className="w-[3px] rounded-sm bg-white/70" style={{ height: b * 3 + 2 }} />
                     ))}
                   </div>
-                  <div className="h-2.5 w-4 rounded-sm border border-white/50 p-px">
+                  <div className="h-3 w-5 rounded-sm border border-white/50 p-px">
                     <div className="h-full w-3/4 rounded-[1px] bg-white/70" />
                   </div>
                 </div>
@@ -131,48 +131,48 @@ function PhoneMockup() {
             </div>
 
             {/* App header */}
-            <div className="bg-[#035034] px-4 pb-3 pt-1.5 text-white">
+            <div className="bg-[#035034] px-4 pb-4 pt-2 text-white">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <span className="flex size-5 items-center justify-center rounded-md bg-[#C4A237] text-[9px] font-black text-[#035034]">S</span>
-                  <span className="text-[11px] font-bold">SarafuPay</span>
+                <div className="flex items-center gap-2">
+                  <span className="flex size-6 items-center justify-center rounded-lg bg-[#C4A237] text-[10px] font-black text-[#035034]">S</span>
+                  <span className="text-[13px] font-bold">SarafuPay</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <div className="size-1 rounded-full bg-white/40" />
-                  <div className="size-1 rounded-full bg-white/40" />
-                  <div className="size-1 rounded-full bg-white/40" />
+                  <div className="size-1.5 rounded-full bg-white/40" />
+                  <div className="size-1.5 rounded-full bg-white/40" />
+                  <div className="size-1.5 rounded-full bg-white/40" />
                 </div>
               </div>
-              <p className="mt-1 text-[9px] font-medium text-white/60">My Collections</p>
+              <p className="mt-2 text-[11px] font-medium text-white/60">My Collections</p>
             </div>
 
             {/* Collection card */}
-            <div className="mx-2.5 mt-2.5 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
-              <div className="flex items-center justify-between border-b border-slate-50 px-3 py-2">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-sm">🎓</span>
+            <div className="mx-3 mt-3 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+              <div className="flex items-center justify-between border-b border-slate-50 px-3.5 py-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🎓</span>
                   <div>
-                    <p className="text-[10px] font-bold text-[#035034]">Harambee 2026</p>
-                    <p className="text-[8px] text-slate-400">Final Year Project</p>
+                    <p className="text-[13px] font-bold text-[#035034]">Harambee 2026</p>
+                    <p className="text-[10px] text-slate-400">Final Year Project</p>
                   </div>
                 </div>
-                <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[7px] font-bold text-emerald-600">
-                  <span className="size-1 animate-pulse rounded-full bg-emerald-500" />
+                <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-bold text-emerald-600">
+                  <span className="size-1.5 animate-pulse rounded-full bg-emerald-500" />
                   Active
                 </span>
               </div>
-              <div className="px-3 py-2">
+              <div className="px-3.5 py-3">
                 <div className="flex items-end justify-between">
                   <div>
-                    <p className="text-[8px] text-slate-400">Collected</p>
-                    <p className="text-sm font-black text-[#035034]">312K <span className="text-[8px] font-medium text-slate-400">TZS</span></p>
+                    <p className="text-[10px] text-slate-400">Collected</p>
+                    <p className="text-base font-black text-[#035034]">312K <span className="text-[10px] font-medium text-slate-400">TZS</span></p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[8px] text-slate-400">Target</p>
-                    <p className="text-[10px] font-semibold text-slate-600">500K TZS</p>
+                    <p className="text-[10px] text-slate-400">Target</p>
+                    <p className="text-[11px] font-semibold text-slate-600">500K TZS</p>
                   </div>
                 </div>
-                <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100">
+                <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
                   <motion.div
                     className="h-full rounded-full bg-[#C4A237]"
                     initial={{ width: 0 }}
@@ -181,36 +181,36 @@ function PhoneMockup() {
                     transition={{ duration: 1.3, delay: 0.5, ease: "easeOut" }}
                   />
                 </div>
-                <div className="mt-1 flex items-center justify-between">
+                <div className="mt-1.5 flex items-center justify-between">
                   <div className="flex items-center gap-1">
-                    <Users className="size-2 text-slate-400" />
-                    <span className="text-[8px] text-slate-400">24 contributors</span>
+                    <Users className="size-3 text-slate-400" />
+                    <span className="text-[10px] text-slate-400">24 contributors</span>
                   </div>
-                  <span className="text-[8px] font-bold text-[#C4A237]">62%</span>
+                  <span className="text-[10px] font-bold text-[#C4A237]">62%</span>
                 </div>
               </div>
             </div>
 
             {/* Recent payments */}
-            <div className="mx-2.5 mt-2">
-              <p className="mb-1 px-0.5 text-[8px] font-bold uppercase tracking-wider text-slate-400">Recent</p>
-              <div className="flex flex-col gap-1">
+            <div className="mx-3 mt-3">
+              <p className="mb-1.5 px-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Recent</p>
+              <div className="flex flex-col gap-1.5">
                 {mockPayments.map((p) => (
                   <div
                     key={p.name}
-                    className="flex items-center justify-between rounded-xl bg-white px-2 py-1.5 shadow-sm ring-1 ring-slate-100"
+                    className="flex items-center justify-between rounded-xl bg-white px-3 py-2 shadow-sm ring-1 ring-slate-100"
                   >
-                    <div className="flex items-center gap-1.5">
-                      <span className="flex size-4 items-center justify-center rounded-full bg-[#035034]/10 text-[7px] font-bold text-[#035034]">
+                    <div className="flex items-center gap-2">
+                      <span className="flex size-5 items-center justify-center rounded-full bg-[#035034]/10 text-[9px] font-bold text-[#035034]">
                         {p.initial}
                       </span>
-                      <span className="text-[9px] font-semibold text-slate-700">{p.name}</span>
+                      <span className="text-[11px] font-semibold text-slate-700">{p.name}</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-[9px] font-bold text-[#035034]">{p.amount}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-bold text-[#035034]">{p.amount}</span>
                       {p.done
-                        ? <CheckCircle2 className="size-2.5 text-emerald-500" />
-                        : <Clock3 className="size-2.5 text-amber-500" />
+                        ? <CheckCircle2 className="size-3 text-emerald-500" />
+                        : <Clock3 className="size-3 text-amber-500" />
                       }
                     </div>
                   </div>
@@ -219,23 +219,60 @@ function PhoneMockup() {
             </div>
 
             {/* Action buttons */}
-            <div className="mx-2.5 mb-4 mt-auto pt-2">
-              <div className="flex gap-1.5">
-                <button className="flex flex-1 items-center justify-center gap-1 rounded-xl bg-[#035034] py-2 text-[8px] font-bold text-white">
-                  <Share2 className="size-2.5" /> Share
+            <div className="mx-3 mb-5 mt-auto pt-3">
+              <div className="flex gap-2">
+                <button className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#035034] py-2.5 text-[10px] font-bold text-white">
+                  <Share2 className="size-3" /> Share
                 </button>
-                <button className="flex flex-1 items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white py-2 text-[8px] font-semibold text-[#035034]">
-                  <QrCode className="size-2.5" /> QR Code
+                <button className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white py-2.5 text-[10px] font-semibold text-[#035034]">
+                  <QrCode className="size-3" /> QR Code
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Live badge below phone */}
-        <div className="mt-4 flex justify-center">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/80 px-3 py-1 text-[11px] font-medium text-slate-500 backdrop-blur-sm shadow-sm">
-            <span className="size-1.5 animate-pulse rounded-full bg-emerald-500" />
+        {/* Floating notification — lg+ only */}
+        <motion.div
+          className="absolute -right-4 top-14 hidden w-44 flex-col gap-1 rounded-2xl border border-white/90 bg-white/96 p-3 shadow-xl shadow-slate-900/8 backdrop-blur-xl lg:flex"
+          initial={{ opacity: 0, x: 12 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.45, delay: 0.7 }}
+        >
+          <div className="flex items-center gap-2">
+            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-emerald-100">
+              <CheckCircle2 className="size-4 text-emerald-600" />
+            </span>
+            <div>
+              <p className="text-[11px] font-bold text-slate-800">Payment received</p>
+              <p className="text-[11px] font-bold text-emerald-600">+25,000 TZS</p>
+            </div>
+          </div>
+          <p className="mt-0.5 pl-9 text-[10px] text-slate-400">Sarah M. · just now</p>
+        </motion.div>
+
+        {/* Floating contributors — lg+ only */}
+        <motion.div
+          className="absolute -left-4 bottom-28 hidden items-center gap-2.5 rounded-2xl border border-white/90 bg-white/96 p-3 shadow-xl shadow-slate-900/8 backdrop-blur-xl lg:flex"
+          initial={{ opacity: 0, x: -12 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.45, delay: 0.9 }}
+        >
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#035034]/10">
+            <Users className="size-4 text-[#035034]" />
+          </span>
+          <div>
+            <p className="text-[12px] font-bold text-[#035034]">24 contributors</p>
+            <p className="text-[10px] text-slate-400">Active collection</p>
+          </div>
+        </motion.div>
+
+        {/* Live badge */}
+        <div className="mt-5 flex justify-center">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/80 px-3.5 py-1.5 text-[11px] font-medium text-slate-500 shadow-sm backdrop-blur-sm">
+            <span className="size-2 animate-pulse rounded-full bg-emerald-500" />
             Live dashboard preview
           </span>
         </div>
@@ -250,31 +287,33 @@ function ChipMarquee() {
   const doubled = [...chips, ...chips];
   return (
     <div
-      className="overflow-hidden py-3"
+      className="overflow-hidden py-2"
       style={{
         maskImage:
-          "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+          "linear-gradient(to right, transparent, black 6%, black 94%, transparent)",
       }}
     >
       <motion.div
-        className="flex w-max gap-2.5"
+        className="flex w-max gap-3"
         animate={{ x: ["0%", "-50%"] }}
-        transition={{ duration: 30, ease: "linear", repeat: Infinity }}
+        transition={{ duration: 38, ease: "linear", repeat: Infinity }}
       >
         {doubled.map((chip, i) => (
-          <span
+          <div
             key={i}
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/70 bg-white/80 px-3.5 py-1.5 text-xs font-medium text-slate-600 backdrop-blur-sm shadow-sm"
+            className="flex w-36 shrink-0 flex-col gap-1.5 rounded-2xl border border-white/80 bg-white/90 px-4 py-3.5 shadow-sm backdrop-blur-sm"
           >
-            {chip}
-          </span>
+            <span className="text-2xl leading-none">{chip.emoji}</span>
+            <p className="text-sm font-bold text-[#035034]">{chip.label}</p>
+            <p className="text-xs leading-tight text-slate-500">{chip.desc}</p>
+          </div>
         ))}
       </motion.div>
     </div>
   );
 }
 
-// ─── Section ─────────────────────────────────────────────────────────────────
+// ─── Animation variants ───────────────────────────────────────────────────────
 
 const stepVariants = {
   hidden: {},
@@ -295,6 +334,8 @@ const caseItemVariant = {
   hidden: { opacity: 0, x: 16 },
   visible: { opacity: 1, x: 0, transition: { duration: 0.32 } },
 };
+
+// ─── Section ─────────────────────────────────────────────────────────────────
 
 export function JourneySection() {
   return (
@@ -360,7 +401,7 @@ export function JourneySection() {
       {/* ── Phone + Use cases ── */}
       <div id="uses" className="border-t border-white/70 bg-[#035034]/3 backdrop-blur-sm">
         <div className="mx-auto max-w-6xl px-4 py-16 md:py-20">
-          <div className="grid items-start gap-10 lg:grid-cols-2 lg:gap-16">
+          <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
 
             {/* Phone mockup */}
             <PhoneMockup />
@@ -436,8 +477,8 @@ export function JourneySection() {
       </div>
 
       {/* ── Chip marquee ── */}
-      <div className="border-t border-white/70 bg-white/50 py-5 backdrop-blur-sm">
-        <p className="mb-3 text-center text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
+      <div className="border-t border-white/70 bg-white/50 py-6 backdrop-blur-sm">
+        <p className="mb-4 text-center text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
           Collections people run on SarafuPay
         </p>
         <ChipMarquee />
