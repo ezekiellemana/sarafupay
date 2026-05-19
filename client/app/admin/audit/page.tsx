@@ -6,7 +6,6 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { SkeletonRows } from "@/components/shared/SkeletonRows";
 import { AlertTriangle, CheckCircle2, Loader2, RefreshCw, XCircle } from "lucide-react";
 import type { AuditCheck, AuditCheckStatus, SystemAuditData } from "@/types";
 
@@ -143,7 +142,11 @@ export default function AdminAuditPage() {
         />
 
         {/* Loading (initial) */}
-        {loading && !data && <SkeletonRows rows={8} />}
+        {loading && !data && (
+          <div className="flex min-h-40 items-center justify-center">
+            <div className="size-5 animate-spin rounded-full border-2 border-slate-200 border-t-[#035034]" />
+          </div>
+        )}
 
         {/* Error */}
         {!loading && error && (

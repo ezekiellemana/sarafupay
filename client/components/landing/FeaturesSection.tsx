@@ -7,7 +7,7 @@ const features = [
   {
     Icon: Link2,
     title: "Shareable Payment Links",
-    desc: "Create a unique payment page for any collection in seconds. Share the link via WhatsApp, SMS, or email — no app install needed.",
+    desc: "Create a unique payment page for any collection in seconds. Share via WhatsApp, SMS, or email — no app install needed.",
     tint: "bg-amber-50/90 border-amber-200/50",
     iconBg: "bg-amber-400/15",
     iconColor: "text-[#C4A237]",
@@ -57,7 +57,7 @@ const features = [
 export function FeaturesSection() {
   return (
     <section id="features" className="border-y border-white/70 bg-white/60 backdrop-blur-xl">
-      <div className="mx-auto max-w-6xl px-4 py-16 md:py-20">
+      <div className="mx-auto max-w-6xl px-4 py-14 md:py-20">
 
         {/* Section header */}
         <div className="mx-auto max-w-2xl text-center">
@@ -75,8 +75,34 @@ export function FeaturesSection() {
           </p>
         </div>
 
-        {/* Feature cards */}
-        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {/* ── Mobile: compact premium list (< sm) ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.38 }}
+          className="mt-10 overflow-hidden rounded-3xl border border-white/80 bg-white/95 shadow-xl shadow-slate-900/5 backdrop-blur-xl sm:hidden"
+        >
+          <div className="divide-y divide-slate-100/80">
+            {features.map(({ Icon, title, desc, iconBg, iconColor }) => (
+              <div
+                key={title}
+                className="flex items-start gap-4 px-5 py-4 transition-colors hover:bg-slate-50/60 active:bg-slate-50/80"
+              >
+                <span className={`mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl ${iconBg}`}>
+                  <Icon className={`size-4.5 ${iconColor}`} strokeWidth={1.8} />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-[#035034]">{title}</p>
+                  <p className="mt-0.5 text-xs leading-5 text-slate-500">{desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* ── sm+: card grid ── */}
+        <div className="mt-12 hidden gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3">
           {features.map(({ Icon, title, desc, tint, iconBg, iconColor }, index) => (
             <motion.div
               key={title}

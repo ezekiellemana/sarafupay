@@ -6,7 +6,6 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { SkeletonRows } from "@/components/shared/SkeletonRows";
 import {
   Check,
   CheckCircle2,
@@ -189,7 +188,11 @@ export default function AdminSettingsPage() {
         />
 
         {/* Loading (initial) */}
-        {loading && !settings && <SkeletonRows rows={7} />}
+        {loading && !settings && (
+          <div className="flex min-h-40 items-center justify-center">
+            <div className="size-5 animate-spin rounded-full border-2 border-slate-200 border-t-[#035034]" />
+          </div>
+        )}
 
         {/* Error */}
         {!loading && error && (

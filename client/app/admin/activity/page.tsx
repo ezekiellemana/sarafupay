@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { formatDate } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
-import { SkeletonTimeline } from "@/components/shared/SkeletonTimeline";
 import {
   Activity,
   CreditCard,
@@ -198,7 +197,11 @@ export default function AdminActivityPage() {
         </div>
 
         {/* Loading initial */}
-        {loading && !data && <SkeletonTimeline />}
+        {loading && !data && (
+          <div className="flex min-h-40 items-center justify-center">
+            <div className="size-5 animate-spin rounded-full border-2 border-slate-200 border-t-[#035034]" />
+          </div>
+        )}
 
         {/* Error */}
         {!loading && error && (
