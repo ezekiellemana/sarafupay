@@ -51,6 +51,7 @@ export const getAdminDashboard = async () => {
     projectStatusCounts,
     recentUsers,
     latestCompletedPayments,
+    topCollectionsRaw,
   ] = await Promise.all([
     Payment.aggregate<{ total: number }>([
       { $match: { status: "completed" } },
@@ -83,6 +84,15 @@ export const getAdminDashboard = async () => {
       .sort({ createdAt: -1 })
       .limit(5)
       .lean(),
+    Payment.aggregate<{ title: string; slug: string; total: number; count: number }>([
+      { $match: { status: "completed" } },
+      { $group: { _id: "$projectId", total: { $sum: "$amount" }, count: { $sum: 1 } } },
+      { $sort: { total: -1 } },
+      { $limit: 5 },
+      { $lookup: { from: "projects", localField: "_id", foreignField: "_id", as: "project" } },
+      { $unwind: { path: "$project", preserveNullAndEmptyArrays: true } },
+      { $project: { _id: 0, title: { $ifNull: ["$project.title", "Unknown"] }, slug: { $ifNull: ["$project.slug", ""] }, total: 1, count: 1 } },
+    ]),
   ]);
 
   const totalCollected = collectedResult[0]?.total ?? 0;
@@ -114,6 +124,7 @@ export const getAdminDashboard = async () => {
     projectsByStatus: projectStatusCounts.map(({ _id, count }) => ({ status: _id, count })),
     recentUsers,
     latestCompletedPayments,
+    topCollections: topCollectionsRaw,
   };
 };
 

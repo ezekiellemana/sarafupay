@@ -158,6 +158,8 @@ export type AdminDashboardData = {
   // recent activity
   recentUsers: RecentUser[];
   latestCompletedPayments: Payment[];
+  // top collections by revenue
+  topCollections: { title: string; slug: string; total: number; count: number }[];
 };
 
 export type ActivityEventType = "user_registered" | "collection_created" | "payment_completed";
