@@ -1,11 +1,10 @@
 import bcrypt from "bcryptjs";
 import { z } from "zod";
-import type { Response } from "express";
-import { env, isProduction } from "../config/env";
+import { env } from "../config/env";
 import { User, type IUser } from "../models/User.model";
 import { AppError } from "../utils/AppError";
 import { asyncHandler } from "../utils/asyncHandler";
-import { generateToken } from "../utils/generateToken";
+import { setAuthCookie, clearAuthCookie } from "../utils/cookieHelpers";
 
 export const registerSchema = z
   .object({
@@ -46,7 +45,7 @@ export const register = asyncHandler(async (req, res) => {
 
   const passwordHash = await bcrypt.hash(password, 12);
   const user = await User.create({ fullName, phoneNumber, email, passwordHash });
-  setAuthCookie(res, user);
+  setAuthCookie(res, user._id.toString());
   res.status(201).json({ success: true, message: "Account created successfully.", data: { user: serializeUser(user) } });
 });
 
@@ -60,12 +59,12 @@ export const login = asyncHandler(async (req, res) => {
   }
   if (!user.isActive) throw new AppError("This account is inactive.", 403, "ACCOUNT_INACTIVE");
 
-  setAuthCookie(res, user);
+  setAuthCookie(res, user._id.toString());
   res.json({ success: true, message: "Logged in successfully.", data: { user: serializeUser(user) } });
 });
 
 export const logout = asyncHandler(async (_req, res) => {
-  res.clearCookie(env.COOKIE_NAME, cookieOptions());
+  clearAuthCookie(res);
   res.json({ success: true, message: "Logged out successfully.", data: {} });
 });
 
@@ -86,17 +85,6 @@ export const changePassword = asyncHandler(async (req, res) => {
   user.passwordHash = await bcrypt.hash(req.body.newPassword, 12);
   await user.save();
   res.json({ success: true, message: "Password changed.", data: {} });
-});
-
-const setAuthCookie = (res: Response, user: IUser) => {
-  res.cookie(env.COOKIE_NAME, generateToken(user._id.toString()), cookieOptions());
-};
-
-const cookieOptions = () => ({
-  httpOnly: true,
-  secure: isProduction,
-  sameSite: isProduction ? ("none" as const) : ("lax" as const),
-  maxAge: 7 * 24 * 60 * 60 * 1000
 });
 
 export const serializeUser = (user: IUser) => ({

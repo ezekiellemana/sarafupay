@@ -1,22 +1,19 @@
 import crypto from "crypto";
 import type { Request, Response } from "express";
-import { env, isProduction } from "../config/env";
+import { env } from "../config/env";
 import { User } from "../models/User.model";
 import { AppError } from "../utils/AppError";
 import { asyncHandler } from "../utils/asyncHandler";
-import { generateToken } from "../utils/generateToken";
+import {
+  setAuthCookie,
+  setOAuthStateCookie,
+  clearOAuthStateCookie,
+  OAUTH_STATE_COOKIE,
+} from "../utils/cookieHelpers";
 
-const STATE_COOKIE = "sarafupay_oauth_state";
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo";
-
-const stateCookieOptions = () => ({
-  httpOnly: true,
-  secure: isProduction,
-  sameSite: isProduction ? ("none" as const) : ("lax" as const),
-  maxAge: 5 * 60 * 1000,
-});
 
 type GoogleProfile = {
   id?: string;
@@ -36,7 +33,7 @@ export const googleRedirect = asyncHandler(async (_req: Request, res: Response) 
   }
 
   const state = crypto.randomBytes(16).toString("hex");
-  res.cookie(STATE_COOKIE, state, stateCookieOptions());
+  setOAuthStateCookie(res, state);
 
   const params = new URLSearchParams({
     client_id: env.GOOGLE_CLIENT_ID,
@@ -69,8 +66,8 @@ export const googleCallback = asyncHandler(async (req: Request, res: Response) =
   if (error) return redirectError("google_denied");
 
   // Verify CSRF state
-  const storedState = req.cookies?.[STATE_COOKIE];
-  res.clearCookie(STATE_COOKIE, stateCookieOptions());
+  const storedState = req.cookies?.[OAUTH_STATE_COOKIE];
+  clearOAuthStateCookie(res);
 
   if (!code || !state || !storedState || state !== storedState) {
     return redirectError("google_invalid_state");
@@ -136,13 +133,7 @@ export const googleCallback = asyncHandler(async (req: Request, res: Response) =
     });
   }
 
-  // Set the same JWT cookie as normal login
-  res.cookie(env.COOKIE_NAME, generateToken(user._id.toString()), {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? ("none" as const) : ("lax" as const),
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
+  setAuthCookie(res, user._id.toString());
 
   const destination = user.role === "admin" ? "/admin" : "/dashboard";
   res.redirect(`${clientUrl}${destination}`);
