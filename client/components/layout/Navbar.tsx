@@ -93,7 +93,7 @@ export function Navbar() {
                     key={href}
                     href={href}
                     onClick={() => setMobileOpen(false)}
-                    className="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-[#035034]"
+                    className="rounded-xl px-3 py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-[#035034]"
                   >
                     {label}
                   </Link>

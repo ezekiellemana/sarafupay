@@ -48,7 +48,7 @@ export function DashboardShell({ children, admin = false }: { children: React.Re
     <div className="relative min-h-screen overflow-hidden bg-background">
       <FloatingBlobBackground />
       <AppSidebar admin={admin} />
-      <main className="pb-24 lg:ml-64 lg:pb-0">
+      <main className="pb-32 lg:ml-64 lg:pb-0">
         <div className="mx-auto max-w-7xl px-4 py-8 md:px-8 lg:px-10">
           <PageTransition>{children}</PageTransition>
         </div>
