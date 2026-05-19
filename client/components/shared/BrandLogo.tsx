@@ -1,7 +1,3 @@
-"use client";
-
-import { useState } from "react";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 export type BrandLogoVariant = "light" | "dark" | "icon";
@@ -12,78 +8,91 @@ interface BrandLogoProps {
   className?: string;
 }
 
-const SRCS: Record<BrandLogoVariant, string> = {
-  light: "/brand/sarafupay-horizontal-logo.png",
-  dark: "/brand/sarafupay-logo-white.png",
-  icon: "/brand/sarafupay-icon.png",
-};
+// ── Brand tokens ────────────────────────────────────────────────────────────
+const GREEN_DARK = "#035034";
+const GOLD = "#C4A237";
+const GOLD_LIGHT = "#F2D37A";
 
-function Fallback({ variant, height = 36, className }: { variant: BrandLogoVariant; height?: number; className?: string }) {
+// ── S mark — circle with gold ring and gold S letterform ─────────────────────
+function SMark({ size }: { size: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 60 60"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      style={{ flexShrink: 0, display: "block" }}
+      aria-hidden="true"
+    >
+      {/* Dark green base */}
+      <circle cx="30" cy="30" r="29" fill={GREEN_DARK} />
+      {/* Gold outer ring */}
+      <circle cx="30" cy="30" r="29" fill="none" stroke={GOLD} strokeWidth="3" />
+      {/* Subtle inner highlight ring */}
+      <circle cx="30" cy="30" r="24.5" fill="none" stroke={GOLD_LIGHT} strokeWidth="0.75" opacity="0.45" />
+      {/* S lettermark */}
+      <text
+        x="30"
+        y="42"
+        textAnchor="middle"
+        fontSize="34"
+        fontWeight="900"
+        fill={GOLD}
+        style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+      >
+        S
+      </text>
+    </svg>
+  );
+}
+
+// ── Full logo (mark + wordmark) ───────────────────────────────────────────────
+export function BrandLogo({ variant = "light", height = 36, className }: BrandLogoProps) {
+  const markSize = Math.round(height * 0.88);
+  const wordSize = Math.round(height * 0.37);
+  const tagSize = Math.max(8, Math.round(height * 0.20));
   const isDark = variant === "dark";
-  const markSize = Math.round(height * 0.78);
-  const fontSize = Math.round(markSize * 0.55);
 
   if (variant === "icon") {
     return (
-      <span
-        className={cn(
-          "relative inline-flex shrink-0 items-center justify-center rounded-xl",
-          isDark ? "bg-white/10 ring-1 ring-white/15" : "bg-[#071a0e]",
-          className,
-        )}
-        style={{ width: markSize, height: markSize }}
-      >
-        <span className="font-black leading-none text-emerald-400" style={{ fontSize }}>S</span>
-        <span className="absolute right-1 top-1 size-1.5 rounded-full bg-amber-400" />
+      <span className={cn("inline-block", className)}>
+        <SMark size={markSize} />
       </span>
     );
   }
 
   return (
-    <span className={cn("inline-flex shrink-0 items-center gap-2.5", className)}>
-      <span
-        className={cn(
-          "relative inline-flex shrink-0 items-center justify-center rounded-xl",
-          isDark ? "bg-white/10 ring-1 ring-white/15" : "bg-[#071a0e]",
+    <span className={cn("inline-flex shrink-0 items-center gap-2", className)}>
+      <SMark size={markSize} />
+      <span className="flex flex-col leading-none" style={{ gap: "0.18em" }}>
+        <span
+          style={{
+            fontSize: wordSize,
+            fontWeight: 800,
+            letterSpacing: "-0.025em",
+            lineHeight: 1,
+            color: isDark ? "#ffffff" : GREEN_DARK,
+          }}
+        >
+          Sarafu
+          <span style={{ color: GOLD }}>Pay</span>
+        </span>
+        {height >= 32 && (
+          <span
+            style={{
+              fontSize: tagSize,
+              fontWeight: 600,
+              letterSpacing: "0.07em",
+              textTransform: "uppercase" as const,
+              lineHeight: 1,
+              color: isDark ? `${GOLD_LIGHT}bb` : `${GOLD}cc`,
+            }}
+          >
+            Powering Payments
+          </span>
         )}
-        style={{ width: markSize, height: markSize }}
-      >
-        <span className="font-black leading-none text-emerald-400" style={{ fontSize }}>S</span>
-        <span className="absolute right-1 top-1 size-1.5 rounded-full bg-amber-400" />
-      </span>
-      <span className="flex flex-col leading-none gap-0.5">
-        <span
-          className={cn("font-bold tracking-tight", isDark ? "text-white" : "text-[#0B1F3A]")}
-          style={{ fontSize: Math.round(height * 0.34) }}
-        >
-          SarafuPay
-        </span>
-        <span
-          className={cn("font-semibold tracking-wide", isDark ? "text-amber-400/80" : "text-amber-600")}
-          style={{ fontSize: Math.round(height * 0.22) }}
-        >
-          Lipa kwa urahisi
-        </span>
       </span>
     </span>
-  );
-}
-
-export function BrandLogo({ variant = "light", height = 36, className }: BrandLogoProps) {
-  const [failed, setFailed] = useState(false);
-
-  if (failed) return <Fallback variant={variant} height={height} className={className} />;
-
-  return (
-    <Image
-      src={SRCS[variant]}
-      alt="SarafuPay"
-      width={300}
-      height={height}
-      style={{ height: `${height}px`, width: "auto", objectFit: "contain" }}
-      className={className}
-      onError={() => setFailed(true)}
-      priority
-    />
   );
 }

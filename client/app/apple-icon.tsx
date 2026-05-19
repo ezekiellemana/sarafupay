@@ -11,34 +11,31 @@ export default function AppleIcon() {
           width: 180,
           height: 180,
           borderRadius: 40,
-          background: "linear-gradient(135deg, #071a0e 0%, #0d3a1f 100%)",
+          background: "#035034",
+          border: "7px solid #C4A237",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           position: "relative",
         }}
       >
-        {/* Gold accent dot */}
+        {/* Subtle inner highlight ring */}
         <div
           style={{
             position: "absolute",
-            top: 26,
-            right: 26,
-            width: 32,
-            height: 32,
-            borderRadius: "50%",
-            background: "#F59E0B",
-            boxShadow: "0 0 20px rgba(245,158,11,0.7)",
+            inset: 12,
+            borderRadius: 30,
+            border: "1px solid rgba(242,211,122,0.35)",
           }}
         />
-        {/* S lettermark */}
         <span
           style={{
-            color: "#4ade80",
-            fontSize: 112,
+            color: "#C4A237",
+            fontSize: 108,
             fontWeight: 900,
             lineHeight: 1,
-            fontFamily: "sans-serif",
+            fontFamily: "serif",
+            marginTop: 8,
           }}
         >
           S
