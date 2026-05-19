@@ -26,25 +26,37 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const form = useForm<LoginValues>({ resolver: zodResolver(loginSchema), defaultValues: { identifier: "", password: "" } });
 
-  const googleErrorParam = search.get("error");
-  const googleError = googleErrorParam
-    ? ({
-        google_denied: "Google sign-in was cancelled.",
-        google_invalid_state: "Sign-in session expired. Please try again.",
-        google_token_failed: "Google sign-in failed. Please try again.",
-        google_profile_failed: "Could not retrieve your Google profile. Please try again.",
-        google_unverified_email: "Please verify your Google account email first.",
-        google_not_configured: "Google sign-in is not available right now.",
-        account_inactive: "This account is deactivated. Please contact support.",
-      }[googleErrorParam] ?? "Google sign-in failed. Please try again.")
-    : null;
+  // Lazy initializer reads ?error= once on first render. After that, googleError
+  // is managed as independent state — changes to the URL do not reset it.
+  const [googleError, setGoogleError] = useState<string | null>(() => {
+    const code = search.get("error");
+    if (!code) return null;
+    const messages: Record<string, string> = {
+      google_denied: "Google sign-in was cancelled.",
+      google_invalid_state: "Sign-in session expired. Please try again.",
+      google_token_failed: "Google sign-in failed. Please try again.",
+      google_profile_failed: "Could not retrieve your Google profile. Please try again.",
+      google_unverified_email: "Please verify your Google account email first.",
+      google_not_configured: "Google sign-in is not available right now.",
+      account_inactive: "This account is deactivated. Please contact support.",
+    };
+    return messages[code] ?? "Google sign-in failed. Please try again.";
+  });
 
   useEffect(() => {
     router.prefetch("/dashboard");
     router.prefetch("/admin");
   }, [router]);
 
+  // Strip ?error= from the URL after mount so a page refresh does not replay
+  // the error. Only calls router.replace — no setState inside this effect.
+  useEffect(() => {
+    if (!search.get("error")) return;
+    router.replace("/login");
+  }, [search, router]);
+
   const onSubmit = async (values: LoginValues) => {
+    setGoogleError(null);
     setApiError(null);
     setLoading(true);
     try {
@@ -104,7 +116,7 @@ export function LoginForm() {
               id="identifier"
               className="h-12 rounded-2xl border-slate-200 bg-white px-4 text-sm text-slate-800 placeholder:text-slate-400 focus-visible:border-[#035034]/50 focus-visible:ring-[#035034]/10"
               placeholder="e.g. email@example.com"
-              {...form.register("identifier")}
+              {...form.register("identifier", { onChange: () => setGoogleError(null) })}
               aria-invalid={!!form.formState.errors.identifier}
             />
             {form.formState.errors.identifier && (
@@ -122,7 +134,7 @@ export function LoginForm() {
                 type={showPassword ? "text" : "password"}
                 className="h-12 rounded-2xl border-slate-200 bg-white px-4 pr-12 text-sm text-slate-800 placeholder:text-slate-400 focus-visible:border-[#035034]/50 focus-visible:ring-[#035034]/10"
                 placeholder="Your password"
-                {...form.register("password")}
+                {...form.register("password", { onChange: () => setGoogleError(null) })}
                 aria-invalid={!!form.formState.errors.password}
               />
               <button
