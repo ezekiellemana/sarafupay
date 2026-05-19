@@ -19,7 +19,10 @@ const envSchema = z.object({
   ADMIN_NAME: z.string().optional(),
   ADMIN_EMAIL: z.string().email().optional(),
   ADMIN_PHONE: z.string().optional(),
-  ADMIN_PASSWORD: z.string().optional()
+  ADMIN_PASSWORD: z.string().optional(),
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  GOOGLE_CALLBACK_URL: z.string().url().optional()
 });
 
 export const env = envSchema.parse({
@@ -38,7 +41,10 @@ export const env = envSchema.parse({
   ADMIN_NAME: process.env.ADMIN_NAME,
   ADMIN_EMAIL: process.env.ADMIN_EMAIL,
   ADMIN_PHONE: process.env.ADMIN_PHONE,
-  ADMIN_PASSWORD: process.env.ADMIN_PASSWORD
+  ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+  GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL
 });
 
 export const isProduction = env.NODE_ENV === "production";

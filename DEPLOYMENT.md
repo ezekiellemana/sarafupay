@@ -167,6 +167,9 @@ Add these in **App Platform → your app → Settings → Environment Variables*
 | `ADMIN_EMAIL` | admin@your-domain.com | Admin login email. |
 | `ADMIN_PHONE` | +255700000000 | Admin phone number. |
 | `ADMIN_PASSWORD` | Strong password | Change this immediately after first login. |
+| `GOOGLE_CLIENT_ID` | From Google Cloud Console | Optional. Google login is silently disabled if absent. |
+| `GOOGLE_CLIENT_SECRET` | From Google Cloud Console | Optional. **Never expose in the frontend.** |
+| `GOOGLE_CALLBACK_URL` | `https://your-domain.com/api/auth/google/callback` | Must match exactly what is registered in Google Cloud Console. Goes through the Vercel proxy — use the **frontend** URL, not the backend URL. |
 
 > ⚠️ **`CLIENT_URL` warning:** This must exactly match the origin your browser uses to open the app. If the browser loads `https://your-domain.com` but `CLIENT_URL` is `https://your-domain.com/` (with a trailing slash) or `https://www.your-domain.com` (with www), the server will reject all API requests with a CORS error.
 
@@ -181,6 +184,41 @@ Add these in **Vercel → Project → Settings → Environment Variables**.
 | `NEXT_PUBLIC_API_PROXY_URL` | `https://api.your-domain.com` | Your backend HTTPS URL. **No trailing slash.** This tells Next.js where to proxy `/api/*` requests. |
 
 > ⚠️ **`NEXT_PUBLIC_API_PROXY_URL` warning:** If this is not set on Vercel, Next.js falls back to `http://127.0.0.1:5000`, which does not exist on Vercel's servers. Every API call — login, payment, dashboard — will return a 502 error.
+
+### Google OAuth Setup (Optional)
+
+Google login is completely optional. If `GOOGLE_CLIENT_ID` is not set, the "Continue with Google" button on the login and register pages will redirect to a 503 error — no silent failure.
+
+To enable it:
+
+1. Go to [console.cloud.google.com](https://console.cloud.google.com).
+2. Create a new project (or use an existing one).
+3. Go to **APIs & Services → OAuth consent screen**:
+   - User type: **External**
+   - App name: `SarafuPay`
+   - Authorized domains: `your-domain.com`
+   - Scopes: add `email`, `profile`, `openid`
+   - Save and publish
+4. Go to **APIs & Services → Credentials → Create Credentials → OAuth 2.0 Client ID**:
+   - Application type: **Web application**
+   - Name: `SarafuPay Production`
+   - **Authorized redirect URIs**: add `https://your-domain.com/api/auth/google/callback`
+     *(this goes through the Vercel → DigitalOcean proxy — use the **frontend** URL, not the backend URL)*
+   - Click **Create**
+5. Copy **Client ID** → set as `GOOGLE_CLIENT_ID` on DigitalOcean
+6. Copy **Client Secret** → set as `GOOGLE_CLIENT_SECRET` on DigitalOcean
+7. Set `GOOGLE_CALLBACK_URL=https://your-domain.com/api/auth/google/callback` on DigitalOcean
+
+**Before deploying to production:** Run the phone index migration once against your production database:
+
+```powershell
+$env:MONGO_URI = "mongodb+srv://sarafupay:YOURPASSWORD@cluster0.xxxxx.mongodb.net/sarafupay?retryWrites=true&w=majority"
+npm --workspace server run fix-phone-index
+```
+
+This safely converts the `phoneNumber` index from non-sparse to sparse, allowing Google users without a phone number to coexist with existing users. Existing users and their data are untouched.
+
+---
 
 ### Snippe Configuration
 
@@ -249,11 +287,21 @@ Work through this top to bottom before opening SarafuPay to real users.
 - [ ] Check MongoDB: `db.payments.findOne({ status: "completed" })` — `paymentMethod` and `rawWebhookPayload` should be set (these are only written by the webhook path, not the return-page path)
 - [ ] Confirm project `totalCollected` and `contributorCount` updated
 
+### Google OAuth (if enabled)
+
+- [ ] `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_CALLBACK_URL` set on DigitalOcean
+- [ ] `https://your-domain.com/api/auth/google/callback` added as Authorized redirect URI in Google Cloud Console
+- [ ] Phone index migration run: `npm --workspace server run fix-phone-index`
+- [ ] Google login creates a new member account (new email)
+- [ ] Google login with existing email links to the same account
+- [ ] Inactive user cannot log in via Google
+
 ### Security
 - [ ] No API request in browser DevTools shows `SNIPPE_API_KEY` in any response
 - [ ] Accessing another user's collection payments returns 404
 - [ ] `/api/admin/*` returns 403 for a normal user account
 - [ ] Admin password changed from seed default
+- [ ] `GOOGLE_CLIENT_SECRET` is NOT visible in any frontend response or build output
 
 ---
 

@@ -12,6 +12,7 @@
     "setup-admin": "tsx src/scripts/setup-admin.ts",
     "verify-admin": "tsx src/scripts/verify-admin.ts",
     "fix-admin-login": "tsx src/scripts/fix-admin-login.ts",
+    "fix-phone-index": "tsx src/scripts/fix-phone-index.ts",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],

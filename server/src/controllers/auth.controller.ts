@@ -55,7 +55,7 @@ export const login = asyncHandler(async (req, res) => {
   const user = await User.findOne({
     $or: [{ email: identifier.toLowerCase() }, { phoneNumber: identifier }]
   });
-  if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+  if (!user || !user.passwordHash || !(await bcrypt.compare(password, user.passwordHash))) {
     throw new AppError("Invalid email/phone or password.", 401, "INVALID_CREDENTIALS");
   }
   if (!user.isActive) throw new AppError("This account is inactive.", 403, "ACCOUNT_INACTIVE");
@@ -80,7 +80,7 @@ export const updateProfile = asyncHandler(async (req, res) => {
 
 export const changePassword = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user!._id);
-  if (!user || !(await bcrypt.compare(req.body.currentPassword, user.passwordHash))) {
+  if (!user || !user.passwordHash || !(await bcrypt.compare(req.body.currentPassword, user.passwordHash))) {
     throw new AppError("Current password is incorrect.", 400, "PASSWORD_INCORRECT");
   }
   user.passwordHash = await bcrypt.hash(req.body.newPassword, 12);
@@ -102,7 +102,7 @@ const cookieOptions = () => ({
 export const serializeUser = (user: IUser) => ({
   id: user._id.toString(),
   fullName: user.fullName,
-  phoneNumber: user.phoneNumber,
+  phoneNumber: user.phoneNumber ?? null,
   email: user.email,
   role: user.role,
   isActive: user.isActive,

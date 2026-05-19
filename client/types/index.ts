@@ -21,7 +21,7 @@ export type User = {
   id: string;
   _id?: string;
   fullName: string;
-  phoneNumber: string;
+  phoneNumber?: string | null;
   email: string;
   role: Role;
   isActive: boolean;

@@ -30,7 +30,7 @@ export default function ProfilePage() {
     if (user) {
       form.reset({
         fullName: user.fullName,
-        phoneNumber: user.phoneNumber,
+        phoneNumber: user.phoneNumber ?? undefined,
         email: user.email,
         businessName: user.businessName ?? "",
         bio: user.bio ?? "",

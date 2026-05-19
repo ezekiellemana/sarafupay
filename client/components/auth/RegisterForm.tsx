@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, Eye, EyeOff, Loader2, LockKeyhole } from "lucide-react";
 import type { z } from "zod";
 import { Input } from "@/components/ui/input";
+import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 import { registerSchema } from "@/lib/validations";
 import { authApi } from "@/lib/auth";
 import { getApiErrorMessage } from "@/lib/api";
@@ -80,6 +81,14 @@ export function RegisterForm() {
       </div>
 
       <div className="px-7 py-6">
+        {/* Google OAuth */}
+        <GoogleAuthButton label="Sign up with Google" />
+        <div className="my-5 flex items-center gap-3">
+          <div className="h-px flex-1 bg-slate-100" />
+          <span className="text-xs font-medium text-slate-400">or register with email</span>
+          <div className="h-px flex-1 bg-slate-100" />
+        </div>
+
         <form className="flex flex-col gap-4" method="post" onSubmit={form.handleSubmit(onSubmit)}>
 
           {/* API error alert */}

@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, Eye, EyeOff, Loader2, LockKeyhole } from "lucide-react";
 import type { z } from "zod";
 import { Input } from "@/components/ui/input";
+import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 import { loginSchema } from "@/lib/validations";
 import { authApi } from "@/lib/auth";
 import { getApiErrorMessage } from "@/lib/api";
@@ -24,6 +25,19 @@ export function LoginForm() {
   const [apiError, setApiError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const form = useForm<LoginValues>({ resolver: zodResolver(loginSchema), defaultValues: { identifier: "", password: "" } });
+
+  const googleErrorParam = search.get("error");
+  const googleError = googleErrorParam
+    ? ({
+        google_denied: "Google sign-in was cancelled.",
+        google_invalid_state: "Sign-in session expired. Please try again.",
+        google_token_failed: "Google sign-in failed. Please try again.",
+        google_profile_failed: "Could not retrieve your Google profile. Please try again.",
+        google_unverified_email: "Please verify your Google account email first.",
+        google_not_configured: "Google sign-in is not available right now.",
+        account_inactive: "This account is deactivated. Please contact support.",
+      }[googleErrorParam] ?? "Google sign-in failed. Please try again.")
+    : null;
 
   useEffect(() => {
     router.prefetch("/dashboard");
@@ -56,7 +70,23 @@ export function LoginForm() {
       </div>
 
       <div className="px-7 py-6">
+        {/* Google OAuth */}
+        <GoogleAuthButton label="Continue with Google" />
+        <div className="my-5 flex items-center gap-3">
+          <div className="h-px flex-1 bg-slate-100" />
+          <span className="text-xs font-medium text-slate-400">or sign in with email</span>
+          <div className="h-px flex-1 bg-slate-100" />
+        </div>
+
         <form className="flex flex-col gap-5" method="post" onSubmit={form.handleSubmit(onSubmit)}>
+
+          {/* Google OAuth error */}
+          {googleError && !apiError && (
+            <div className="flex items-start gap-2.5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3">
+              <AlertCircle className="mt-0.5 size-4 shrink-0 text-red-500" />
+              <p className="text-sm font-medium text-red-700">{googleError}</p>
+            </div>
+          )}
 
           {/* API error alert */}
           {apiError && (
