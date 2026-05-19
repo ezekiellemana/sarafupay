@@ -25,7 +25,8 @@ export function AnimatedProgressBar({
             : "bg-linear-to-r from-[#16A34A] via-[#2563EB] to-[#38BDF8]"
         )}
         initial={{ width: 0 }}
-        animate={{ width: `${safeValue}%` }}
+        whileInView={{ width: `${safeValue}%` }}
+        viewport={{ once: true }}
         transition={{ duration: 0.55, ease: "easeOut" }}
       />
     </div>

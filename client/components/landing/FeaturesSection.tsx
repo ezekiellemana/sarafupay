@@ -82,7 +82,7 @@ export function FeaturesSection() {
               key={title}
               initial={{ opacity: 0, y: 14 }}
               whileInView={{ opacity: 1, y: 0 }}
-              whileHover={{ y: -4, scale: 1.01 }}
+              whileHover={{ y: -4 }}
               transition={{ delay: index * 0.07, duration: 0.3 }}
               viewport={{ once: true }}
               className={`rounded-3xl border ${tint} p-6 shadow-lg shadow-slate-900/4 backdrop-blur transition-shadow hover:shadow-xl`}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
+import { MotionProvider } from "@/components/providers/MotionProvider";
 import "./globals.css";
 
 const jakartaSans = Plus_Jakarta_Sans({ variable: "--font-sans", subsets: ["latin"], weight: ["400", "500", "600", "700", "800"] });
@@ -35,7 +36,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en">
       <body className={`${jakartaSans.variable} ${geistMono.variable}`}>
-        {children}
+        <MotionProvider>
+          {children}
+        </MotionProvider>
         <Toaster richColors position="top-center" />
       </body>
     </html>
