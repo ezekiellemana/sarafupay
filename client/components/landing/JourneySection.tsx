@@ -178,7 +178,7 @@ function PhoneMockup() {
                     initial={{ width: 0 }}
                     whileInView={{ width: "62%" }}
                     viewport={{ once: true }}
-                    transition={{ duration: 1.3, delay: 0.5, ease: "easeOut" }}
+                    transition={{ duration: 0.9, delay: 0.3, ease: "easeOut" }}
                   />
                 </div>
                 <div className="mt-1.5 flex items-center justify-between">
@@ -317,7 +317,7 @@ function ChipMarquee() {
 
 const stepVariants = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.1 } },
+  visible: { transition: { staggerChildren: 0.08 } },
 };
 
 const stepItemVariant = {
@@ -327,7 +327,7 @@ const stepItemVariant = {
 
 const caseVariants = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.07 } },
+  visible: { transition: { staggerChildren: 0.05 } },
 };
 
 const caseItemVariant = {
@@ -429,18 +429,45 @@ export function JourneySection() {
                 </p>
               </motion.div>
 
+              {/* Mobile: compact list */}
+              <motion.div
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.38 }}
+                className="overflow-hidden rounded-3xl border border-white/80 bg-white/95 shadow-xl shadow-slate-900/5 backdrop-blur-xl sm:hidden"
+              >
+                <div className="divide-y divide-slate-100/80">
+                  {useCases.map(({ emoji, title, desc }) => (
+                    <div
+                      key={title}
+                      className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-slate-50/60 active:bg-slate-50/80"
+                    >
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#035034]/6 text-xl">
+                        {emoji}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-[#035034]">{title}</p>
+                        <p className="mt-0.5 text-xs leading-5 text-slate-500">{desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* sm+: card grid */}
               <motion.div
                 variants={caseVariants}
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
-                className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3"
+                className="hidden gap-3 sm:grid sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3"
               >
                 {useCases.map(({ emoji, title, desc }) => (
                   <motion.div
                     key={title}
                     variants={caseItemVariant}
-                    whileHover={{ y: -3, scale: 1.02 }}
+                    whileHover={{ y: -3 }}
                     className="flex flex-col gap-2 rounded-2xl border border-white/80 bg-white/90 p-4 shadow-md shadow-slate-900/4 backdrop-blur transition-shadow hover:shadow-lg"
                   >
                     <span className="flex size-10 items-center justify-center rounded-xl bg-[#035034]/6 text-xl">
@@ -459,7 +486,7 @@ export function JourneySection() {
                 initial={{ opacity: 0, y: 8 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.35, delay: 0.3 }}
+                transition={{ duration: 0.35, delay: 0.2 }}
                 className="mt-7 flex flex-wrap items-center gap-3"
               >
                 <a
