@@ -7,23 +7,24 @@ import { Footer } from "@/components/layout/Footer";
 export const metadata: Metadata = {
   title: "Privacy Policy — SarafuPay",
   description:
-    "Read SarafuPay's Privacy Policy — what data we collect, how it is used, Google sign-in data, payment records, and your rights.",
+    "Read SarafuPay's Privacy Policy — what data we collect, how it is used, Google sign-in data, payment records, analytics, and your rights.",
   robots: { index: true, follow: true },
 };
 
 const LAST_UPDATED = "May 2026";
 
 const TOC = [
-  { id: "overview", label: "1. Overview" },
-  { id: "collect", label: "2. Information We Collect" },
+  { id: "overview",    label: "1. Overview" },
+  { id: "collect",     label: "2. Information We Collect" },
   { id: "google-data", label: "3. Google Sign-In Data" },
-  { id: "payments", label: "4. Payment Records" },
-  { id: "cookies", label: "5. Cookies & Auth Tokens" },
-  { id: "use", label: "6. How We Use Your Data" },
+  { id: "payments",    label: "4. Payment Records" },
+  { id: "cookies",     label: "5. Cookies & Auth Tokens" },
+  { id: "use",         label: "6. How We Use Your Data" },
   { id: "third-party", label: "7. Third-Party Services" },
-  { id: "protection", label: "8. Data Protection" },
-  { id: "rights", label: "9. Your Rights" },
-  { id: "contact", label: "10. Contact" },
+  { id: "analytics",   label: "8. Analytics & Tracking" },
+  { id: "protection",  label: "9. Data Protection" },
+  { id: "rights",      label: "10. Your Rights" },
+  { id: "contact",     label: "11. Contact" },
 ];
 
 export default function PrivacyPage() {
@@ -157,7 +158,10 @@ export default function PrivacyPage() {
                 "Is immediately removed when you click Log Out",
               ]} />
               <p className="mt-4">
-                We do <strong className="text-slate-700">not</strong> use advertising cookies, analytics trackers, or any third-party tracking scripts on SarafuPay. The only additional short-lived cookie used is a temporary state token during Google OAuth sign-in, which is deleted as soon as the sign-in is complete.
+                The only additional short-lived cookie used is a temporary state token during Google OAuth sign-in, which is deleted as soon as the sign-in is complete.
+              </p>
+              <p className="mt-3">
+                We do <strong className="text-slate-700">not</strong> use advertising cookies or marketing trackers. SarafuPay uses PostHog for product analytics, which may store an anonymous session identifier in your browser. See the <a href="#analytics" className="font-medium text-[#035034] underline underline-offset-2 hover:text-[#024028]">Analytics &amp; Tracking</a> section for full details.
               </p>
             </Section>
 
@@ -171,6 +175,7 @@ export default function PrivacyPage() {
                 "Detecting and preventing fraud or misuse of the platform",
                 "Responding to support requests",
                 "Sending essential service notifications, such as payment confirmations",
+                "Understanding how SarafuPay is used so we can improve it (via PostHog analytics — see section 8)",
               ]} />
               <p className="mt-4">
                 We do not use your data for marketing emails, targeted advertising, or profiling. We do not sell or rent your data to any third party.
@@ -193,6 +198,13 @@ export default function PrivacyPage() {
                   "Shares your name, email, and account ID with SarafuPay",
                   "Does not share passwords, contacts, or other Google data",
                 ]} />
+                <DataBlock label="PostHog (product analytics)" items={[
+                  "Used to understand page visits, traffic sources, and product usage",
+                  "Configured with autocapture disabled — we control exactly what is tracked",
+                  "All form inputs are masked — PostHog never sees what you type",
+                  "No passwords, payment credentials, or personal identifiers are sent to PostHog",
+                  "See section 8 for full details",
+                ]} />
                 <DataBlock label="MongoDB Atlas (database)" items={[
                   "Stores all SarafuPay account, collection, and payment data",
                   "Access-controlled, encrypted at rest, hosted on secure cloud infrastructure",
@@ -208,7 +220,62 @@ export default function PrivacyPage() {
               </div>
             </Section>
 
-            <Section id="protection" num={8} title="Data Protection">
+            <Section id="analytics" num={8} title="Analytics & Tracking">
+              <p>
+                We use <strong className="text-slate-700">PostHog</strong> (posthog.com) to understand how SarafuPay is used — for example, which pages are visited, where visitors come from, and which features are most used. This helps us improve the product for everyone.
+              </p>
+
+              <p className="mt-4 font-semibold text-slate-700">What PostHog may collect:</p>
+              <BulletList color="green" items={[
+                "Page URLs visited and the order in which they were visited",
+                "Traffic source — for example, whether you arrived from a link, search, or social media",
+                "Browser type, device type, and approximate location (country level only)",
+                "An anonymous session identifier stored in your browser (cookie or local storage)",
+                "Which features or buttons were clicked — only those we explicitly choose to track",
+              ]} />
+
+              <p className="mt-4 font-semibold text-slate-700">What PostHog never collects on SarafuPay:</p>
+              <BulletList color="slate" items={[
+                "Passwords or password hashes",
+                "Payment credentials, M-Pesa PINs, or card numbers",
+                "Session tokens, auth cookies, or any authentication secrets",
+                "Form input values — all inputs are masked before any data is sent",
+                "Your email address, phone number, or full name",
+                "Any personally identifiable information beyond an anonymous internal ID",
+              ]} />
+
+              <p className="mt-4 font-semibold text-slate-700">Session replay:</p>
+              <p className="mt-1">
+                Session replay (a recording of how you navigate the screen) may be used to help us understand usability issues. When active, all input fields are automatically masked. Session replay is <strong className="text-slate-700">completely disabled</strong> on the following pages:
+              </p>
+              <BulletList color="slate" items={[
+                "/pay/** — all payment checkout pages",
+                "/payment/** — all payment processing pages",
+                "/dashboard/profile — your profile and settings",
+                "/login — the sign-in page",
+                "/register — the account creation page",
+              ]} />
+
+              <Callout>
+                PostHog analytics is configured with <strong>autocapture disabled</strong> — this means PostHog does not automatically record every click or keystroke on the page. Only specific events that we deliberately choose to track are ever sent.
+              </Callout>
+
+              <p className="mt-4">
+                PostHog may store an anonymous session identifier in your browser using a cookie or local storage entry. This identifier is used for analytics purposes only and is not linked to your SarafuPay account or any personal data we hold about you.
+              </p>
+              <p className="mt-3">
+                If you have any questions about what analytics data is collected or how it is used, please contact us at{" "}
+                <a
+                  href="mailto:enzottech@gmail.com"
+                  className="font-medium text-[#035034] underline underline-offset-2 hover:text-[#024028]"
+                >
+                  enzottech@gmail.com
+                </a>
+                .
+              </p>
+            </Section>
+
+            <Section id="protection" num={9} title="Data Protection">
               <p>We take reasonable technical and organisational measures to protect your data:</p>
               <BulletList color="green" items={[
                 "All data is transmitted over HTTPS (TLS encryption in transit)",
@@ -217,13 +284,14 @@ export default function PrivacyPage() {
                 "Database access is restricted by role-based access controls",
                 "No sensitive payment credentials (card numbers, PINs) are stored by SarafuPay",
                 "Admin accounts have separate access controls from regular member accounts",
+                "Analytics is configured to mask all inputs and exclude sensitive pages",
               ]} />
               <p className="mt-4">
                 No system can guarantee absolute security. If you believe your account has been compromised, please contact us immediately at the address below so we can take action.
               </p>
             </Section>
 
-            <Section id="rights" num={9} title="Your Rights">
+            <Section id="rights" num={10} title="Your Rights">
               <p>You have the right to:</p>
               <BulletList color="green" items={[
                 "Access the personal data we hold about you",
@@ -240,9 +308,9 @@ export default function PrivacyPage() {
               </p>
             </Section>
 
-            <Section id="contact" num={10} title="Contact">
+            <Section id="contact" num={11} title="Contact">
               <p>
-                For any privacy-related questions, requests, or concerns, please contact us:
+                For any privacy-related questions, requests, or concerns — including questions about analytics data — please contact us:
               </p>
               <ContactCard />
               <p className="mt-4">
@@ -324,7 +392,7 @@ type BulletColor = "green" | "red" | "slate";
 function BulletList({ items, color = "slate" }: { items: string[]; color?: BulletColor }) {
   const dot: Record<BulletColor, string> = {
     green: "bg-emerald-500",
-    red: "bg-red-400",
+    red:   "bg-red-400",
     slate: "bg-slate-400",
   };
   return (
