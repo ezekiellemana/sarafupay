@@ -52,7 +52,7 @@ export function HowItWorksSection() {
         <h2 className="text-3xl font-extrabold tracking-tight text-[#035034] sm:text-4xl">
           How it works
         </h2>
-        <p className="mt-3 text-base leading-7 text-slate-500">
+        <p className="mt-3 text-base leading-7 text-slate-600">
           From zero to collecting money in under 5 minutes.
         </p>
       </div>
@@ -78,7 +78,7 @@ export function HowItWorksSection() {
               {num}
             </div>
             <h3 className={`mt-4 text-base font-bold ${titleColor}`}>{title}</h3>
-            <p className="mt-2 text-sm leading-6 text-slate-500">{desc}</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">{desc}</p>
           </motion.div>
         ))}
       </div>

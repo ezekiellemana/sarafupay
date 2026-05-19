@@ -90,7 +90,7 @@ export function HeroSection() {
               <span className="flex size-9 items-center justify-center rounded-xl bg-[#035034]/8 text-xl">🎓</span>
               <div>
                 <p className="text-sm font-bold text-[#035034]">Harambee 2026</p>
-                <p className="text-xs text-slate-400">Final Year Project Fundraiser</p>
+                <p className="text-xs font-medium text-slate-500">Final Year Project Fundraiser</p>
               </div>
             </div>
             <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-600">
@@ -102,11 +102,11 @@ export function HeroSection() {
           <div className="px-5 py-4">
             <div className="mb-2 flex items-end justify-between">
               <div>
-                <p className="text-xs text-slate-400">Collected</p>
+                <p className="text-xs font-medium text-slate-500">Collected</p>
                 <p className="text-2xl font-extrabold tracking-tight text-[#035034]">312,000 <span className="text-sm font-semibold text-slate-400">TZS</span></p>
               </div>
               <div className="text-right">
-                <p className="text-xs text-slate-400">Target</p>
+                <p className="text-xs font-medium text-slate-500">Target</p>
                 <p className="text-sm font-semibold text-slate-600">500,000 TZS</p>
               </div>
             </div>
@@ -117,21 +117,21 @@ export function HeroSection() {
           {/* Stats row */}
           <div className="grid grid-cols-2 gap-3 px-5 pb-4">
             <div className="rounded-2xl bg-[#035034]/6 px-4 py-3">
-              <div className="flex items-center gap-1.5 text-xs text-slate-500">
+              <div className="flex items-center gap-1.5 text-xs font-medium text-slate-600">
                 <Users className="size-3.5" />
                 Contributors
               </div>
               <p className="mt-1 text-xl font-extrabold text-[#035034]">24</p>
             </div>
             <div className="rounded-2xl bg-amber-50/80 px-4 py-3">
-              <p className="text-xs text-slate-500">Avg. contribution</p>
+              <p className="text-xs font-medium text-slate-600">Avg. contribution</p>
               <p className="mt-1 text-xl font-extrabold text-[#C4A237]">13,000 <span className="text-xs font-medium text-slate-400">TZS</span></p>
             </div>
           </div>
 
           {/* Recent contributors */}
           <div className="border-t border-slate-100 px-5 py-3">
-            <p className="mb-2.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Recent contributions</p>
+            <p className="mb-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">Recent contributions</p>
             <div className="flex flex-col gap-2">
               {recentContribs.map((c) => (
                 <div key={c.name} className="flex items-center justify-between">
@@ -154,7 +154,7 @@ export function HeroSection() {
           <div className="border-t border-slate-100 px-5 py-3">
             <div className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2.5">
               <Share2 className="size-3.5 shrink-0 text-[#C4A237]" />
-              <span className="flex-1 truncate font-mono text-[11px] text-slate-500">sarafupay.com/pay/harambee-2026</span>
+              <span className="flex-1 truncate font-mono text-[12px] font-medium text-slate-600">sarafupay.com/pay/harambee-2026</span>
               <span className="shrink-0 rounded-lg bg-[#035034] px-2 py-0.5 text-[10px] font-bold text-white">Copy</span>
             </div>
           </div>
