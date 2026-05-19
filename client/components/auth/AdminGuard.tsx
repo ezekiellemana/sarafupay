@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { LoadingState } from "@/components/shared/LoadingState";
 
 export function AdminGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -23,7 +22,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
   if (!hydrated || !user || user.role !== "admin") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <LoadingState label={!hydrated ? "Loading..." : "Redirecting..."} />
+        <div className="size-5 animate-spin rounded-full border-2 border-slate-200 border-t-[#035034]" />
       </div>
     );
   }

@@ -6,7 +6,6 @@ import { DashboardShell } from "@/components/layout/DashboardShell";
 import { AdminStatsCards } from "@/components/admin/AdminStatsCards";
 import { AdminPaymentsTable } from "@/components/admin/AdminPaymentsTable";
 import { SystemHealthCard } from "@/components/admin/SystemHealthCard";
-import { SkeletonStatCards } from "@/components/shared/SkeletonStatCards";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAdminDashboard } from "@/hooks/useDashboard";
@@ -402,16 +401,8 @@ export default function AdminPage() {
 
         {/* ── States ── */}
         {loading && (
-          <div className="flex flex-col gap-6">
-            <SkeletonStatCards rows={2} />
-            <div className="h-72 animate-pulse rounded-3xl border border-white/70 bg-white/60" />
-            <div className="grid gap-6 lg:grid-cols-2">
-              <div className="h-64 animate-pulse rounded-3xl border border-white/70 bg-white/60" />
-              <div className="flex flex-col gap-6">
-                <div className="h-28 animate-pulse rounded-3xl border border-white/70 bg-white/60" />
-                <div className="h-28 animate-pulse rounded-3xl border border-white/70 bg-white/60" />
-              </div>
-            </div>
+          <div className="flex min-h-80 items-center justify-center">
+            <div className="size-5 animate-spin rounded-full border-2 border-slate-200 border-t-[#035034]" />
           </div>
         )}
         {error && (
