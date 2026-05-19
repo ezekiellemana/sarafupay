@@ -5,17 +5,22 @@ import { BrandLogo } from "@/components/shared/BrandLogo";
 
 export default function RegisterPage() {
   return (
-    <main className="relative grid min-h-screen place-items-center overflow-hidden px-4 py-10">
+    <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 py-12">
       <FloatingBlobBackground />
 
-      {/* Logo bar */}
-      <div className="mb-6 flex items-center">
-        <Link href="/" className="flex items-center rounded-2xl border border-white/70 bg-white/75 px-4 py-2 shadow-lg shadow-slate-900/5 backdrop-blur-xl">
-          <BrandLogo variant="light" height={38} />
-        </Link>
-      </div>
+      <div className="relative z-10 w-full max-w-lg">
+        {/* Logo + intro */}
+        <div className="mb-8 flex flex-col items-center gap-3 text-center">
+          <Link href="/" className="inline-flex">
+            <BrandLogo variant="light" height={44} />
+          </Link>
+          <p className="text-sm font-medium text-slate-500">
+            Create your account and start collecting in minutes.
+          </p>
+        </div>
 
-      <RegisterForm />
+        <RegisterForm />
+      </div>
     </main>
   );
 }

@@ -11,30 +11,30 @@ export default function LoginPage() {
       <FloatingBlobBackground />
       <div className="grid w-full max-w-5xl overflow-hidden rounded-[2rem] border border-white/75 bg-white/65 shadow-2xl shadow-slate-900/10 backdrop-blur-xl ring-1 ring-amber-200/20 lg:grid-cols-[0.9fr_1.1fr]">
 
-        {/* Left panel — dark vault */}
-        <div className="relative hidden overflow-hidden bg-[#071a0e] p-10 text-white lg:flex lg:flex-col">
+        {/* Left panel — brand vault */}
+        <div className="relative hidden overflow-hidden bg-[#035034] p-10 text-white lg:flex lg:flex-col">
           {/* Background blobs inside panel */}
-          <div className="absolute -right-10 -top-10 size-48 rounded-full bg-[#4ade80]/15 blur-3xl" />
-          <div className="absolute -bottom-10 left-1/4 size-40 rounded-full bg-[#F59E0B]/12 blur-3xl" />
-          <div className="absolute bottom-1/4 -left-8 size-32 rounded-full bg-[#F59E0B]/10 blur-2xl" />
+          <div className="absolute -right-10 -top-10 size-48 rounded-full bg-[#19A254]/20 blur-3xl" />
+          <div className="absolute -bottom-10 left-1/4 size-40 rounded-full bg-[#C4A237]/15 blur-3xl" />
+          <div className="absolute bottom-1/4 -left-8 size-32 rounded-full bg-[#C4A237]/10 blur-2xl" />
 
           <Link href="/" className="relative z-10 flex items-center">
             <BrandLogo variant="dark" height={46} />
           </Link>
 
           <div className="relative z-10 mt-16 flex-1">
-            <p className="text-sm text-white/60">Welcome back</p>
-            <h1 className="mt-3 text-4xl font-bold tracking-tight leading-snug">
+            <p className="text-sm font-medium text-white/75">Welcome back</p>
+            <h1 className="mt-3 text-4xl font-bold leading-snug tracking-tight">
               Secure contribution records in one calm dashboard.
             </h1>
 
             {/* Gold stat box */}
-            <div className="mt-8 glass-gold rounded-3xl p-5">
-              <p className="text-sm text-amber-800/80 font-medium">Secure contributions</p>
-              <p className="mt-2 text-3xl font-bold sarafu-gradient-text-gold">Per project</p>
+            <div className="mt-8 rounded-3xl border border-[#C4A237]/30 bg-[#C4A237]/10 p-5 backdrop-blur-sm">
+              <p className="text-sm font-medium text-[#F2D37A]/85">Trusted by groups across Tanzania</p>
+              <p className="mt-2 text-3xl font-bold text-[#C4A237]">Webhook-verified</p>
               <div className="mt-3 flex items-center gap-2">
-                <ShieldCheck className="size-4 text-amber-600" />
-                <span className="text-xs text-amber-700/70">Webhook-verified payments</span>
+                <ShieldCheck className="size-4 text-[#C4A237]" />
+                <span className="text-xs font-medium text-white/65">Every payment confirmed before it appears</span>
               </div>
             </div>
           </div>
