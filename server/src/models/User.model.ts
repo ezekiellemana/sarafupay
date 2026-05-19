@@ -36,5 +36,9 @@ const userSchema = new Schema<IUser>(
 
 userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ phoneNumber: 1 }, { unique: true });
+userSchema.index({ role: 1 });
+userSchema.index({ isActive: 1 });
+userSchema.index({ role: 1, isActive: 1 });
+userSchema.index({ createdAt: -1 });
 
 export const User = model<IUser>("User", userSchema);

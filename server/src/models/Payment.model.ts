@@ -68,5 +68,8 @@ paymentSchema.index({ projectId: 1, status: 1 });
 paymentSchema.index({ externalReference: 1 }, { unique: true });
 paymentSchema.index({ snippeReference: 1 }, { unique: true, sparse: true });
 paymentSchema.index({ snippeSessionId: 1 }, { sparse: true });
+paymentSchema.index({ createdAt: -1 });
+paymentSchema.index({ projectId: 1, createdAt: -1 });
+paymentSchema.index({ ownerId: 1, createdAt: -1 });
 
 export const Payment = model<IPayment>("Payment", paymentSchema);

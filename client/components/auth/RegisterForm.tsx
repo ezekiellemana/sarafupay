@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm, useWatch } from "react-hook-form";
@@ -52,6 +52,10 @@ export function RegisterForm() {
   });
 
   const password = useWatch({ control: form.control, name: "password" }) ?? "";
+
+  useEffect(() => {
+    router.prefetch("/dashboard");
+  }, [router]);
 
   const onSubmit = async (values: RegisterValues) => {
     setApiError(null);

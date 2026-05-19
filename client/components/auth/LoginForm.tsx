@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -24,6 +24,11 @@ export function LoginForm() {
   const [apiError, setApiError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const form = useForm<LoginValues>({ resolver: zodResolver(loginSchema), defaultValues: { identifier: "", password: "" } });
+
+  useEffect(() => {
+    router.prefetch("/dashboard");
+    router.prefetch("/admin");
+  }, [router]);
 
   const onSubmit = async (values: LoginValues) => {
     setApiError(null);

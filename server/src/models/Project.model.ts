@@ -86,5 +86,7 @@ projectSchema.index({ status: 1 });
 projectSchema.index({ slug: 1 }, { unique: true, sparse: true });
 projectSchema.index({ ownerId: 1, status: 1 });
 projectSchema.index({ visibility: 1, status: 1 });
+projectSchema.index({ createdAt: -1 });
+projectSchema.index({ ownerId: 1, createdAt: -1 });
 
 export const Project = model<IProject>("Project", projectSchema);
