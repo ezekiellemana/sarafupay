@@ -22,7 +22,7 @@ function ReceiptRow({ label, value, mono = false }: { label: string; value: Reac
   return (
     <div className="flex items-start justify-between gap-4 py-1.5 text-sm">
       <span className="shrink-0 text-muted-foreground">{label}</span>
-      <span className={`text-right font-medium text-[#071a0e] ${mono ? "break-all font-mono text-xs" : ""}`}>{value}</span>
+      <span className={`text-right font-medium text-[#035034] ${mono ? "break-all font-mono text-xs" : ""}`}>{value}</span>
     </div>
   );
 }
@@ -79,11 +79,11 @@ function PaymentReturnContent() {
       </div>
       <div className="flex w-full max-w-lg flex-col gap-4">
         {/* Status card — hidden on print, receipt below takes over */}
-        <Card className="glass-premium relative overflow-hidden border-0 text-center shadow-2xl shadow-slate-900/10 print:hidden">
+        <Card className="relative overflow-hidden rounded-3xl border border-white/80 bg-white/95 text-center shadow-2xl shadow-slate-900/10 backdrop-blur-xl print:hidden">
 
           <CardHeader className="relative gap-4">
             <SuccessAnimation state={state} />
-            <CardTitle className={`pt-2 text-2xl font-bold ${isSuccess ? "sarafu-gradient-text-gold" : "text-[#0B1F3A]"}`}>
+            <CardTitle className={`pt-2 text-2xl font-bold ${isSuccess ? "text-[#C4A237]" : "text-[#035034]"}`}>
               {status === "completed" ? "Payment completed!" : status === "failed" ? "Payment failed" : "Checking your payment..."}
             </CardTitle>
           </CardHeader>
@@ -103,7 +103,7 @@ function PaymentReturnContent() {
                 <p className="text-sm text-muted-foreground">Login or create an account to view your contribution dashboard.</p>
                 <div className="mt-3 flex justify-center gap-2">
                   <Link href="/login?next=/dashboard">
-                    <Button className="rounded-2xl bg-[#0B1F3A] text-white">Login</Button>
+                    <Button className="rounded-2xl bg-[#035034] text-white">Login</Button>
                   </Link>
                   <Link href="/register">
                     <Button variant="outline" className="rounded-2xl">Create Account</Button>
@@ -135,7 +135,7 @@ function PaymentReturnContent() {
             {/* Prominent amount */}
             <div className="bg-slate-50/60 px-6 py-5 text-center">
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Amount paid</p>
-              <p className="mt-1.5 text-4xl font-bold text-[#071a0e]">{formatMoney(payment.amount, payment.currency)}</p>
+              <p className="mt-1.5 text-4xl font-bold text-[#035034]">{formatMoney(payment.amount, payment.currency)}</p>
             </div>
 
             <div className="border-t border-dashed border-slate-200" />
@@ -151,12 +151,12 @@ function PaymentReturnContent() {
               <div className="flex items-start justify-between gap-4 py-2.5 text-sm">
                 <span className="shrink-0 text-muted-foreground">Reference</span>
                 <div className="flex items-center gap-1.5">
-                  <span className="break-all font-mono text-xs font-medium text-[#071a0e]">{paymentRef}</span>
+                  <span className="break-all font-mono text-xs font-medium text-[#035034]">{paymentRef}</span>
                   <button
                     type="button"
                     onClick={copyRef}
                     title="Copy reference"
-                    className="print:hidden shrink-0 rounded-lg p-1 text-muted-foreground transition-colors hover:bg-slate-100 hover:text-[#071a0e]"
+                    className="print:hidden shrink-0 rounded-lg p-1 text-muted-foreground transition-colors hover:bg-slate-100 hover:text-[#035034]"
                   >
                     {copied
                       ? <Check className="size-3 text-[#16a34a]" />
@@ -196,17 +196,17 @@ export default function PaymentReturnPage() {
     <Suspense
       fallback={
         <main className="grid min-h-screen place-items-center px-4 py-10">
-          <Card className="w-full max-w-lg sarafu-glass border-0 shadow-2xl">
-            <CardHeader>
-              <div className="flex size-14 items-center justify-center rounded-2xl bg-secondary text-primary">
-                <Clock3 />
+          <div className="w-full max-w-lg overflow-hidden rounded-3xl border border-white/80 bg-white/95 shadow-2xl shadow-slate-900/10 backdrop-blur-xl">
+            <div className="flex flex-col gap-4 p-8 text-center">
+              <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-[#035034]/8">
+                <Clock3 className="size-8 text-[#035034]" />
               </div>
-              <CardTitle className="pt-2">Checking your payment...</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Your payment is being verified securely.</p>
-            </CardContent>
-          </Card>
+              <div>
+                <p className="text-xl font-bold text-[#035034]">Checking your payment...</p>
+                <p className="mt-1.5 text-sm font-medium text-slate-500">Your payment is being verified securely.</p>
+              </div>
+            </div>
+          </div>
         </main>
       }
     >

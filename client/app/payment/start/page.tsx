@@ -2,12 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { CalendarDays, LockKeyhole, Loader2, ShieldCheck, Sparkles } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CalendarDays, LockKeyhole, Loader2, ShieldCheck } from "lucide-react";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { GradientButton } from "@/components/shared/GradientButton";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { formatMoney, currentMonth } from "@/lib/formatters";
 import type { Project } from "@/types";
@@ -44,34 +42,43 @@ export default function PaymentStartPage() {
   return (
     <DashboardShell>
       <div className="mx-auto flex max-w-3xl flex-col gap-6">
-        <PageHeader eyebrow="Secure checkout" title="Pay Monthly Contribution" description="Review your project, contribution month, and amount before continuing to Snippe." />
+        <PageHeader
+          eyebrow="Secure checkout"
+          title="Pay Monthly Contribution"
+          description="Review your project, contribution month, and amount before continuing to Snippe."
+        />
 
-        <Card className="glass-premium relative overflow-hidden border-0 shadow-2xl shadow-slate-900/10">
-          {/* Background glow */}
-          <div className="absolute -right-10 -top-10 size-52 rounded-full bg-amber-400/10 blur-3xl" />
-          <div className="absolute -left-8 bottom-0 size-40 rounded-full bg-[#4ade80]/10 blur-3xl" />
+        <div className="relative overflow-hidden rounded-3xl border border-white/80 bg-white/95 shadow-2xl shadow-slate-900/10 backdrop-blur-xl">
+          {/* Background glows */}
+          <div className="pointer-events-none absolute -right-10 -top-10 size-52 rounded-full bg-[#C4A237]/8 blur-3xl" />
+          <div className="pointer-events-none absolute -left-8 bottom-0 size-40 rounded-full bg-[#19A254]/8 blur-3xl" />
 
-          <CardHeader className="relative">
-            <CardTitle className="flex items-center gap-2 text-[#071a0e]">
-              <Sparkles className="size-5 text-amber-500" />
-              Snippe hosted checkout
-            </CardTitle>
-          </CardHeader>
+          <div className="relative flex flex-col gap-5 p-6 md:p-8">
+            {/* Section title */}
+            <div className="flex items-center gap-2.5 border-b border-slate-100 pb-5">
+              <span className="flex size-9 items-center justify-center rounded-xl bg-[#035034]/8">
+                <ShieldCheck className="size-4.5 text-[#035034]" />
+              </span>
+              <div>
+                <p className="text-sm font-bold text-[#035034]">Snippe hosted checkout</p>
+                <p className="text-xs font-medium text-slate-500">You will be redirected to complete payment securely.</p>
+              </div>
+            </div>
 
-          <CardContent className="relative flex flex-col gap-5">
             {/* Amount banner */}
-            <div className="relative overflow-hidden rounded-3xl bg-[#071a0e] p-5 text-white">
-              <div className="absolute -right-6 -top-6 size-28 rounded-full bg-amber-400/10 blur-2xl" />
-              <p className="text-sm text-white/60">Monthly amount</p>
-              <p className="mt-1 text-4xl font-bold sarafu-gradient-text-gold">
+            <div className="relative overflow-hidden rounded-2xl bg-[#035034] p-5 text-white">
+              <div className="pointer-events-none absolute -right-6 -top-6 size-28 rounded-full bg-[#C4A237]/15 blur-2xl" />
+              <p className="text-xs font-medium text-white/70">Monthly contribution amount</p>
+              <p className="mt-1.5 text-4xl font-black tracking-tight text-[#C4A237]">
                 {selected ? formatMoney(selected.monthlyContributionAmount) : "—"}
               </p>
             </div>
 
-            <div className="grid gap-2">
-              <label className="text-sm font-semibold text-[#071a0e]">Project</label>
+            {/* Project selector */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-[#035034]">Project</label>
               <Select value={projectId} onValueChange={(value) => setProjectId(value ?? "")}>
-                <SelectTrigger className="w-full rounded-2xl border-white/70 bg-white/80 backdrop-blur-sm">
+                <SelectTrigger className="h-12 w-full rounded-2xl border-slate-200 bg-white text-sm shadow-sm">
                   <SelectValue placeholder="Select project" />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl">
@@ -84,33 +91,47 @@ export default function PaymentStartPage() {
               </Select>
             </div>
 
+            {/* Info row */}
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="flex items-center gap-3 rounded-2xl border border-white/60 bg-white/60 p-4 backdrop-blur-sm">
-                <CalendarDays className="size-5 shrink-0 text-amber-600" />
+              <div className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
+                <CalendarDays className="size-5 shrink-0 text-[#C4A237]" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Contribution month</p>
-                  <p className="mt-0.5 font-semibold text-[#071a0e]">{currentMonth()}</p>
+                  <p className="text-xs font-medium text-slate-500">Contribution month</p>
+                  <p className="mt-0.5 text-sm font-semibold text-[#035034]">{currentMonth()}</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3 rounded-2xl bg-emerald-500/10 p-4 text-emerald-800">
-                <ShieldCheck className="mt-0.5 size-4 shrink-0 text-emerald-600" />
+              <div className="flex items-start gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/80 p-4">
+                <ShieldCheck className="mt-0.5 size-4 shrink-0 text-[#19A254]" />
                 <div>
-                  <p className="text-sm font-semibold">Secure payment</p>
-                  <p className="mt-0.5 text-xs text-emerald-700/80">Redirected to Snippe for safe checkout.</p>
+                  <p className="text-sm font-semibold text-emerald-800">Secure payment</p>
+                  <p className="mt-0.5 text-xs font-medium text-emerald-700/80">Redirected to Snippe for safe checkout.</p>
                 </div>
               </div>
             </div>
 
-            <GradientButton btnVariant="gold" disabled={!projectId || loading} onClick={startPayment} className="w-full">
-              {loading ? <><Loader2 className="mr-2 size-4 animate-spin" />Creating session…</> : "Continue to Snippe Payment"}
-            </GradientButton>
+            {/* CTA button */}
+            <button
+              type="button"
+              disabled={!projectId || loading}
+              onClick={startPayment}
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#035034] text-sm font-bold text-white shadow-lg shadow-[#035034]/25 transition-all hover:bg-[#024028] hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Creating session…
+                </>
+              ) : (
+                "Continue to Snippe Payment"
+              )}
+            </button>
 
-            <p className="inline-flex items-center gap-2 text-xs text-muted-foreground">
-              <LockKeyhole className="size-3.5" />
-              Records update only after Snippe webhook confirmation.
-            </p>
-          </CardContent>
-        </Card>
+            <div className="flex items-center gap-2 text-xs text-slate-400">
+              <LockKeyhole className="size-3.5 shrink-0" />
+              <span>Records update only after Snippe webhook confirmation.</span>
+            </div>
+          </div>
+        </div>
       </div>
     </DashboardShell>
   );
