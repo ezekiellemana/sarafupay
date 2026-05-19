@@ -48,10 +48,12 @@ export function DashboardShell({ children, admin = false }: { children: React.Re
     <div className="relative min-h-screen overflow-hidden bg-background">
       <FloatingBlobBackground />
       <AppSidebar admin={admin} />
-      <main className="pb-32 lg:ml-64 lg:pb-0">
+      <main className="lg:ml-64">
         <div className="mx-auto max-w-7xl px-4 py-8 md:px-8 lg:px-10">
           <PageTransition>{children}</PageTransition>
         </div>
+        {/* Mobile spacer — clears the floating bottom nav; hidden on desktop */}
+        <div aria-hidden="true" className="lg:hidden" style={{ height: "calc(6rem + env(safe-area-inset-bottom))" }} />
       </main>
       <MobileNav admin={admin} />
     </div>
