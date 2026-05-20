@@ -3,6 +3,14 @@ import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV === "development";
 
+// PostHog analytics is only active when NEXT_PUBLIC_POSTHOG_ENABLED=true.
+// CSP domains are opened only when the flag is set, so the browser enforces
+// the restriction even if the env var changes at runtime without a rebuild.
+const posthogEnabled = process.env.NEXT_PUBLIC_POSTHOG_ENABLED === "true";
+// Specific PostHog US-cloud domains — no wildcards.
+const POSTHOG_SCRIPT  = "https://us-assets.i.posthog.com https://us.i.posthog.com";
+const POSTHOG_CONNECT = "https://us.i.posthog.com https://us-assets.i.posthog.com";
+
 // ---------------------------------------------------------------------------
 // Content Security Policy
 //
@@ -17,15 +25,18 @@ const isDev = process.env.NODE_ENV === "development";
 //   - Restricts framing to prevent clickjacking
 //   - Allows user-supplied avatar images from any HTTPS domain
 //   - Allows canvas.toDataURL() data: URIs for QR code download
+//   - When NEXT_PUBLIC_POSTHOG_ENABLED=true, opens only the two PostHog US-cloud
+//     domains needed for analytics — no wildcards, no *.posthog.com
 // ---------------------------------------------------------------------------
 const cspDirectives = [
   "default-src 'self'",
 
   // unsafe-inline required for Next.js hydration scripts.
   // unsafe-eval added in development only for Turbopack HMR source maps.
+  // PostHog loads its SDK from us-assets.i.posthog.com (script-src).
   isDev
-    ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
-    : "script-src 'self' 'unsafe-inline'",
+    ? `script-src 'self' 'unsafe-inline' 'unsafe-eval'${posthogEnabled ? ` ${POSTHOG_SCRIPT}` : ""}`
+    : `script-src 'self' 'unsafe-inline'${posthogEnabled ? ` ${POSTHOG_SCRIPT}` : ""}`,
 
   // unsafe-inline required for Tailwind and framer-motion inline styles.
   "style-src 'self' 'unsafe-inline'",
@@ -38,7 +49,8 @@ const cspDirectives = [
   "font-src 'self'",
 
   // All API calls go through Next.js /api/* rewrites — same-origin only.
-  "connect-src 'self'",
+  // PostHog capture/decide requests go to us.i.posthog.com (connect-src).
+  `connect-src 'self'${posthogEnabled ? ` ${POSTHOG_CONNECT}` : ""}`,
 
   // Prevent this app from being embedded in a frame anywhere.
   "frame-ancestors 'none'",

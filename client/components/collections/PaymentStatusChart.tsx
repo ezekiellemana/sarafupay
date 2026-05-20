@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { Cell, Label, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Payment } from "@/types";
@@ -12,7 +12,12 @@ const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   other:     { label: "Other",     color: "#94a3b8" }
 };
 
+// Server snapshot = false, client snapshot = true — no setState-in-effect needed
+const subscribeNoop = () => () => {};
+
 export function PaymentStatusChart({ payments }: { payments: Payment[] }) {
+  const isClient = useSyncExternalStore(subscribeNoop, () => true, () => false);
+
   const { data, total } = useMemo(() => {
     const counts = { completed: 0, pending: 0, failed: 0, other: 0 };
     for (const p of payments) {
@@ -37,7 +42,7 @@ export function PaymentStatusChart({ payments }: { payments: Payment[] }) {
       <CardContent>
         <div className="flex flex-col items-center gap-4">
           <div className="h-44 w-full max-w-[220px]">
-            <ResponsiveContainer width="100%" height="100%">
+            {isClient && <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={data}
@@ -73,7 +78,7 @@ export function PaymentStatusChart({ payments }: { payments: Payment[] }) {
                   }}
                 />
               </PieChart>
-            </ResponsiveContainer>
+            </ResponsiveContainer>}
           </div>
 
           {/* Legend */}

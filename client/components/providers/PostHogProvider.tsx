@@ -90,13 +90,25 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
     if (!ENABLED || !KEY) return;
     posthog.init(KEY, {
       api_host: HOST,
-      autocapture: false,       // we control exactly what is tracked
-      capture_pageview: false,  // fired manually by PageviewTracker
+      // ── Privacy & scope constraints ───────────────────────────────────────
+      autocapture: false,                // we control exactly what is tracked
+      capture_pageview: false,           // fired manually by PageviewTracker
       capture_pageleave: false,
       person_profiles: "identified_only",
+      // ── Disable features we are not using (reduces network requests) ──────
+      // disable_session_recording confirmed in @posthog/types PostHogConfig
+      disable_session_recording: true,
+      // disable_surveys confirmed in @posthog/types PostHogConfig
+      disable_surveys: true,
+      // advanced_disable_flags confirmed in @posthog/types — prevents
+      // /flags and /decide calls we do not need (no feature flags in use)
+      advanced_disable_flags: true,
+      // capture_heatmaps confirmed in @posthog/types as boolean | HeatmapConfig
+      capture_heatmaps: false,
+      // ── Session replay config (applies when recording is re-enabled later) ─
       session_recording: {
-        maskAllInputs: true,      // mask every input field in recordings
-        maskTextSelector: "[data-sensitive]", // also mask any element marked data-sensitive
+        maskAllInputs: true,                     // mask every input field
+        maskTextSelector: "[data-sensitive]",    // mask data-sensitive elements
       },
     });
   }, []);
