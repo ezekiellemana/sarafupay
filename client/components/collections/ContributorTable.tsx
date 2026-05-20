@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronUp, Search, SlidersHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -20,7 +21,7 @@ const STATUS_OPTIONS: { value: "all" | PaymentStatus; label: string }[] = [
   { value: "cancelled", label: "Cancelled" }
 ];
 
-export function ContributorTable({ payments }: { payments: Payment[] }) {
+export function ContributorTable({ payments, emptyAction }: { payments: Payment[]; emptyAction?: ReactNode }) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | PaymentStatus>("all");
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -62,7 +63,13 @@ export function ContributorTable({ payments }: { payments: Payment[] }) {
   });
 
   if (!payments.length) {
-    return <EmptyState title="No contributors yet." description="Share your payment link to start collecting." />;
+    return (
+      <EmptyState
+        title="No contributors yet."
+        description="Share your payment link to start collecting."
+        action={emptyAction}
+      />
+    );
   }
 
   return (
