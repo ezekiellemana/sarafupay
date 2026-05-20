@@ -20,7 +20,7 @@ export const registerSchema = z
 
 export const profileSchema = z.object({
   fullName: z.string().min(2),
-  phoneNumber: z.string().regex(/^\+?255\d{9}$|^0\d{9}$/),
+  phoneNumber: z.string().regex(/^\+?255\d{9}$|^0\d{9}$/).optional().or(z.literal("")),
   email: z.string().email(),
   businessName: z.string().max(120).optional(),
   bio: z.string().max(300).optional(),

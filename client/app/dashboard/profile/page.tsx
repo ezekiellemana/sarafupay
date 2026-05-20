@@ -5,14 +5,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import type { z } from "zod";
-import { Building2, Loader2, MapPin, User as UserIcon } from "lucide-react";
+import { Building2, Loader2, Phone, User as UserIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { PageHeader } from "@/components/shared/PageHeader";
 import { profileSchema } from "@/lib/validations";
 import { authApi } from "@/lib/auth";
 import { useAuth } from "@/hooks/useAuth";
@@ -29,12 +27,12 @@ export default function ProfilePage() {
   useEffect(() => {
     if (user) {
       form.reset({
-        fullName: user.fullName,
-        phoneNumber: user.phoneNumber ?? undefined,
-        email: user.email,
+        fullName:     user.fullName,
+        phoneNumber:  user.phoneNumber ?? "",
+        email:        user.email,
         businessName: user.businessName ?? "",
-        bio: user.bio ?? "",
-        avatarUrl: user.avatarUrl ?? ""
+        bio:          user.bio ?? "",
+        avatarUrl:    user.avatarUrl ?? ""
       });
     }
   }, [user, form]);
@@ -44,9 +42,10 @@ export default function ProfilePage() {
     try {
       const response = await authApi.updateProfile({
         ...values,
+        phoneNumber:  values.phoneNumber  || undefined,
         businessName: values.businessName || undefined,
-        bio: values.bio || undefined,
-        avatarUrl: values.avatarUrl || undefined
+        bio:          values.bio          || undefined,
+        avatarUrl:    values.avatarUrl    || undefined
       });
       setUser(response.data.user);
       toast.success("Profile updated.");
@@ -58,133 +57,201 @@ export default function ProfilePage() {
   };
 
   const displayName = watched.businessName?.trim() || user?.fullName?.split(" ")[0] || "Your Name";
-  const initials = (user?.fullName ?? "SP").slice(0, 2).toUpperCase();
+  const initials    = (user?.fullName ?? "SP").slice(0, 2).toUpperCase();
+  const missingPhone = !watched.phoneNumber?.trim();
 
   return (
     <DashboardShell>
       <div className="flex flex-col gap-6">
-        <PageHeader eyebrow="Account settings" title="Profile" description="Manage your account details and public business profile." />
 
-        <form className="flex flex-col gap-6" method="post" onSubmit={form.handleSubmit(save)}>
-          {/* ── Section 1: Account Details ── */}
-          <Card className="max-w-2xl border-white/70 bg-white/85 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
-            <CardHeader>
-              <div className="flex items-center gap-4">
-                <Avatar className="size-14 border border-white/70 shadow-lg">
-                  {watched.avatarUrl && <AvatarImage src={watched.avatarUrl} alt={user?.fullName} />}
-                  <AvatarFallback className="bg-[#071a0e] text-white text-lg font-bold">{initials}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <UserIcon className="size-4 text-muted-foreground" />
-                    Account Details
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground">Your login and contact information.</p>
-                </div>
+        {/* ── Inline header ─────────────────────────────────────────── */}
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest text-[#16a34a]">Account settings</p>
+          <h1 className="text-2xl font-extrabold text-[#071a0e] sm:text-3xl">Profile</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Manage your account details and public presence.
+          </p>
+        </div>
+
+        {/* ── Single connected form panel ───────────────────────────── */}
+        <form method="post" onSubmit={form.handleSubmit(save)}>
+          <div className="max-w-2xl overflow-hidden rounded-3xl border border-white/70 bg-white/85 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
+
+            {/* Panel header: avatar + title */}
+            <div className="flex items-center gap-4 px-6 py-5">
+              <Avatar className="size-14 shrink-0 border border-white/70 shadow-lg">
+                {watched.avatarUrl && <AvatarImage src={watched.avatarUrl} alt={user?.fullName} />}
+                <AvatarFallback className="bg-[#071a0e] text-lg font-bold text-white">{initials}</AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="text-base font-bold text-[#071a0e]">{user?.fullName ?? "Your Profile"}</p>
+                <p className="text-sm text-muted-foreground">{user?.email}</p>
               </div>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="fullName" className="text-sm font-semibold text-[#0B1F3A]">Full name *</Label>
-                <Input id="fullName" placeholder="John Doe" className="h-11 rounded-2xl" {...form.register("fullName")} />
-                {form.formState.errors.fullName && <p className="text-xs font-medium text-destructive">{form.formState.errors.fullName.message}</p>}
+            </div>
+
+            {/* ── Section 1: Account ──────────────────────────────────── */}
+            <div className="border-t border-slate-100 px-6 py-5">
+              <div className="mb-4 flex items-center gap-2">
+                <UserIcon className="size-4 text-muted-foreground" />
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Account</p>
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="flex flex-col gap-4">
+
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="phoneNumber" className="text-sm font-semibold text-[#0B1F3A]">Phone number *</Label>
-                  <Input id="phoneNumber" type="tel" placeholder="0712345678" className="h-11 rounded-2xl" {...form.register("phoneNumber")} />
-                  {form.formState.errors.phoneNumber && <p className="text-xs font-medium text-destructive">Use a valid Tanzanian phone number.</p>}
+                  <Label htmlFor="fullName" className="text-sm font-semibold text-[#071a0e]">Full name</Label>
+                  <Input
+                    id="fullName"
+                    placeholder="John Doe"
+                    className="h-11 rounded-2xl"
+                    {...form.register("fullName")}
+                  />
+                  {form.formState.errors.fullName && (
+                    <p className="text-xs font-medium text-destructive">{form.formState.errors.fullName.message}</p>
+                  )}
                 </div>
+
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="email" className="text-sm font-semibold text-[#0B1F3A]">Email *</Label>
-                  <Input id="email" type="email" placeholder="you@example.com" className="h-11 rounded-2xl" {...form.register("email")} />
-                  {form.formState.errors.email && <p className="text-xs font-medium text-destructive">{form.formState.errors.email.message}</p>}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* ── Section 2: Business / Public Profile ── */}
-          <Card className="max-w-2xl border-white/70 bg-white/85 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="size-4 text-amber-600" />
-                Business / Public Profile
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Shown publicly on your collection pages. Phone and email are never shared.
-              </p>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="businessName" className="text-sm font-semibold text-[#0B1F3A]">Display / Business name</Label>
-                <Input
-                  id="businessName"
-                  placeholder="e.g. Juma wa Mama Events, Chama cha Matumaini"
-                  className="h-11 rounded-2xl"
-                  {...form.register("businessName")}
-                />
-                <p className="text-xs text-muted-foreground">Shown as &quot;Organized by &hellip;&quot; on public payment pages.</p>
-                {form.formState.errors.businessName && <p className="text-xs font-medium text-destructive">{form.formState.errors.businessName.message}</p>}
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="bio" className="text-sm font-semibold text-[#0B1F3A]">Short description</Label>
-                <textarea
-                  id="bio"
-                  rows={3}
-                  placeholder="e.g. We organize group savings and events for families in Dar es Salaam."
-                  {...form.register("bio")}
-                  className="rounded-2xl border border-input bg-background px-3 py-2.5 text-sm shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
-                />
-                {form.formState.errors.bio && <p className="text-xs font-medium text-destructive">{form.formState.errors.bio.message}</p>}
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="avatarUrl" className="text-sm font-semibold text-[#0B1F3A]">Avatar / Logo URL <span className="font-normal text-muted-foreground">(optional)</span></Label>
-                <Input
-                  id="avatarUrl"
-                  type="url"
-                  placeholder="https://example.com/logo.png"
-                  className="h-11 rounded-2xl"
-                  {...form.register("avatarUrl")}
-                />
-                {form.formState.errors.avatarUrl && <p className="text-xs font-medium text-destructive">{form.formState.errors.avatarUrl.message}</p>}
-              </div>
-
-              {/* Preview */}
-              {(watched.businessName || watched.bio || watched.avatarUrl) && (
-                <div className="rounded-2xl border border-amber-200/60 bg-amber-50/60 p-4">
-                  <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-amber-700/70">
-                    <MapPin className="mr-1 inline size-3" />
-                    Public preview
+                  <Label htmlFor="email" className="text-sm font-semibold text-[#071a0e]">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    readOnly
+                    className="h-11 rounded-2xl bg-slate-50 text-muted-foreground"
+                    {...form.register("email")}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Email is managed by your login provider and cannot be changed here.
                   </p>
-                  <div className="flex items-start gap-3">
-                    <Avatar className="size-10 shrink-0 border border-amber-200/60">
-                      {watched.avatarUrl && <AvatarImage src={watched.avatarUrl} alt={displayName} />}
-                      <AvatarFallback className="bg-[#071a0e] text-white text-sm font-bold">{initials}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="text-sm font-semibold text-[#071a0e]">Organized by {displayName}</p>
-                      {watched.bio && <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">{watched.bio}</p>}
-                    </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="phoneNumber" className="text-sm font-semibold text-[#071a0e]">
+                    Phone number{" "}
+                    <span className="font-normal text-muted-foreground">(optional)</span>
+                  </Label>
+                  <Input
+                    id="phoneNumber"
+                    type="tel"
+                    placeholder="0712345678"
+                    className="h-11 rounded-2xl"
+                    {...form.register("phoneNumber")}
+                  />
+                  {form.formState.errors.phoneNumber ? (
+                    <p className="text-xs font-medium text-destructive">Use a valid Tanzanian phone number (e.g. 0712345678).</p>
+                  ) : missingPhone ? (
+                    <p className="flex items-center gap-1 text-xs text-amber-600">
+                      <Phone className="size-3" />
+                      Add your phone number so contributors can reach you when needed.
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+
+            {/* ── Section 2: Public Profile ────────────────────────────── */}
+            <div className="border-t border-slate-100 px-6 py-5">
+              <div className="mb-4 flex items-center gap-2">
+                <Building2 className="size-4 text-amber-600" />
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Public Profile</p>
+              </div>
+              <p className="mb-4 text-xs text-muted-foreground">
+                Shown on your public collection pages. Phone and email are never shared.
+              </p>
+              <div className="flex flex-col gap-4">
+
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="businessName" className="text-sm font-semibold text-[#071a0e]">
+                    Display / Business name{" "}
+                    <span className="font-normal text-muted-foreground">(optional)</span>
+                  </Label>
+                  <Input
+                    id="businessName"
+                    placeholder="e.g. Juma wa Mama Events, Chama cha Matumaini"
+                    className="h-11 rounded-2xl"
+                    {...form.register("businessName")}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Shown as &quot;Organized by &hellip;&quot; on public payment pages.
+                  </p>
+                  {form.formState.errors.businessName && (
+                    <p className="text-xs font-medium text-destructive">{form.formState.errors.businessName.message}</p>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="bio" className="text-sm font-semibold text-[#071a0e]">
+                    Short description{" "}
+                    <span className="font-normal text-muted-foreground">(optional)</span>
+                  </Label>
+                  <textarea
+                    id="bio"
+                    rows={3}
+                    placeholder="e.g. We organize group savings and events for families in Dar es Salaam."
+                    {...form.register("bio")}
+                    className="resize-none rounded-2xl border border-input bg-background px-3 py-2.5 text-sm shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                  {form.formState.errors.bio && (
+                    <p className="text-xs font-medium text-destructive">{form.formState.errors.bio.message}</p>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="avatarUrl" className="text-sm font-semibold text-[#071a0e]">
+                    Avatar / Logo URL{" "}
+                    <span className="font-normal text-muted-foreground">(optional)</span>
+                  </Label>
+                  <Input
+                    id="avatarUrl"
+                    type="url"
+                    placeholder="https://example.com/logo.png"
+                    className="h-11 rounded-2xl"
+                    {...form.register("avatarUrl")}
+                  />
+                  {form.formState.errors.avatarUrl && (
+                    <p className="text-xs font-medium text-destructive">{form.formState.errors.avatarUrl.message}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* ── Section 3: Preview ──────────────────────────────────── */}
+            <div className="border-t border-slate-100 px-6 py-5">
+              <p className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Public preview
+              </p>
+              <div className="rounded-2xl border border-amber-200/60 bg-amber-50/60 p-4">
+                <div className="flex items-start gap-3">
+                  <Avatar className="size-10 shrink-0 border border-amber-200/60">
+                    {watched.avatarUrl && <AvatarImage src={watched.avatarUrl} alt={displayName} />}
+                    <AvatarFallback className="bg-[#071a0e] text-sm font-bold text-white">{initials}</AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-[#071a0e]">Organized by {displayName}</p>
+                    {watched.bio ? (
+                      <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{watched.bio}</p>
+                    ) : (
+                      <p className="mt-0.5 text-xs italic text-slate-400">Add a description to appear here.</p>
+                    )}
                   </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </div>
+            </div>
 
-          <div className="max-w-2xl">
-            <Button
-              type="submit"
-              disabled={loading}
-              className="h-11 w-full rounded-2xl bg-linear-to-r from-[#052e16] via-[#16a34a] to-[#4ade80] text-white shadow-lg shadow-green-700/20 hover:brightness-105"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 size-4 animate-spin" />
-                  Saving…
-                </>
-              ) : "Save profile"}
-            </Button>
+            {/* ── Save button ─────────────────────────────────────────── */}
+            <div className="border-t border-slate-100 px-6 py-5">
+              <Button
+                type="submit"
+                disabled={loading}
+                className="h-11 w-full rounded-2xl bg-linear-to-r from-[#052e16] via-[#16a34a] to-[#4ade80] text-white shadow-lg shadow-green-700/20 hover:brightness-105"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 size-4 animate-spin" />
+                    Saving…
+                  </>
+                ) : "Save profile"}
+              </Button>
+            </div>
           </div>
         </form>
       </div>
