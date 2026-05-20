@@ -15,6 +15,7 @@ import { DashboardShell } from "@/components/layout/DashboardShell";
 import { AdminStatsCards } from "@/components/admin/AdminStatsCards";
 import { SystemHealthCard } from "@/components/admin/SystemHealthCard";
 import { ErrorState } from "@/components/shared/ErrorState";
+import { SafeChartContainer } from "@/components/shared/SafeChartContainer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAdminDashboard, useAdminActivity } from "@/hooks/useDashboard";
@@ -319,6 +320,7 @@ function AnalyticsPanel({ data }: { data: AdminDashboardData }) {
                 <p className="text-sm text-muted-foreground">No payment data yet.</p>
               </div>
             ) : (
+              <SafeChartContainer className="h-full w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={data.monthlyChart}
@@ -372,6 +374,7 @@ function AnalyticsPanel({ data }: { data: AdminDashboardData }) {
                   />
                 </AreaChart>
               </ResponsiveContainer>
+              </SafeChartContainer>
             )}
           </div>
           {/* Mobile total — shown below chart on small screens */}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useEffect, useRef } from "react";
 import { animate, motion, useInView } from "framer-motion";
 import {
   Area,
@@ -16,6 +16,7 @@ import {
 } from "recharts";
 import { BarChart3, Users } from "lucide-react";
 import { AnimatedProgressBar } from "@/components/shared/AnimatedProgressBar";
+import { SafeChartContainer } from "@/components/shared/SafeChartContainer";
 
 // ─── Demo data ────────────────────────────────────────────────────────────────
 
@@ -126,16 +127,6 @@ function LegendRow({ name, value, color }: { name: string; value: number; color:
   );
 }
 
-// ─── Client-only guard ────────────────────────────────────────────────────────
-// useSyncExternalStore is the idiomatic React 18+ way to get server=false /
-// client=true without a setState-in-effect pattern. ResponsiveContainer
-// reports width(-1)/height(-1) when rendered on the server because the DOM
-// is not available; deferring to the client eliminates the warning.
-const subscribeNoop = () => () => {};
-function useIsClient() {
-  return useSyncExternalStore(subscribeNoop, () => true, () => false);
-}
-
 // ─── Section ──────────────────────────────────────────────────────────────────
 
 export function InsightsSection() {
@@ -145,7 +136,6 @@ export function InsightsSection() {
 
   const totalRef        = useCountUp(312000, 1.8);
   const contributorsRef = useCountUp(24, 1.4, "plain");
-  const isClient        = useIsClient();
 
   return (
     <section className="border-y border-white/70 bg-[#035034]/3 backdrop-blur-sm">
@@ -239,8 +229,8 @@ export function InsightsSection() {
               <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">
                 Monthly growth (TZS × 1,000)
               </p>
-              <div className="h-44">
-                {isClient && <ResponsiveContainer width="100%" height="100%">
+              <SafeChartContainer className="h-44 w-full">
+                <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="goldGradient" x1="0" y1="0" x2="0" y2="1">
@@ -278,8 +268,8 @@ export function InsightsSection() {
                       animationEasing="ease-out"
                     />
                   </AreaChart>
-                </ResponsiveContainer>}
-              </div>
+                </ResponsiveContainer>
+              </SafeChartContainer>
             </div>
           </motion.div>
 
@@ -302,8 +292,8 @@ export function InsightsSection() {
 
               {/* Donut + legend */}
               <div className="flex items-center gap-5 px-5 py-5">
-                <div className="h-32 w-32 shrink-0">
-                  {isClient && <ResponsiveContainer width="100%" height="100%">
+                <SafeChartContainer className="h-32 w-32 shrink-0">
+                  <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
                         data={paymentStatus}
@@ -324,8 +314,8 @@ export function InsightsSection() {
                       </Pie>
                       <Tooltip content={<DonutTooltip />} />
                     </PieChart>
-                  </ResponsiveContainer>}
-                </div>
+                  </ResponsiveContainer>
+                </SafeChartContainer>
 
                 <div className="flex flex-1 flex-col gap-4">
                   {paymentStatus.map((item) => (

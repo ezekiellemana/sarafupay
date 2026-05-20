@@ -18,6 +18,7 @@ import { CollectionStats } from "@/components/collections/CollectionStats";
 import { ContributorTable } from "@/components/collections/ContributorTable";
 import { PaymentLinkCard } from "@/components/collections/PaymentLinkCard";
 import { PaymentStatusChart } from "@/components/collections/PaymentStatusChart";
+import { SafeChartContainer } from "@/components/shared/SafeChartContainer";
 import { TopContributors } from "@/components/collections/TopContributors";
 import { collectionsApi, COLLECTION_TYPE_EMOJIS, COLLECTION_TYPE_LABELS } from "@/lib/collections";
 import { getApiErrorMessage } from "@/lib/api";
@@ -190,7 +191,8 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
                     {summary.monthlyChart.length} month{summary.monthlyChart.length !== 1 ? "s" : ""} of completed payment data
                   </p>
                 </CardHeader>
-                <CardContent className="h-64">
+                <CardContent>
+                  <SafeChartContainer className="h-64 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={summary.monthlyChart}>
                       <defs>
@@ -235,6 +237,7 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
                       <Area type="monotone" dataKey="total" name="Collected" stroke="#16a34a" strokeWidth={2} fill="url(#collectionGrad)" />
                     </AreaChart>
                   </ResponsiveContainer>
+                  </SafeChartContainer>
                 </CardContent>
               </Card>
             )}
