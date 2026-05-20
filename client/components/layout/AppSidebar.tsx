@@ -22,7 +22,7 @@ import { BrandLogo } from "@/components/shared/BrandLogo";
 
 const icons: Record<string, React.ReactNode> = {
   Dashboard: <BarChart3 />,
-  "My Projects": <Folders />,
+  "Collections": <Folders />,
   Payments: <History />,
   Project: <FolderKanban />,
   Profile: <User />,

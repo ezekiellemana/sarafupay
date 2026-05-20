@@ -48,7 +48,7 @@ export default function NewCollectionPage() {
         <div className="mb-6">
           <Link href="/dashboard/collections">
             <Button variant="ghost" className="gap-2 rounded-2xl text-muted-foreground hover:text-[#071a0e]">
-              <ArrowLeft className="size-4" /> Back to My Projects
+              <ArrowLeft className="size-4" /> My Collections
             </Button>
           </Link>
         </div>
@@ -109,7 +109,7 @@ export default function NewCollectionPage() {
               </div>
 
               <Link href="/dashboard/collections">
-                <Button className="h-11 w-full rounded-2xl" variant="outline">← Back to My Projects</Button>
+                <Button className="h-11 w-full rounded-2xl" variant="outline">← My Collections</Button>
               </Link>
             </motion.div>
 

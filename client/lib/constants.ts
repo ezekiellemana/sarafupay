@@ -4,7 +4,7 @@ export const CURRENCY = "TZS";
 
 export const memberNav = [
   { href: "/dashboard", label: "Dashboard" },
-  { href: "/dashboard/collections", label: "My Projects" },
+  { href: "/dashboard/collections", label: "Collections" },
   { href: "/dashboard/payments", label: "Payments" },
   { href: "/dashboard/profile", label: "Profile" }
 ];
