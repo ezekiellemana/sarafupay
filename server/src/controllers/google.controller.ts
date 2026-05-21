@@ -170,6 +170,7 @@ export const googleCallback = asyncHandler(async (req: Request, res: Response) =
   setAuthCookie(res, user._id.toString());
 
   const destination = user.role === "admin" ? "/admin" : "/dashboard";
+  console.log(`[google_callback] auth success → ${destination} (role=${user.role}, id=${user._id.toString()})`);
   res.redirect(`${clientUrl}${destination}`);
 });
 
