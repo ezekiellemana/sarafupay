@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 import { MotionProvider } from "@/components/providers/MotionProvider";
 import { PostHogProvider } from "@/components/providers/PostHogProvider";
 import "./globals.css";
@@ -38,9 +39,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en">
       <body className={`${jakartaSans.variable} ${geistMono.variable}`}>
         <PostHogProvider>
-          <MotionProvider>
-            {children}
-          </MotionProvider>
+          <AuthProvider>
+            <MotionProvider>
+              {children}
+            </MotionProvider>
+          </AuthProvider>
         </PostHogProvider>
         <Toaster richColors position="top-center" />
       </body>
