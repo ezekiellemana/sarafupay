@@ -29,7 +29,6 @@ export default function ProfilePage() {
       form.reset({
         fullName:     user.fullName,
         phoneNumber:  user.phoneNumber ?? "",
-        email:        user.email,
         businessName: user.businessName ?? "",
         bio:          user.bio ?? "",
         avatarUrl:    user.avatarUrl ?? ""
@@ -116,11 +115,12 @@ export default function ProfilePage() {
                     id="email"
                     type="email"
                     readOnly
-                    className="h-11 rounded-2xl bg-slate-50 text-muted-foreground"
-                    {...form.register("email")}
+                    value={user?.email ?? ""}
+                    onChange={() => {}}
+                    className="h-11 cursor-not-allowed rounded-2xl bg-slate-50 text-muted-foreground"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Email is managed by your login provider and cannot be changed here.
+                    Email is managed by your login method. Contact support to change it.
                   </p>
                 </div>
 

@@ -18,10 +18,10 @@ export const registerSchema = z
     path: ["confirmPassword"]
   });
 
+// Email is excluded — changes require a separate verification flow.
 export const profileSchema = z.object({
   fullName: z.string().min(2),
   phoneNumber: z.string().regex(/^\+?255\d{9}$|^0\d{9}$/).optional().or(z.literal("")),
-  email: z.string().email(),
   businessName: z.string().max(120).optional(),
   bio: z.string().max(300).optional(),
   avatarUrl: z.string().url("Use a valid URL.").optional().or(z.literal(""))

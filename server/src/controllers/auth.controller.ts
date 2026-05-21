@@ -24,10 +24,12 @@ export const loginSchema = z.object({
   password: z.string().min(1)
 });
 
+// Email changes require a dedicated verification flow and are intentionally
+// excluded here. Zod strips unknown keys by default, so any email field sent
+// by the client is silently dropped before reaching findByIdAndUpdate.
 export const profileSchema = z.object({
   fullName: z.string().min(2).optional(),
   phoneNumber: z.string().regex(/^\+?255\d{9}$|^0\d{9}$/).optional(),
-  email: z.string().email().optional(),
   businessName: z.string().max(120).optional(),
   bio: z.string().max(300).optional(),
   avatarUrl: z.string().url().optional().or(z.literal(""))
