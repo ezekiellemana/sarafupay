@@ -292,10 +292,10 @@ function ContactCard() {
       <p className="mt-1 text-sm text-slate-600">
         Email:{" "}
         <a
-          href="mailto:enzottech@gmail.com"
+          href="mailto:support.sarafupay@gmail.com"
           className="font-medium text-[#035034] underline underline-offset-2 hover:text-[#024028]"
         >
-          enzottech@gmail.com
+          support.sarafupay@gmail.com
         </a>
       </p>
     </div>
