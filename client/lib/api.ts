@@ -1,4 +1,5 @@
 import type { ApiResponse } from "@/types";
+import { useAuthStore } from "@/store/authStore";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
@@ -31,6 +32,20 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<A
     errorCode: "BAD_RESPONSE"
   }));
   if (!response.ok) {
+    // 401 interceptor — redirect expired/deactivated sessions to the login page.
+    // Condition: only fire when the store is already hydrated with a user, which
+    // means this is a mid-session expiry and NOT the initial /api/auth/me call
+    // (that fires before hydrated is set to true, so user is null at that point).
+    if (response.status === 401 && typeof window !== "undefined") {
+      const store = useAuthStore.getState();
+      const onAuthPage = window.location.pathname === "/login" || window.location.pathname === "/register";
+      if (!onAuthPage && store.hydrated && store.user !== null) {
+        store.setUser(null);
+        store.setHydrated(true);
+        window.location.replace("/login?error=session_expired");
+      }
+    }
+
     const message = typeof payload?.message === "string" ? payload.message : "Request failed.";
     throw new ApiError(message, {
       errorCode: typeof payload?.errorCode === "string" ? payload.errorCode : undefined,

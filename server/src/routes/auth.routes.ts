@@ -11,7 +11,7 @@ router.post("/register", authLimiter, validate(registerSchema), register);
 router.post("/login", authLimiter, validate(loginSchema), login);
 router.get("/google", googleRedirect);
 router.get("/google/callback", googleCallback);
-router.post("/logout", protect, logout);
+router.post("/logout", logout);
 router.get("/me", protect, me);
 router.patch("/profile", protect, validate(profileSchema), updateProfile);
 router.patch("/change-password", protect, validate(changePasswordSchema), changePassword);

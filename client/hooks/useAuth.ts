@@ -9,9 +9,9 @@ export const useAuth = () => {
   const router = useRouter();
   const { user, hydrated, setUser } = useAuthStore();
 
-  const logout = async () => {
-    await authApi.logout();
+  const logout = () => {
     setUser(null);
+    authApi.logout().catch(() => {}); // best-effort: clear server cookie; no auth gate on this route
     toast.success("Logged out successfully.");
     router.push("/login");
   };

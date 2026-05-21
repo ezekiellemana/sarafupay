@@ -39,8 +39,9 @@ export function LoginForm() {
       google_unverified_email: "Please verify your Google account email first.",
       google_not_configured: "Google sign-in is not available right now.",
       account_inactive: "This account is deactivated. Please contact support.",
+      session_expired: "Your session expired. Please sign in again.",
     };
-    return messages[code] ?? "Google sign-in failed. Please try again.";
+    return messages[code] ?? "Sign-in failed. Please try again.";
   });
 
   useEffect(() => {
