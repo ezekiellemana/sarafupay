@@ -1,24 +1,24 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-
-export const metadata: Metadata = {
-  title: "About",
-  description: "Learn what SarafuPay is, how it works, and the everyday use cases it was built for — from weddings and events to group savings and charity drives.",
-};
-import { Users, Heart, GraduationCap, Building2, Gift, PartyPopper } from "lucide-react";
+import { Building2, Gift, GraduationCap, Handshake, Heart, PartyPopper, Users } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { FloatingBlobBackground } from "@/components/shared/FloatingBlobBackground";
 import { GradientButton } from "@/components/shared/GradientButton";
 
+export const metadata: Metadata = {
+  title: "About",
+  description: "Learn what SarafuPay is, how it works, and the everyday use cases it was built for — from weddings and events to group savings and charity drives.",
+};
+
 const useCases = [
-  { icon: PartyPopper, title: "Events & Celebrations", description: "Collect contributions for birthday parties, graduation ceremonies, farewell parties, and cultural celebrations." },
-  { icon: Heart, title: "Weddings", description: "Let guests contribute to the couple's wedding fund directly through a simple payment link — no cash envelopes needed." },
-  { icon: Heart, title: "Charity & Fundraising", description: "Run transparent charity drives. Donors see the goal and track progress. Every payment is recorded." },
-  { icon: Users, title: "Groups & Chamas", description: "Manage monthly chama contributions, savings groups, or community funds with clear payment records for every member." },
+  { icon: PartyPopper, title: "Events & Celebrations",  description: "Collect contributions for birthday parties, graduation ceremonies, farewell parties, and cultural celebrations." },
+  { icon: Heart,       title: "Weddings",               description: "Let guests contribute to the couple's wedding fund directly through a simple payment link — no cash envelopes needed." },
+  { icon: Handshake,   title: "Charity & Fundraising",  description: "Run transparent charity drives. Donors see the goal and track progress. Every payment is recorded." },
+  { icon: Users,       title: "Groups & Chamas",         description: "Manage monthly chama contributions, savings groups, or community funds with clear payment records for every member." },
   { icon: GraduationCap, title: "School & Class Funds", description: "Collect class trip fees, uniform funds, or school project contributions from parents without the paper trail." },
-  { icon: Building2, title: "Business Collections", description: "Accept deposits, event fees, or service payments through a branded collection page — no payment terminal required." },
-  { icon: Gift, title: "Gift Collections", description: "Pool money for a group gift. One link, everyone contributes, you track who has paid." },
+  { icon: Building2,   title: "Business Collections",   description: "Accept deposits, event fees, or service payments through a branded collection page — no payment terminal required." },
+  { icon: Gift,        title: "Gift Collections",        description: "Pool money for a group gift. One link, everyone contributes, you track who has paid." },
 ];
 
 export default function AboutPage() {
