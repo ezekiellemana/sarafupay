@@ -4,16 +4,44 @@ import { env } from "../config/env";
 import { User } from "../models/User.model";
 import { AppError } from "../utils/AppError";
 import { asyncHandler } from "../utils/asyncHandler";
-import {
-  setAuthCookie,
-  setOAuthStateCookie,
-  clearOAuthStateCookie,
-  OAUTH_STATE_COOKIE,
-} from "../utils/cookieHelpers";
+import { setAuthCookie } from "../utils/cookieHelpers";
 
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo";
+
+// HMAC-signed stateless OAuth state — no cross-domain cookie required.
+// Format (base64url): nonce.timestamp_b36.HMAC-SHA256(nonce.timestamp_b36, JWT_SECRET)
+function generateOAuthState(): string {
+  const nonce = crypto.randomBytes(16).toString("hex");
+  const timestamp = Date.now().toString(36);
+  const payload = `${nonce}.${timestamp}`;
+  const sig = crypto.createHmac("sha256", env.JWT_SECRET).update(payload).digest("hex");
+  return Buffer.from(`${payload}.${sig}`).toString("base64url");
+}
+
+function verifyOAuthState(state: string): boolean {
+  try {
+    const decoded = Buffer.from(state, "base64url").toString("utf-8");
+    const lastDot = decoded.lastIndexOf(".");
+    if (lastDot < 0) return false;
+    const payload = decoded.slice(0, lastDot);
+    const receivedSig = decoded.slice(lastDot + 1);
+    const expectedSig = crypto.createHmac("sha256", env.JWT_SECRET).update(payload).digest("hex");
+    // Constant-time comparison guards against timing attacks
+    const recv = Buffer.from(receivedSig, "hex");
+    const want = Buffer.from(expectedSig, "hex");
+    if (recv.length !== want.length) return false;
+    if (!crypto.timingSafeEqual(recv, want)) return false;
+    const firstDot = payload.indexOf(".");
+    if (firstDot < 0) return false;
+    const timestamp = parseInt(payload.slice(firstDot + 1), 36);
+    if (isNaN(timestamp) || Date.now() - timestamp > 5 * 60 * 1000) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 type GoogleProfile = {
   id?: string;
@@ -32,8 +60,7 @@ export const googleRedirect = asyncHandler(async (_req: Request, res: Response) 
     throw new AppError("Google authentication is not configured.", 503, "GOOGLE_NOT_CONFIGURED");
   }
 
-  const state = crypto.randomBytes(16).toString("hex");
-  setOAuthStateCookie(res, state);
+  const state = generateOAuthState();
 
   const params = new URLSearchParams({
     client_id: env.GOOGLE_CLIENT_ID,
@@ -65,11 +92,13 @@ export const googleCallback = asyncHandler(async (req: Request, res: Response) =
   // User cancelled or denied consent
   if (error) return redirectError("google_denied");
 
-  // Verify CSRF state
-  const storedState = req.cookies?.[OAUTH_STATE_COOKIE];
-  clearOAuthStateCookie(res);
-
-  if (!code || !state || !storedState || state !== storedState) {
+  // Verify HMAC-signed state (no cookie dependency — works across domains)
+  if (!code || !state || !verifyOAuthState(state)) {
+    console.error("[google_callback] state verification failed", {
+      hasCode: !!code,
+      hasState: !!state,
+      error,
+    });
     return redirectError("google_invalid_state");
   }
 
@@ -88,9 +117,13 @@ export const googleCallback = asyncHandler(async (req: Request, res: Response) =
       }),
     });
     const tokens = (await tokenRes.json()) as GoogleTokenResponse;
-    if (!tokens.access_token) return redirectError("google_token_failed");
+    if (!tokens.access_token) {
+      console.error("[google_callback] token exchange failed", { error: tokens.error });
+      return redirectError("google_token_failed");
+    }
     accessToken = tokens.access_token;
-  } catch {
+  } catch (err) {
+    console.error("[google_callback] token fetch threw", err);
     return redirectError("google_token_failed");
   }
 
@@ -101,7 +134,8 @@ export const googleCallback = asyncHandler(async (req: Request, res: Response) =
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     profile = (await profileRes.json()) as GoogleProfile;
-  } catch {
+  } catch (err) {
+    console.error("[google_callback] profile fetch threw", err);
     return redirectError("google_profile_failed");
   }
 
