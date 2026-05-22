@@ -18,10 +18,10 @@ This guide walks you through deploying SarafuPay as a solo developer using three
 User's browser
     │
     ▼
-Vercel — your-domain.com
+Vercel — sarafupay.app
     │  /api/* requests are rewritten to backend
     ▼
-DigitalOcean App Platform — api.your-domain.com
+DigitalOcean App Platform — api.sarafupay.app
     │
     ▼
 MongoDB Atlas — cloud database
@@ -95,19 +95,19 @@ You will need:
 4. Click **Next** and skip to **Environment Variables** — add all the backend variables from the table below.
 5. Choose a plan: **Basic → $12/mo** is sufficient for MVP.
 6. Click **Create Resources** and wait for the first deploy to finish.
-7. Once live, note your app URL — it looks like `https://sarafupay-api-xxxxx.ondigitalocean.app`.
+7. Once live, note your app URL. After adding a custom domain it will be `https://api.sarafupay.app`.
 8. **(Recommended) Add a custom domain:**
    - Go to **Settings → Domains → Add Domain**
-   - Enter `api.your-domain.com`
+   - Enter `api.sarafupay.app`
    - DigitalOcean will give you DNS records to add to your registrar
    - TLS is provisioned automatically once DNS propagates
 
 ### Verify the backend is running
 
-Open this URL in your browser (replace with your actual URL):
+Open this URL in your browser:
 
 ```text
-https://sarafupay-api-xxxxx.ondigitalocean.app/health
+https://api.sarafupay.app/health
 ```
 
 Expected response:
@@ -135,10 +135,10 @@ If `status` is `"ok"` and `db` is `"connected"`, the backend and database are bo
    - Framework preset: **Next.js** (auto-detected)
 4. Add frontend environment variables from the table below.
 5. Click **Deploy** and wait for it to finish.
-6. Once live, note your URL: `https://sarafupay.vercel.app`.
+6. Once live, note your URL. After adding a custom domain it will be `https://sarafupay.app`.
 7. **(Recommended) Add a custom domain:**
    - Go to **Settings → Domains → Add**
-   - Enter `your-domain.com`
+   - Enter `sarafupay.app`
    - Follow Vercel's instructions to add DNS records at your registrar
 
 ---
@@ -157,21 +157,21 @@ Add these in **App Platform → your app → Settings → Environment Variables*
 | `JWT_SECRET` | 64+ random characters | Use a password generator. Never reuse a dev secret. |
 | `JWT_EXPIRES_IN` | `7d` | How long login sessions last. |
 | `COOKIE_NAME` | `sarafupay_token` | Can leave as-is. |
-| `CLIENT_URL` | `https://your-domain.com` | Your Vercel frontend URL. **No trailing slash.** Must be exact. |
-| `SERVER_URL` | `https://api.your-domain.com` | Your DigitalOcean backend URL. **No trailing slash. Must be HTTPS.** |
+| `CLIENT_URL` | `https://sarafupay.app` | Your Vercel frontend URL. **No trailing slash.** Must be exact. |
+| `SERVER_URL` | `https://api.sarafupay.app` | Your DigitalOcean backend URL. **No trailing slash. Must be HTTPS.** |
 | `SNIPPE_API_KEY` | From Snippe dashboard | **Required in production — server will not start without this.** Never expose in the frontend. |
 | `SNIPPE_WEBHOOK_SECRET` | From Snippe dashboard | **Required in production — server will not start without this.** Copy from Snippe dashboard → Settings → Webhook Secret. |
 | `SNIPPE_BASE_URL` | `https://api.snippe.sh` | Do not change. |
 | `SNIPPE_PROFILE_ID` | Your profile ID | Sets SarafuPay branding on the Snippe checkout page. |
 | `ADMIN_NAME` | Your name | Used by the seed script. |
-| `ADMIN_EMAIL` | admin@your-domain.com | Admin login email. |
+| `ADMIN_EMAIL` | admin@sarafupay.app | Admin login email. |
 | `ADMIN_PHONE` | +255700000000 | Admin phone number. |
 | `ADMIN_PASSWORD` | Strong password | Change this immediately after first login. |
 | `GOOGLE_CLIENT_ID` | From Google Cloud Console | Optional. Google login is silently disabled if absent. |
 | `GOOGLE_CLIENT_SECRET` | From Google Cloud Console | Optional. **Never expose in the frontend.** |
-| `GOOGLE_CALLBACK_URL` | `https://your-domain.com/api/auth/google/callback` | Must match exactly what is registered in Google Cloud Console. Goes through the Vercel proxy — use the **frontend** URL, not the backend URL. |
+| `GOOGLE_CALLBACK_URL` | `https://sarafupay.app/api/auth/google/callback` | Must match exactly what is registered in Google Cloud Console. Goes through the Vercel proxy — use the **frontend** URL, not the backend URL. |
 
-> ⚠️ **`CLIENT_URL` warning:** This must exactly match the origin your browser uses to open the app. If the browser loads `https://your-domain.com` but `CLIENT_URL` is `https://your-domain.com/` (with a trailing slash) or `https://www.your-domain.com` (with www), the server will reject all API requests with a CORS error.
+> ⚠️ **`CLIENT_URL` warning:** This must exactly match the origin your browser uses to open the app. If the browser loads `https://sarafupay.app` but `CLIENT_URL` is `https://sarafupay.app/` (with a trailing slash) or `https://www.sarafupay.app` (with www), the server will reject all API requests with a CORS error.
 
 > ⚠️ **`NODE_ENV` warning:** If this is missing or set to anything other than `production`, auth cookies will use `secure: false` and `sameSite: lax`, which will not work when the frontend and backend are on different domains. Login will appear to work but the session cookie will not be sent on subsequent requests.
 
@@ -181,7 +181,7 @@ Add these in **Vercel → Project → Settings → Environment Variables**.
 
 | Variable | Value | Notes |
 |---|---|---|
-| `NEXT_PUBLIC_API_PROXY_URL` | `https://api.your-domain.com` | Your backend HTTPS URL. **No trailing slash.** This tells Next.js where to proxy `/api/*` requests. |
+| `NEXT_PUBLIC_API_PROXY_URL` | `https://api.sarafupay.app` | Your backend HTTPS URL. **No trailing slash.** This tells Next.js where to proxy `/api/*` requests. |
 
 > ⚠️ **`NEXT_PUBLIC_API_PROXY_URL` warning:** If this is not set on Vercel, Next.js falls back to `http://127.0.0.1:5000`, which does not exist on Vercel's servers. Every API call — login, payment, dashboard — will return a 502 error.
 
@@ -196,18 +196,18 @@ To enable it:
 3. Go to **APIs & Services → OAuth consent screen**:
    - User type: **External**
    - App name: `SarafuPay`
-   - Authorized domains: `your-domain.com`
+   - Authorized domains: `sarafupay.app`
    - Scopes: add `email`, `profile`, `openid`
    - Save and publish
 4. Go to **APIs & Services → Credentials → Create Credentials → OAuth 2.0 Client ID**:
    - Application type: **Web application**
    - Name: `SarafuPay Production`
-   - **Authorized redirect URIs**: add `https://your-domain.com/api/auth/google/callback`
+   - **Authorized redirect URIs**: add `https://sarafupay.app/api/auth/google/callback`
      *(this goes through the Vercel → DigitalOcean proxy — use the **frontend** URL, not the backend URL)*
    - Click **Create**
 5. Copy **Client ID** → set as `GOOGLE_CLIENT_ID` on DigitalOcean
 6. Copy **Client Secret** → set as `GOOGLE_CLIENT_SECRET` on DigitalOcean
-7. Set `GOOGLE_CALLBACK_URL=https://your-domain.com/api/auth/google/callback` on DigitalOcean
+7. Set `GOOGLE_CALLBACK_URL=https://sarafupay.app/api/auth/google/callback` on DigitalOcean
 
 **Before deploying to production:** Run the phone index migration once against your production database:
 
@@ -226,9 +226,9 @@ After the backend is live, update your Snippe dashboard settings:
 
 | Field | Value |
 |---|---|
-| Webhook URL | `https://api.your-domain.com/api/webhooks/snippe` |
+| Webhook URL | `https://api.sarafupay.app/api/webhooks/snippe` |
 | Webhook events | `payment.completed`, `payment.failed`, `payment.expired`, `payment.cancelled` |
-| Redirect / Return URL | `https://your-domain.com/payment/return` |
+| Redirect / Return URL | `https://sarafupay.app/payment/return` |
 
 Copy the webhook signing secret from **Snippe Dashboard → Settings → Webhook Secret** and set it as `SNIPPE_WEBHOOK_SECRET` in App Platform. Then redeploy the backend.
 
@@ -243,7 +243,7 @@ After the backend is live, create the admin account once using the seed script. 
 $env:NODE_ENV = "production"
 $env:MONGO_URI = "mongodb+srv://sarafupay:YOURPASSWORD@cluster0.xxxxx.mongodb.net/sarafupay?retryWrites=true&w=majority"
 $env:ADMIN_NAME = "SarafuPay Admin"
-$env:ADMIN_EMAIL = "admin@your-domain.com"
+$env:ADMIN_EMAIL = "admin@sarafupay.app"
 $env:ADMIN_PHONE = "+255700000000"
 $env:ADMIN_PASSWORD = "ChangeThisImmediately!"
 npm --workspace server run seed
@@ -290,7 +290,7 @@ Work through this top to bottom before opening SarafuPay to real users.
 ### Google OAuth (if enabled)
 
 - [ ] `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_CALLBACK_URL` set on DigitalOcean
-- [ ] `https://your-domain.com/api/auth/google/callback` added as Authorized redirect URI in Google Cloud Console
+- [ ] `https://sarafupay.app/api/auth/google/callback` added as Authorized redirect URI in Google Cloud Console
 - [ ] Phone index migration run: `npm --workspace server run fix-phone-index`
 - [ ] Google login creates a new member account (new email)
 - [ ] Google login with existing email links to the same account
@@ -339,7 +339,7 @@ Specific limiters are additive on top of the global limit. A login attempt consu
 
 **Causes and fixes:**
 - `NODE_ENV` is not `production` on the backend. The cookie is set with `secure: false, sameSite: lax`, which browsers reject on cross-domain HTTPS. Set `NODE_ENV=production` and redeploy.
-- The frontend URL and backend URL are on different TLDs (e.g. Vercel URL and App Platform URL without custom domains). The browser may block `sameSite: none` cookies from a `.ondigitalocean.app` backend when loaded from `.vercel.app`. Add custom domains on the same root domain (e.g. `your-domain.com` and `api.your-domain.com`) to resolve this reliably.
+- The frontend URL and backend URL are on different TLDs (e.g. Vercel URL and App Platform URL without custom domains). The browser may block `sameSite: none` cookies from a `.ondigitalocean.app` backend when loaded from `.vercel.app`. Add custom domains on the same root domain (e.g. `sarafupay.app` and `api.sarafupay.app`) to resolve this reliably.
 
 ---
 
@@ -356,9 +356,9 @@ Specific limiters are additive on top of the global limit. A login attempt consu
 **Symptom:** Payments complete on Snippe but status stays `pending` in MongoDB (and no `paymentMethod` or `rawWebhookPayload` on the payment record).
 
 **Causes and fixes:**
-- Webhook URL in Snippe dashboard is still pointing to the old ngrok URL. Update it to `https://api.your-domain.com/api/webhooks/snippe`.
+- Webhook URL in Snippe dashboard is still pointing to the old ngrok URL. Update it to `https://api.sarafupay.app/api/webhooks/snippe`.
 - `SNIPPE_WEBHOOK_SECRET` is not set on the backend. The server throws `500 WEBHOOK_SECRET_MISSING` before processing the event. Set the secret and redeploy.
-- The backend `/api/webhooks/snippe` route is not reachable. Test it: `curl -X POST https://api.your-domain.com/api/webhooks/snippe` — you should get a 400 or 401 (not 502 or connection refused).
+- The backend `/api/webhooks/snippe` route is not reachable. Test it: `curl -X POST https://api.sarafupay.app/api/webhooks/snippe` — you should get a 400 or 401 (not 502 or connection refused).
 
 ---
 
@@ -391,8 +391,9 @@ Specific limiters are additive on top of the global limit. A login attempt consu
 | Item | Status | Detail |
 | --- | --- | --- |
 | MongoDB Atlas | **Live** | Cluster connected, `db: "connected"` confirmed |
-| DigitalOcean App Platform | **Live** | `https://sarafupay-server-ejbun.ondigitalocean.app` |
-| Vercel Frontend | **Live** | `https://sarafupay-client.vercel.app` |
+| DigitalOcean App Platform | **Live** | `https://sarafupay-server-ejbun.ondigitalocean.app` → migrating to `https://api.sarafupay.app` |
+| Vercel Frontend | **Live** | `https://sarafupay-client.vercel.app` → migrating to `https://sarafupay.app` |
+| Custom Domain | **Pending DNS** | `sarafupay.app` (frontend) · `api.sarafupay.app` (backend) — see migration checklist below |
 | Auth (register + login) | **Verified** | Cookie/session works across Vercel → DigitalOcean |
 | Public payment page | **Verified** | `/pay/[slug]` loads without login |
 | Snippe checkout | **Verified** | Checkout opens, M-Pesa payment completes |
@@ -404,3 +405,89 @@ Specific limiters are additive on top of the global limit. A login attempt consu
 Full smoke test log: [FINAL_TEST_REPORT.md](./FINAL_TEST_REPORT.md)
 
 **Release tag:** `v1.2.1` — production deployment confirmed live.
+
+---
+
+## Custom Domain Migration Checklist (sarafupay.app)
+
+Work through this in order. Do not update env vars until DNS is confirmed.
+
+### 1 — Namecheap DNS (or your registrar)
+
+| Type | Host | Value |
+| --- | --- | --- |
+| `A` or `CNAME` | `@` | Vercel-provided value (from Vercel → Domains) |
+| `CNAME` | `www` | `cname.vercel-dns.com` |
+| `CNAME` | `api` | DigitalOcean-provided value (from App Platform → Settings → Domains) |
+
+> DNS propagation can take up to 48 hours, but is usually under 30 minutes.
+
+### 2 — Vercel: add custom domain
+
+1. Vercel → Project → **Settings → Domains → Add**
+2. Enter `sarafupay.app` → follow instructions
+3. Also add `www.sarafupay.app` → set to redirect to `sarafupay.app`
+4. Wait for TLS to provision (green checkmark)
+
+### 3 — DigitalOcean: add custom domain
+
+1. App Platform → your app → **Settings → Domains → Add Domain**
+2. Enter `api.sarafupay.app`
+3. DigitalOcean provides a CNAME target — add it to your registrar
+4. Wait for TLS to provision
+
+### 4 — Google Cloud Console
+
+Update your OAuth 2.0 Client ID:
+
+| Setting | Value |
+| --- | --- |
+| Authorized JavaScript origins | `https://sarafupay.app` |
+| Authorized redirect URIs | `https://sarafupay.app/api/auth/google/callback` |
+
+Remove old Vercel URL entries once migration is confirmed working.
+
+### 5 — Vercel environment variables
+
+Update in **Vercel → Project → Settings → Environment Variables**:
+
+| Variable | New value |
+| --- | --- |
+| `NEXT_PUBLIC_API_PROXY_URL` | `https://api.sarafupay.app` |
+
+Redeploy the frontend after saving.
+
+### 6 — DigitalOcean environment variables
+
+Update in **App Platform → Settings → Environment Variables**:
+
+| Variable | New value |
+| --- | --- |
+| `CLIENT_URL` | `https://sarafupay.app` |
+| `SERVER_URL` | `https://api.sarafupay.app` |
+| `GOOGLE_CALLBACK_URL` | `https://sarafupay.app/api/auth/google/callback` |
+
+Redeploy the backend after saving.
+
+### 7 — Snippe dashboard
+
+| Field | New value |
+| --- | --- |
+| Webhook URL | `https://api.sarafupay.app/api/webhooks/snippe` |
+| Return / Redirect URL | `https://sarafupay.app/payment/return` |
+
+### 8 — PostHog (if enabled)
+
+Add `sarafupay.app` to your PostHog project's allowed domains / authorized URLs.
+
+### 9 — Final browser tests after DNS + env vars live
+
+- [ ] `https://sarafupay.app` loads the landing page
+- [ ] `https://api.sarafupay.app/health` returns `{"status":"ok","db":"connected"}`
+- [ ] Login with email/password — session cookie set, dashboard loads
+- [ ] Login with Google — redirects correctly to `/dashboard` or `/admin`
+- [ ] Make a test payment — Snippe checkout opens, webhook delivers, `/payment/return` shows receipt
+- [ ] No CORS errors in browser DevTools
+- [ ] Old Vercel URL (`sarafupay-client.vercel.app`) still works during transition (Vercel keeps it active)
+
+**Release tag after confirmed migration:** `v1.11.0-custom-domain-migration`

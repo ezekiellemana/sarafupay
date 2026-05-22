@@ -153,8 +153,8 @@ Do not launch until all of the following are true:
 
 | Layer | URL |
 | --- | --- |
-| Frontend | `https://sarafupay-client.vercel.app` |
-| Backend | `https://sarafupay-server-ejbun.ondigitalocean.app` |
+| Frontend | `https://sarafupay-client.vercel.app` → `https://sarafupay.app` (custom domain) |
+| Backend | `https://sarafupay-server-ejbun.ondigitalocean.app` → `https://api.sarafupay.app` (custom domain) |
 | Database | MongoDB Atlas — cluster0.ny7x27a.mongodb.net / sarafupay |
 
 ### Smoke Test Results

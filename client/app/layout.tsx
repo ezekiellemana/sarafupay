@@ -13,6 +13,7 @@ const siteDescription =
   "Create a payment collection page for weddings, events, groups, and projects in Tanzania. Accept M-Pesa and card payments through a simple, shareable link.";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://sarafupay.app"),
   title: {
     default: "SarafuPay — Lipa kwa urahisi",
     template: "%s | SarafuPay",
@@ -21,6 +22,7 @@ export const metadata: Metadata = {
   keywords: ["payment collection", "Tanzania", "M-Pesa", "group contributions", "chama", "event payments", "Snippe", "SarafuPay"],
   openGraph: {
     type: "website",
+    url: "https://sarafupay.app",
     locale: "en_TZ",
     siteName: "SarafuPay",
     title: "SarafuPay — Lipa kwa urahisi",
