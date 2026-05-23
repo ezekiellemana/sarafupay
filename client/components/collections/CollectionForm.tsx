@@ -174,7 +174,7 @@ export function CollectionForm({
       </div>
 
       {/* Allow custom amount toggle */}
-      <div className="flex items-start gap-3 rounded-2xl border border-white/70 bg-white/60 p-4 backdrop-blur-sm">
+      <div className="flex items-start gap-3 rounded-2xl border border-[#e5e0d6] bg-white p-4">
         <input
           id="allowCustomAmount"
           type="checkbox"
@@ -188,7 +188,7 @@ export function CollectionForm({
       </div>
 
       {/* Show contributors toggle */}
-      <div className="flex items-start gap-3 rounded-2xl border border-white/70 bg-white/60 p-4 backdrop-blur-sm">
+      <div className="flex items-start gap-3 rounded-2xl border border-[#e5e0d6] bg-white p-4">
         <input
           id="showContributors"
           type="checkbox"
@@ -234,7 +234,7 @@ export function CollectionForm({
       <Button
         type="submit"
         disabled={loading}
-        className="h-12 rounded-2xl bg-linear-to-r from-[#052e16] via-[#16a34a] to-[#4ade80] text-white shadow-lg shadow-green-700/20 hover:brightness-105"
+        className="h-12 rounded-2xl bg-[#035034] text-white shadow-md shadow-[#035034]/20 hover:bg-[#024028]"
       >
         {loading
           ? <><Loader2 className="mr-2 size-4 animate-spin" />{isEdit ? "Saving…" : "Creating…"}</>

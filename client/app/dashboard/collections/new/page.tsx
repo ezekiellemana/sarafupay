@@ -62,9 +62,9 @@ export default function NewCollectionPage() {
               animate={{ opacity: 1, scale: 1 }}
               className="flex flex-col gap-6"
             >
-              <div className="rounded-3xl border border-green-200/60 bg-green-50/80 p-6 text-center shadow-xl shadow-green-900/5">
+              <div className="rounded-2xl border border-green-200 bg-green-50 p-6 text-center shadow-sm shadow-[#0a1f12]/4">
                 <div className="mb-4 flex justify-center">
-                  <span className="flex size-16 items-center justify-center rounded-full bg-green-500/15 text-4xl ring-4 ring-green-200/60">
+                  <span className="flex size-16 items-center justify-center rounded-full bg-green-100 text-4xl ring-4 ring-green-200">
                     🎉
                   </span>
                 </div>
@@ -72,9 +72,9 @@ export default function NewCollectionPage() {
                 <p className="mt-2 text-muted-foreground">Your project/event is live! Share the payment link below.</p>
               </div>
 
-              <div className="glass-gold rounded-3xl p-6">
+              <div className="rounded-2xl border border-amber-200 bg-[#fffbf0] p-6">
                 <p className="text-sm font-semibold text-amber-800">Your Payment Link</p>
-                <div className="mt-3 flex items-center gap-2 overflow-hidden rounded-2xl border border-amber-200/60 bg-white/70 px-3 py-2.5">
+                <div className="mt-3 flex items-center gap-2 overflow-hidden rounded-xl border border-amber-200 bg-white px-3 py-2.5">
                   <ExternalLink className="size-4 shrink-0 text-amber-600" />
                   <span className="flex-1 truncate text-sm font-medium text-[#071a0e]">{created.publicPaymentLink}</span>
                 </div>
@@ -91,7 +91,7 @@ export default function NewCollectionPage() {
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-white/70 bg-white/80 p-5 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
+              <div className="rounded-2xl border border-[#e5e0d6] bg-white p-5 shadow-sm shadow-[#0a1f12]/4">
                 <p className="font-semibold text-[#071a0e]">What&apos;s next?</p>
                 <ul className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground">
                   {[
@@ -140,10 +140,10 @@ export default function NewCollectionPage() {
                       whileHover={{ y: -2 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => setSelectedTemplate(template)}
-                      className={`rounded-3xl border p-4 text-left transition-all duration-150 ${
+                      className={`rounded-2xl border p-4 text-left transition-all duration-150 ${
                         isSelected
-                          ? "border-[#16a34a] bg-green-50/70 shadow-lg shadow-green-700/10 ring-2 ring-[#16a34a]/25"
-                          : "border-white/70 bg-white/80 shadow-lg shadow-slate-900/5 hover:border-[#16a34a]/40 hover:bg-green-50/30"
+                          ? "border-[#16a34a] bg-green-50 shadow-sm shadow-[#0a1f12]/4 ring-2 ring-[#16a34a]/25"
+                          : "border-[#e5e0d6] bg-white shadow-sm shadow-[#0a1f12]/4 hover:border-[#16a34a]/40 hover:bg-green-50/50"
                       }`}
                     >
                       <span className="text-3xl leading-none">{template.emoji}</span>
@@ -168,7 +168,7 @@ export default function NewCollectionPage() {
                 })}
               </div>
 
-              <div className="flex items-center justify-between gap-4 rounded-3xl border border-white/70 bg-white/80 px-5 py-4 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
+              <div className="flex items-center justify-between gap-4 rounded-2xl border border-[#e5e0d6] bg-white px-5 py-4 shadow-sm shadow-[#0a1f12]/4">
                 <p className="text-sm text-muted-foreground">
                   {selectedTemplate
                     ? <><span className="font-medium text-[#071a0e]">{selectedTemplate.emoji} {selectedTemplate.name}</span> selected</>
@@ -177,7 +177,7 @@ export default function NewCollectionPage() {
                 <Button
                   onClick={handleContinue}
                   disabled={!selectedTemplate}
-                  className="shrink-0 rounded-2xl bg-linear-to-r from-[#052e16] via-[#16a34a] to-[#4ade80] text-white shadow-lg shadow-green-700/20 hover:brightness-105 disabled:opacity-50"
+                  className="shrink-0 rounded-2xl bg-[#035034] text-white shadow-md shadow-[#035034]/20 hover:bg-[#024028] disabled:opacity-50"
                 >
                   Continue →
                 </Button>
@@ -201,7 +201,7 @@ export default function NewCollectionPage() {
                   ← Change template
                 </button>
                 {selectedTemplate && (
-                  <span className="rounded-xl border border-white/70 bg-white/80 px-2.5 py-1 text-sm font-medium text-[#071a0e] shadow-sm">
+                  <span className="rounded-xl border border-[#e5e0d6] bg-white px-2.5 py-1 text-sm font-medium text-[#071a0e] shadow-sm">
                     {selectedTemplate.emoji} {selectedTemplate.name}
                   </span>
                 )}
@@ -215,7 +215,7 @@ export default function NewCollectionPage() {
                 </p>
               </div>
 
-              <div className="mt-6 rounded-3xl border border-white/70 bg-white/85 p-6 shadow-2xl shadow-slate-900/8 backdrop-blur-xl">
+              <div className="mt-6 rounded-2xl border border-[#e5e0d6] bg-white p-6 shadow-sm shadow-[#0a1f12]/4">
                 <CollectionForm
                   collection={selectedTemplate?.defaults}
                   onSuccess={handleSuccess}

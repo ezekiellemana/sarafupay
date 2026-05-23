@@ -47,7 +47,7 @@ export default function EditCollectionPage({ params }: { params: Promise<{ id: s
         {error && <ErrorState message={error} />}
 
         {collection && (
-          <div className="rounded-3xl border border-white/70 bg-white/85 p-6 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
+          <div className="rounded-2xl border border-[#e5e0d6] bg-white p-6 shadow-sm shadow-[#0a1f12]/4">
             <CollectionForm
               collection={collection}
               onSuccess={(updated) => {
