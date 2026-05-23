@@ -22,7 +22,8 @@ export default function ProfilePage() {
   const { user, setUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const form = useForm<ProfileValues>({ resolver: zodResolver(profileSchema) });
-  const watched = form.watch();
+  const [watchedBusiness, watchedPhone, watchedAvatarUrl, watchedBio, watchedFullName] =
+    form.watch(["businessName", "phoneNumber", "avatarUrl", "bio", "fullName"]);
 
   useEffect(() => {
     if (user) {
@@ -55,9 +56,9 @@ export default function ProfilePage() {
     }
   };
 
-  const displayName = watched.businessName?.trim() || user?.fullName?.split(" ")[0] || "Your Name";
-  const initials    = (user?.fullName ?? "SP").slice(0, 2).toUpperCase();
-  const missingPhone = !watched.phoneNumber?.trim();
+  const displayName  = watchedBusiness?.trim() || user?.fullName?.split(" ")[0] || "Your Name";
+  const initials     = (watchedFullName ?? user?.fullName ?? "SP").slice(0, 2).toUpperCase();
+  const missingPhone = !watchedPhone?.trim();
 
   return (
     <DashboardShell>
@@ -74,12 +75,12 @@ export default function ProfilePage() {
 
         {/* ── Single connected form panel ───────────────────────────── */}
         <form method="post" onSubmit={form.handleSubmit(save)}>
-          <div className="max-w-2xl overflow-hidden rounded-3xl border border-white/70 bg-white/85 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
+          <div className="max-w-2xl overflow-hidden rounded-2xl border border-[#e5e0d6] bg-white shadow-sm shadow-[#0a1f12]/4">
 
             {/* Panel header: avatar + title */}
             <div className="flex items-center gap-4 px-6 py-5">
-              <Avatar className="size-14 shrink-0 border border-white/70 shadow-lg">
-                {watched.avatarUrl && <AvatarImage src={watched.avatarUrl} alt={user?.fullName} />}
+              <Avatar className="size-14 shrink-0 border border-[#e5e0d6] shadow-sm">
+                {watchedAvatarUrl && <AvatarImage src={watchedAvatarUrl} alt={user?.fullName} />}
                 <AvatarFallback className="bg-[#071a0e] text-lg font-bold text-white">{initials}</AvatarFallback>
               </Avatar>
               <div>
@@ -89,7 +90,7 @@ export default function ProfilePage() {
             </div>
 
             {/* ── Section 1: Account ──────────────────────────────────── */}
-            <div className="border-t border-slate-100 px-6 py-5">
+            <div className="border-t border-[#e5e0d6] px-6 py-5">
               <div className="mb-4 flex items-center gap-2">
                 <UserIcon className="size-4 text-muted-foreground" />
                 <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Account</p>
@@ -149,7 +150,7 @@ export default function ProfilePage() {
             </div>
 
             {/* ── Section 2: Public Profile ────────────────────────────── */}
-            <div className="border-t border-slate-100 px-6 py-5">
+            <div className="border-t border-[#e5e0d6] px-6 py-5">
               <div className="mb-4 flex items-center gap-2">
                 <Building2 className="size-4 text-amber-600" />
                 <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Public Profile</p>
@@ -215,20 +216,20 @@ export default function ProfilePage() {
             </div>
 
             {/* ── Section 3: Preview ──────────────────────────────────── */}
-            <div className="border-t border-slate-100 px-6 py-5">
+            <div className="border-t border-[#e5e0d6] px-6 py-5">
               <p className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Public preview
               </p>
-              <div className="rounded-2xl border border-amber-200/60 bg-amber-50/60 p-4">
+              <div className="rounded-2xl border border-amber-200 bg-[#fffbf0] p-4">
                 <div className="flex items-start gap-3">
-                  <Avatar className="size-10 shrink-0 border border-amber-200/60">
-                    {watched.avatarUrl && <AvatarImage src={watched.avatarUrl} alt={displayName} />}
+                  <Avatar className="size-10 shrink-0 border border-amber-200">
+                    {watchedAvatarUrl && <AvatarImage src={watchedAvatarUrl} alt={displayName} />}
                     <AvatarFallback className="bg-[#071a0e] text-sm font-bold text-white">{initials}</AvatarFallback>
                   </Avatar>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-[#071a0e]">Organized by {displayName}</p>
-                    {watched.bio ? (
-                      <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{watched.bio}</p>
+                    {watchedBio ? (
+                      <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{watchedBio}</p>
                     ) : (
                       <p className="mt-0.5 text-xs italic text-slate-400">Add a description to appear here.</p>
                     )}
@@ -238,11 +239,11 @@ export default function ProfilePage() {
             </div>
 
             {/* ── Save button ─────────────────────────────────────────── */}
-            <div className="border-t border-slate-100 px-6 py-5">
+            <div className="border-t border-[#e5e0d6] px-6 py-5">
               <Button
                 type="submit"
                 disabled={loading}
-                className="h-11 w-full rounded-2xl bg-linear-to-r from-[#052e16] via-[#16a34a] to-[#4ade80] text-white shadow-lg shadow-green-700/20 hover:brightness-105"
+                className="h-11 w-full rounded-2xl bg-[#035034] text-white shadow-md shadow-[#035034]/20 hover:bg-[#024028]"
               >
                 {loading ? (
                   <>
