@@ -11,6 +11,7 @@ import {
   Folders,
   Plus,
   User,
+  Users,
   Wallet,
   XCircle,
 } from "lucide-react";
@@ -33,10 +34,10 @@ import type { PaymentStatus } from "@/types";
 // ── Static data ───────────────────────────────────────────────────────────────
 
 const QUICK_ACTIONS = [
-  { label: "Create Collection", href: "/dashboard/collections/new", Icon: Plus,       green: true  },
-  { label: "View Payments",     href: "/dashboard/payments",         Icon: CreditCard, green: false },
-  { label: "My Collections",   href: "/dashboard/collections",      Icon: Folders,    green: false },
-  { label: "Profile",          href: "/dashboard/profile",          Icon: User,       green: false },
+  { label: "Create Collection", subtitle: "Start a new fundraiser",   href: "/dashboard/collections/new", Icon: Plus,       green: true  },
+  { label: "View Payments",     subtitle: "Your payment history",     href: "/dashboard/payments",        Icon: CreditCard, green: false },
+  { label: "My Collections",   subtitle: "Manage all collections",   href: "/dashboard/collections",     Icon: Folders,    green: false },
+  { label: "Profile",          subtitle: "Account & settings",       href: "/dashboard/profile",         Icon: User,       green: false },
 ] as const;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -46,6 +47,13 @@ function getGreeting(): string {
   if (h < 12) return "Good morning";
   if (h < 17) return "Good afternoon";
   return "Good evening";
+}
+
+// Compact formatter for KPI strip — keeps large TZS values readable at small widths
+function fmtKpi(v: number): string {
+  if (v >= 1_000_000) return `TZS ${(v / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
+  if (v >= 1_000) return `TZS ${Math.round(v / 1_000)}K`;
+  return formatMoney(v);
 }
 
 function MonthStatusPill({ status }: { status: PaymentStatus }) {
@@ -89,6 +97,10 @@ export default function DashboardPage() {
   );
   const totalAcrossCollections = useMemo(
     () => collections.reduce((sum, c) => sum + c.totalCollected, 0),
+    [collections]
+  );
+  const totalContributors = useMemo(
+    () => collections.reduce((sum, c) => sum + c.contributorCount, 0),
     [collections]
   );
 
@@ -155,11 +167,58 @@ export default function DashboardPage() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.36, delay: 0.08 }}
-            className="flex flex-col gap-6"
+            className="flex flex-col gap-5"
           >
 
+            {/* ── KPI command strip ───────────────────────────────────────── */}
+            <div className="relative overflow-hidden rounded-2xl border border-[#0f3a23] bg-[#071a0e] px-5 py-5 sm:px-6">
+              {/* Ambient gold glow */}
+              <div className="pointer-events-none absolute -right-20 -top-20 size-64 rounded-full bg-[#d4a437]/10 blur-3xl" />
+              <div className="pointer-events-none absolute -bottom-16 left-1/4 size-52 rounded-full bg-[#1f8b5a]/10 blur-3xl" />
+
+              <div className="relative grid grid-cols-3 divide-x divide-white/[0.07]">
+                {/* KPI 1 — Total raised */}
+                <div className="flex flex-col gap-2 pr-4 sm:pr-6">
+                  <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-white/50">
+                    <Wallet className="size-3" /> Total raised
+                  </p>
+                  <p className="truncate text-lg font-bold tracking-tight text-[#d4a437] sm:text-2xl">
+                    <AnimatedNumber value={totalAcrossCollections} format={fmtKpi} />
+                  </p>
+                  <p className="text-[10px] text-white/35">across all collections</p>
+                </div>
+
+                {/* KPI 2 — Active collections */}
+                <div className="flex flex-col gap-2 px-4 sm:px-6">
+                  <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-white/50">
+                    <Folders className="size-3" /> Active
+                  </p>
+                  <p className="text-lg font-bold tracking-tight text-white sm:text-2xl">
+                    {activeCollections.length}
+                    {collections.length > 0 && (
+                      <span className="ml-1.5 text-sm font-medium text-white/35">
+                        / {collections.length}
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-[10px] text-white/35">collections running</p>
+                </div>
+
+                {/* KPI 3 — Total contributors */}
+                <div className="flex flex-col gap-2 pl-4 sm:pl-6">
+                  <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-white/50">
+                    <Users className="size-3" /> Contributors
+                  </p>
+                  <p className="text-lg font-bold tracking-tight text-white sm:text-2xl">
+                    <AnimatedNumber value={totalContributors} format={(v) => v.toLocaleString()} />
+                  </p>
+                  <p className="text-[10px] text-white/35">total payments received</p>
+                </div>
+              </div>
+            </div>
+
             {/* ── Connected summary panel ─────────────────────────────────── */}
-            <div className="overflow-hidden rounded-3xl border border-slate-200/60 shadow-xl shadow-slate-900/5">
+            <div className="overflow-hidden rounded-2xl border border-[#e5e0d6] shadow-sm shadow-[#0a1f12]/4">
               <div className="grid lg:grid-cols-2">
 
                 {/* Left: Contribution wallet (dark) */}
@@ -261,7 +320,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Right: Collections summary (light) */}
-                <div className="flex flex-col gap-5 border-t border-slate-100 bg-white/80 p-6 lg:border-l lg:border-t-0">
+                <div className="flex flex-col gap-5 border-t border-[#e5e0d6] bg-white p-6 lg:border-l lg:border-t-0">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="flex size-8 items-center justify-center rounded-xl bg-green-50">
@@ -282,26 +341,40 @@ export default function DashboardPage() {
                     )}
                   </div>
 
-                  {/* Mini stats */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-2xl bg-green-50 px-4 py-3">
-                      <p className="text-xs text-muted-foreground">Total raised</p>
-                      <p className="mt-0.5 truncate text-lg font-extrabold text-[#16a34a]">
-                        {formatMoney(totalAcrossCollections)}
+                  {/* Mini stats — 3 columns */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="rounded-xl bg-green-50 px-3 py-2.5">
+                      <p className="text-[10px] font-medium text-muted-foreground">Total raised</p>
+                      <p className="mt-0.5 truncate text-base font-extrabold text-[#16a34a]">
+                        {fmtKpi(totalAcrossCollections)}
                       </p>
                     </div>
-                    <div className="rounded-2xl bg-amber-50 px-4 py-3">
-                      <p className="text-xs text-muted-foreground">Active</p>
-                      <p className="mt-0.5 text-lg font-extrabold text-amber-700">
+                    <div className="rounded-xl bg-amber-50 px-3 py-2.5">
+                      <p className="text-[10px] font-medium text-muted-foreground">Active</p>
+                      <p className="mt-0.5 text-base font-extrabold text-amber-700">
                         {activeCollections.length}
+                      </p>
+                    </div>
+                    <div className="rounded-xl bg-slate-50 px-3 py-2.5">
+                      <p className="text-[10px] font-medium text-muted-foreground">Contributors</p>
+                      <p className="mt-0.5 text-base font-extrabold text-slate-700">
+                        {totalContributors}
                       </p>
                     </div>
                   </div>
 
                   {/* Collection mini-list or empty state */}
                   {collections.length === 0 ? (
-                    <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-green-200 py-8 text-center">
-                      <Folders className="size-8 text-muted-foreground/30" />
+                    <div
+                      className="flex flex-1 flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[#d6cfc0] py-10 text-center"
+                      style={{
+                        background:
+                          "repeating-linear-gradient(45deg, rgba(212,164,55,0.03) 0, rgba(212,164,55,0.03) 1px, transparent 1px, transparent 12px), #fff",
+                      }}
+                    >
+                      <span className="flex size-12 items-center justify-center rounded-xl border border-amber-100 bg-amber-50 text-amber-600">
+                        <Folders className="size-6" />
+                      </span>
                       <div>
                         <p className="text-sm font-semibold text-[#071a0e]">No collections yet</p>
                         <p className="mt-0.5 text-xs text-muted-foreground">
@@ -315,7 +388,7 @@ export default function DashboardPage() {
                       </Link>
                     </div>
                   ) : (
-                    <div className="flex flex-col divide-y divide-slate-100">
+                    <div className="flex flex-col divide-y divide-[#e5e0d6]">
                       {displayCollections.map((c) => {
                         const progress = c.targetAmount
                           ? Math.min(
@@ -356,7 +429,7 @@ export default function DashboardPage() {
                               <AnimatedProgressBar
                                 value={progress}
                                 variant="green"
-                                className="h-1.5 bg-slate-200/60"
+                                className="h-1.5 bg-slate-100"
                               />
                             )}
                           </Link>
@@ -384,36 +457,41 @@ export default function DashboardPage() {
 
             {/* ── Quick actions ───────────────────────────────────────────── */}
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {QUICK_ACTIONS.map(({ label, href, Icon, green }) => (
+              {QUICK_ACTIONS.map(({ label, subtitle, href, Icon, green }) => (
                 <Link key={label} href={href}>
                   <motion.div
                     whileHover={{ y: -2 }}
                     whileTap={{ scale: 0.97 }}
                     className={cn(
-                      "flex flex-col items-center justify-center gap-2 rounded-3xl border p-4 text-center shadow-sm transition-shadow hover:shadow-md",
+                      "flex flex-col items-center justify-center gap-2 rounded-2xl border p-4 text-center shadow-sm transition-shadow hover:shadow-md",
                       green
                         ? "border-green-200/60 bg-green-50/80 hover:bg-green-50"
-                        : "border-slate-200/60 bg-white/85 hover:bg-white/90"
+                        : "border-[#e5e0d6] bg-white hover:bg-[#faf7f2]"
                     )}
                   >
                     <span
                       className={cn(
-                        "flex size-10 items-center justify-center rounded-2xl shadow-sm",
+                        "flex size-10 items-center justify-center rounded-xl shadow-sm",
                         green
                           ? "bg-[#035034] text-white"
-                          : "bg-slate-100 text-[#071a0e]"
+                          : "bg-[#f6e6ba] text-[#8a611a]"
                       )}
                     >
                       <Icon className="size-5" />
                     </span>
-                    <p
-                      className={cn(
-                        "text-xs font-semibold",
-                        green ? "text-[#035034]" : "text-[#071a0e]"
-                      )}
-                    >
-                      {label}
-                    </p>
+                    <div className="flex flex-col gap-0.5">
+                      <p
+                        className={cn(
+                          "text-xs font-semibold leading-tight",
+                          green ? "text-[#035034]" : "text-[#071a0e]"
+                        )}
+                      >
+                        {label}
+                      </p>
+                      <p className="text-[10px] leading-tight text-muted-foreground">
+                        {subtitle}
+                      </p>
+                    </div>
                   </motion.div>
                 </Link>
               ))}

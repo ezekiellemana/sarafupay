@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, Clock3, XCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { formatMoney } from "@/lib/formatters";
 import type { Payment, PaymentStatus } from "@/types";
@@ -29,18 +30,16 @@ function formatMonthPaidFor(monthStr: string): string {
 }
 
 function StatusIcon({ status }: { status: PaymentStatus }) {
-  if (status === "completed")
-    return <CheckCircle2 className="size-4 shrink-0 text-emerald-500" />;
-  if (status === "pending")
-    return <Clock3 className="size-4 shrink-0 text-amber-500" />;
-  return <XCircle className="size-4 shrink-0 text-red-400" />;
+  if (status === "completed") return <CheckCircle2 className="size-4 shrink-0" />;
+  if (status === "pending")   return <Clock3 className="size-4 shrink-0" />;
+  return <XCircle className="size-4 shrink-0" />;
 }
 
 export function ActivityFeed({ payments }: { payments: Payment[] }) {
   if (!payments.length) return null;
 
   return (
-    <div className="overflow-hidden rounded-3xl border border-slate-200/60 bg-white/80 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
+    <div className="overflow-hidden rounded-2xl border border-[#e5e0d6] bg-white shadow-sm shadow-[#0a1f12]/4">
       <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
         <p className="text-sm font-bold text-[#071a0e]">Recent Payments</p>
         <Link href="/dashboard/payments">
@@ -59,7 +58,12 @@ export function ActivityFeed({ payments }: { payments: Payment[] }) {
           const isCompleted = p.status === "completed";
           return (
             <div key={p._id} className="flex items-center gap-3 px-5 py-3.5">
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-slate-50">
+              <span className={cn(
+                "flex size-9 shrink-0 items-center justify-center rounded-xl",
+                p.status === "completed" ? "bg-green-50 text-[#16a34a]"
+                : p.status === "pending"  ? "bg-amber-50 text-amber-600"
+                :                          "bg-red-50 text-red-500"
+              )}>
                 <StatusIcon status={p.status} />
               </span>
 

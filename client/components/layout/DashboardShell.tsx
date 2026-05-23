@@ -6,6 +6,7 @@ import { AppSidebar } from "@/components/layout/AppSidebar";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { PageTransition } from "@/components/shared/PageTransition";
 import { FloatingBlobBackground } from "@/components/shared/FloatingBlobBackground";
+import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 
 function ShellSpinner() {
@@ -45,8 +46,11 @@ export function DashboardShell({ children, admin = false }: { children: React.Re
   if (shouldRedirect) return <ShellSpinner />;
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-background">
-      <FloatingBlobBackground />
+    <div className={cn(
+      "relative min-h-screen overflow-hidden",
+      admin ? "bg-background" : "bg-[#faf7f2]"
+    )}>
+      {admin && <FloatingBlobBackground />}
       <AppSidebar admin={admin} />
       <main className="lg:ml-64">
         <div className="mx-auto max-w-7xl px-4 py-8 md:px-8 lg:px-10">
