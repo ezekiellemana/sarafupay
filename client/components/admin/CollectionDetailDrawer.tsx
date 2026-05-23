@@ -43,7 +43,7 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
       <span className="w-28 shrink-0 text-xs font-bold uppercase tracking-wide text-slate-500">
         {label}
       </span>
-      <span className="text-sm font-medium text-[#0B1F3A]">{value ?? "—"}</span>
+      <span className="text-sm font-medium text-[#071a0e]">{value ?? "—"}</span>
     </div>
   );
 }
@@ -140,7 +140,7 @@ export function CollectionDetailDrawer({
               <FolderKanban className="size-6 text-amber-600" />
             </div>
             <div className="min-w-0 flex-1">
-              <SheetTitle className="truncate text-base font-bold text-[#0B1F3A]">
+              <SheetTitle className="truncate text-base font-bold text-[#071a0e]">
                 {collection?.title ?? "Collection"}
               </SheetTitle>
               <SheetDescription className="truncate text-xs">
@@ -273,7 +273,7 @@ export function CollectionDetailDrawer({
                         className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3"
                       >
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold text-[#0B1F3A]">
+                          <p className="truncate text-sm font-semibold text-[#071a0e]">
                             {paymentUserName(p)}
                           </p>
                           <p className="text-xs text-slate-500">
@@ -281,7 +281,7 @@ export function CollectionDetailDrawer({
                           </p>
                         </div>
                         <div className="flex flex-col items-end gap-1">
-                          <span className="text-sm font-semibold text-[#0B1F3A]">
+                          <span className="text-sm font-semibold text-[#071a0e]">
                             {formatMoney(p.amount)}
                           </span>
                           <StatusBadge status={p.status} className="text-xs" />

@@ -20,7 +20,7 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
       <span className="w-32 shrink-0 text-xs font-bold uppercase tracking-wide text-slate-500">
         {label}
       </span>
-      <span className="break-all text-sm font-medium text-[#0B1F3A]">{value ?? "—"}</span>
+      <span className="break-all text-sm font-medium text-[#071a0e]">{value ?? "—"}</span>
     </div>
   );
 }
@@ -80,7 +80,7 @@ export function PaymentDetailDrawer({ payment, open, onClose }: PaymentDetailDra
               <CreditCard className="size-6 text-blue-600" />
             </div>
             <div className="min-w-0 flex-1">
-              <SheetTitle className="text-base font-bold text-[#0B1F3A]">
+              <SheetTitle className="text-base font-bold text-[#071a0e]">
                 {displayAmount}
               </SheetTitle>
               <SheetDescription className="truncate text-xs">
