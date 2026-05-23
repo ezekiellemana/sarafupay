@@ -31,6 +31,7 @@ export const getMemberDashboard = async (userId: Types.ObjectId) => {
     remainingAmount: Math.max(targetAmount - totalPaid, 0),
     contributionProgressPercentage: progress,
     missedMonths: expectedMonths.filter((month) => !paidMonths.has(month)),
+    paidMonths: [...paidMonths],
     recentPayments: payments.slice(0, 6)
   };
 };

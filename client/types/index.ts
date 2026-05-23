@@ -121,6 +121,7 @@ export type DashboardData = {
   remainingAmount: number;
   contributionProgressPercentage: number;
   missedMonths: string[];
+  paidMonths: string[];
   recentPayments: Payment[];
 };
 

@@ -25,6 +25,7 @@ import { AnimatedProgressBar } from "@/components/shared/AnimatedProgressBar";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
+import { MonthCoverageGrid } from "@/components/dashboard/MonthCoverageGrid";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
 import { COLLECTION_TYPE_EMOJIS } from "@/lib/collections";
 import { useAuth } from "@/hooks/useAuth";
@@ -545,6 +546,17 @@ export default function DashboardPage() {
                   )}
                 </div>
               </div>
+            )}
+
+            {/* ── Month coverage grid ─────────────────────────────────────── */}
+            {data && !noProject && (
+              <MonthCoverageGrid
+                paidMonths={data.paidMonths}
+                missedMonths={data.missedMonths}
+                currentMonthPaymentStatus={data.currentMonthPaymentStatus}
+                startDate={data.project.startDate}
+                endDate={data.project.endDate}
+              />
             )}
 
             {/* ── Recent payments feed ────────────────────────────────────── */}
