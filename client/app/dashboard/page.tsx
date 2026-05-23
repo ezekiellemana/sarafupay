@@ -159,7 +159,7 @@ export default function DashboardPage() {
           >
 
             {/* ── Connected summary panel ─────────────────────────────────── */}
-            <div className="overflow-hidden rounded-3xl border border-white/70 shadow-xl shadow-slate-900/5">
+            <div className="overflow-hidden rounded-3xl border border-slate-200/60 shadow-xl shadow-slate-900/5">
               <div className="grid lg:grid-cols-2">
 
                 {/* Left: Contribution wallet (dark) */}
@@ -212,8 +212,7 @@ export default function DashboardPage() {
                             variant="gold"
                           />
                           <p className="text-xs text-white/40">
-                            {Math.round((data.contributionProgressPercentage / 100) * 12)} of 12
-                            monthly payments
+                            {data.completedPaymentsCount} payment{data.completedPaymentsCount !== 1 ? "s" : ""} completed
                           </p>
                         </div>
 
@@ -301,7 +300,7 @@ export default function DashboardPage() {
 
                   {/* Collection mini-list or empty state */}
                   {collections.length === 0 ? (
-                    <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-green-100 py-8 text-center">
+                    <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-green-200 py-8 text-center">
                       <Folders className="size-8 text-muted-foreground/30" />
                       <div>
                         <p className="text-sm font-semibold text-[#071a0e]">No collections yet</p>
@@ -356,6 +355,7 @@ export default function DashboardPage() {
                             {progress !== null && (
                               <AnimatedProgressBar
                                 value={progress}
+                                variant="green"
                                 className="h-1.5 bg-slate-200/60"
                               />
                             )}
@@ -393,7 +393,7 @@ export default function DashboardPage() {
                       "flex flex-col items-center justify-center gap-2 rounded-3xl border p-4 text-center shadow-sm transition-shadow hover:shadow-md",
                       green
                         ? "border-green-200/60 bg-green-50/80 hover:bg-green-50"
-                        : "border-white/70 bg-white/80 hover:bg-white/90"
+                        : "border-slate-200/60 bg-white/85 hover:bg-white/90"
                     )}
                   >
                     <span
@@ -401,7 +401,7 @@ export default function DashboardPage() {
                         "flex size-10 items-center justify-center rounded-2xl shadow-sm",
                         green
                           ? "bg-[#035034] text-white"
-                          : "bg-white/70 text-[#071a0e]"
+                          : "bg-slate-100 text-[#071a0e]"
                       )}
                     >
                       <Icon className="size-5" />

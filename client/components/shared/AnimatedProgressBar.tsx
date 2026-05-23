@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-type ProgressVariant = "blue" | "gold";
+type ProgressVariant = "blue" | "gold" | "green";
 
 export function AnimatedProgressBar({
   value,
@@ -22,6 +22,8 @@ export function AnimatedProgressBar({
           "h-full rounded-full",
           variant === "gold"
             ? "bg-linear-to-r from-amber-500 via-yellow-400 to-amber-300"
+            : variant === "green"
+            ? "bg-[#16a34a]"
             : "bg-linear-to-r from-[#16A34A] via-[#2563EB] to-[#38BDF8]"
         )}
         initial={{ width: 0 }}

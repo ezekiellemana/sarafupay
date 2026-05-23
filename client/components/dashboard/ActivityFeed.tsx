@@ -40,7 +40,7 @@ export function ActivityFeed({ payments }: { payments: Payment[] }) {
   if (!payments.length) return null;
 
   return (
-    <div className="overflow-hidden rounded-3xl border border-white/70 bg-white/80 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
+    <div className="overflow-hidden rounded-3xl border border-slate-200/60 bg-white/80 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
       <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
         <p className="text-sm font-bold text-[#071a0e]">Recent Payments</p>
         <Link href="/dashboard/payments">
