@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function SkeletonTimeline({ items = 5 }: { items?: number }) {
   return (
-    <div className="overflow-hidden rounded-3xl border border-white/70 bg-white/80 px-6 py-6 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
+    <div className="overflow-hidden rounded-2xl border border-[#e5e0d6] bg-white px-6 py-6 shadow-sm shadow-[#0a1f12]/4">
       {Array.from({ length: items }).map((_, i) => (
         <div key={i} className="flex gap-4 pb-6 last:pb-0">
           {/* Timeline spine */}

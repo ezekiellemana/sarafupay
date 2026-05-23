@@ -8,7 +8,7 @@ export function SkeletonStatCards({ rows = 1 }: { rows?: number }) {
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
-              className="rounded-3xl border border-white/70 bg-white/80 p-5 shadow-xl shadow-slate-900/5 backdrop-blur-xl"
+              className="rounded-2xl border border-[#e5e0d6] bg-white p-5 shadow-sm shadow-[#0a1f12]/4"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 space-y-3">

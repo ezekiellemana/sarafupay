@@ -94,7 +94,7 @@ function EventRow({ event, isLast }: { event: ActivityEvent; isLast: boolean }) 
 
       {/* Content */}
       <div className={cn("min-w-0 flex-1 pb-6", isLast && "pb-0")}>
-        <p className="text-sm font-medium text-[#0B1F3A]">{event.description}</p>
+        <p className="text-sm font-medium text-[#071a0e]">{event.description}</p>
         <p className="mt-0.5 text-xs text-muted-foreground">
           <span title={formatDate(event.timestamp)}>{relativeTime(event.timestamp)}</span>
           {" · "}
@@ -159,7 +159,7 @@ export default function AdminActivityPage() {
           action={
             <Button
               variant="outline"
-              className="h-11 gap-2 rounded-2xl bg-white/80"
+              className="h-11 gap-2 rounded-2xl bg-white"
               onClick={handleRefresh}
               disabled={loading}
             >
@@ -182,7 +182,7 @@ export default function AdminActivityPage() {
               className={cn(
                 "rounded-full px-4 py-2.5 text-xs font-semibold transition-colors",
                 typeFilter === key
-                  ? "bg-[#0B1F3A] text-white"
+                  ? "bg-[#071a0e] text-white"
                   : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-slate-800",
               )}
             >
@@ -212,7 +212,7 @@ export default function AdminActivityPage() {
 
         {/* Empty */}
         {!loading && !error && data && filtered.length === 0 && (
-          <div className="flex flex-col items-center gap-3 rounded-3xl border border-white/70 bg-white/80 py-16 text-center shadow-xl shadow-slate-900/5 backdrop-blur-xl">
+          <div className="flex flex-col items-center gap-3 rounded-2xl border border-[#e5e0d6] bg-white py-16 text-center shadow-sm shadow-[#0a1f12]/4">
             <Activity className="size-8 text-muted-foreground/40" />
             <p className="text-sm text-muted-foreground">No activity found for this filter.</p>
           </div>
@@ -220,7 +220,7 @@ export default function AdminActivityPage() {
 
         {/* Event timeline */}
         {filtered.length > 0 && (
-          <div className="overflow-hidden rounded-3xl border border-white/70 bg-white/80 px-6 py-6 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
+          <div className="overflow-hidden rounded-2xl border border-[#e5e0d6] bg-white px-6 py-6 shadow-sm shadow-[#0a1f12]/4">
             {filtered.map((event, i) => (
               <EventRow key={event.id} event={event} isLast={i === filtered.length - 1} />
             ))}

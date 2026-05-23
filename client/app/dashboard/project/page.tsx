@@ -20,7 +20,7 @@ export default function ProjectPage() {
         {loading && <LoadingState />}
         {data && (
           <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-            <Card className="border-white/70 bg-white/80 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
+            <Card className="border-[#e5e0d6] bg-white shadow-sm shadow-[#0a1f12]/4">
               <CardHeader><div className="flex items-start justify-between gap-3"><CardTitle className="text-2xl font-bold">{data.project.title}</CardTitle><StatusBadge status={data.project.status} /></div></CardHeader>
               <CardContent className="flex flex-col gap-4">
                 <p className="text-muted-foreground">{data.project.description}</p>
@@ -36,11 +36,11 @@ export default function ProjectPage() {
                 <Link href="/payment/start"><GradientButton>Pay This Month</GradientButton></Link>
               </CardContent>
             </Card>
-            <Card className="border-white/70 bg-white/80 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
+            <Card className="border-[#e5e0d6] bg-white shadow-sm shadow-[#0a1f12]/4">
               <CardHeader><CardTitle>Project rules</CardTitle></CardHeader>
               <CardContent>
                 <ul className="flex flex-col gap-3 text-sm text-muted-foreground">
-                  {(data.project.rules?.length ? data.project.rules : ["Monthly contributions are due by the 5th day of each month."]).map((rule) => <li key={rule} className="rounded-lg bg-background p-3">{rule}</li>)}
+                  {(data.project.rules?.length ? data.project.rules : ["Monthly contributions are due by the 5th day of each month."]).map((rule) => <li key={rule} className="rounded-lg border border-[#e5e0d6] bg-[#faf7f2] p-3">{rule}</li>)}
                 </ul>
               </CardContent>
             </Card>
@@ -52,5 +52,5 @@ export default function ProjectPage() {
 }
 
 function Info({ label, value }: { label: string; value: string }) {
-  return <div className="rounded-2xl border border-white/70 bg-background/80 p-3"><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 font-semibold">{value}</p></div>;
+  return <div className="rounded-2xl border border-[#e5e0d6] bg-[#faf7f2] p-3"><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 font-semibold">{value}</p></div>;
 }

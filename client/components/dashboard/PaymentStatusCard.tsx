@@ -5,7 +5,7 @@ import type { PaymentStatus } from "@/types";
 
 export function PaymentStatusCard({ status }: { status: PaymentStatus }) {
   return (
-    <Card className="border-white/70 bg-white/80 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
+    <Card className="border-[#e5e0d6] bg-white shadow-sm shadow-[#0a1f12]/4">
       <CardHeader>
         <CardTitle>This Month Status</CardTitle>
       </CardHeader>

@@ -63,7 +63,7 @@ function CheckRow({ check }: { check: AuditCheck }) {
         {cfg.icon}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-[#0B1F3A]">{check.label}</p>
+        <p className="text-sm font-semibold text-[#071a0e]">{check.label}</p>
         {check.note && (
           <p className="mt-0.5 text-xs text-slate-500">{check.note}</p>
         )}
@@ -127,7 +127,7 @@ export default function AdminAuditPage() {
           action={
             <Button
               variant="outline"
-              className="h-11 gap-2 rounded-2xl bg-white/80"
+              className="h-11 gap-2 rounded-2xl bg-white"
               onClick={handleRefresh}
               disabled={loading}
             >
@@ -190,8 +190,8 @@ export default function AdminAuditPage() {
             </div>
 
             {/* Check list */}
-            <div className="overflow-hidden rounded-3xl border border-white/70 bg-white/80 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
-              <div className="divide-y divide-slate-100">
+            <div className="overflow-hidden rounded-2xl border border-[#e5e0d6] bg-white shadow-sm shadow-[#0a1f12]/4">
+              <div className="divide-y divide-[#e5e0d6]">
                 {data.checks.map((check) => (
                   <CheckRow key={check.key} check={check} />
                 ))}

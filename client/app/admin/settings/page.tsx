@@ -59,7 +59,7 @@ function UrlRow({ label, value }: { label: string; value: string }) {
       <span className="w-36 shrink-0 text-xs font-bold uppercase tracking-wide text-slate-600">
         {label}
       </span>
-      <code className="flex-1 truncate rounded-lg bg-slate-50 px-3 py-1.5 font-mono text-xs text-[#0B1F3A]">
+      <code className="flex-1 truncate rounded-lg bg-slate-50 px-3 py-1.5 font-mono text-xs text-[#071a0e]">
         {value}
       </code>
       <CopyButton value={value} />
@@ -79,7 +79,7 @@ function ConfigRow({
       <span className="w-36 shrink-0 text-xs font-bold uppercase tracking-wide text-slate-600">
         {label}
       </span>
-      <span className="text-sm font-medium text-[#0B1F3A]">{value}</span>
+      <span className="text-sm font-medium text-[#071a0e]">{value}</span>
     </div>
   );
 }
@@ -113,7 +113,7 @@ function Card({ children, className }: { children: React.ReactNode; className?: 
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-3xl border border-white/70 bg-white/80 shadow-xl shadow-slate-900/5 backdrop-blur-xl",
+        "overflow-hidden rounded-2xl border border-[#e5e0d6] bg-white shadow-sm shadow-[#0a1f12]/4",
         className,
       )}
     >
@@ -123,7 +123,7 @@ function Card({ children, className }: { children: React.ReactNode; className?: 
 }
 
 function CardBody({ children }: { children: React.ReactNode }) {
-  return <div className="divide-y divide-slate-100 px-6">{children}</div>;
+  return <div className="divide-y divide-[#e5e0d6] px-6">{children}</div>;
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -173,7 +173,7 @@ export default function AdminSettingsPage() {
           action={
             <Button
               variant="outline"
-              className="h-11 gap-2 rounded-2xl bg-white/80"
+              className="h-11 gap-2 rounded-2xl bg-white"
               onClick={handleRefresh}
               disabled={loading}
             >

@@ -87,7 +87,7 @@ export default function AdminProjectsPage() {
                 className={cn(
                   "rounded-full px-4 py-2.5 text-xs font-semibold transition-colors",
                   statusFilter === f
-                    ? "bg-[#0B1F3A] text-white"
+                    ? "bg-[#071a0e] text-white"
                     : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-slate-800",
                 )}
               >
