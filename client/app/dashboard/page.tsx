@@ -81,7 +81,7 @@ function MonthStatusPill({ status }: { status: PaymentStatus }) {
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const { data, loading: walletLoading, error: walletError } = useDashboard();
+  const { data, loading: walletLoading, error: walletError, noProject } = useDashboard();
   const { collections, loading: collectionsLoading } = useCollections();
 
   const firstName = user?.fullName?.split(" ")[0] ?? "there";
@@ -147,7 +147,9 @@ export default function DashboardPage() {
         )}
 
         {/* ── Wallet error (non-blocking — still show collections) ────────── */}
-        {!walletLoading && walletError && (
+        {/* Only shown for real errors. noProject (no contribution project) is an expected
+            empty state and must not show a scary error banner. */}
+        {!walletLoading && walletError && !noProject && (
           <ErrorState
             message={walletError}
             action={
@@ -245,6 +247,8 @@ export default function DashboardPage() {
                         ? "Pending"
                         : "Missed"}
                     </span>
+                  ) : noProject ? (
+                    <span className="text-sm font-medium text-white/40">—</span>
                   ) : (
                     <div className="h-5 w-16 animate-pulse rounded-full bg-white/10" />
                   )}
@@ -346,8 +350,21 @@ export default function DashboardPage() {
                           </Link>
                         </div>
                       </>
+                    ) : noProject ? (
+                      /* No active contribution project — expected empty state */
+                      <div className="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
+                        <span className="flex size-10 items-center justify-center rounded-2xl bg-white/10">
+                          <Wallet className="size-5 text-white/40" />
+                        </span>
+                        <div>
+                          <p className="text-sm font-semibold text-white/70">No active contribution project</p>
+                          <p className="mt-1 text-xs leading-relaxed text-white/40">
+                            Your contribution wallet will appear here once you join an active project.
+                          </p>
+                        </div>
+                      </div>
                     ) : (
-                      /* Wallet data unavailable (error path) */
+                      /* Real error path */
                       <div className="flex flex-1 items-center justify-center py-8">
                         <p className="text-sm text-white/40">Wallet data unavailable.</p>
                       </div>

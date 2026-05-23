@@ -1,22 +1,31 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { api, getApiErrorMessage } from "@/lib/api";
+import { api, ApiError, getApiErrorMessage } from "@/lib/api";
 import type { ActivityFeedData, AdminDashboardData, DashboardData } from "@/types";
 
 export const useDashboard = () => {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [noProject, setNoProject] = useState(false);
 
   useEffect(() => {
     api<DashboardData>("/api/dashboard/member")
       .then((res) => setData(res.data))
-      .catch((err: unknown) => setError(getApiErrorMessage(err, "Unable to load dashboard.")))
+      .catch((err: unknown) => {
+        // 404 PROJECT_NOT_FOUND = no active contribution project yet — expected for
+        // members who only use collections. Show a friendly empty state, not an error.
+        if (err instanceof ApiError && err.errorCode === "PROJECT_NOT_FOUND") {
+          setNoProject(true);
+        } else {
+          setError(getApiErrorMessage(err, "Unable to load dashboard."));
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 
-  return { data, loading, error };
+  return { data, loading, error, noProject };
 };
 
 export const useAdminDashboard = () => {

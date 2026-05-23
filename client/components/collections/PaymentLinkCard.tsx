@@ -112,13 +112,15 @@ export function PaymentLinkCard({ collection }: { collection: Collection }) {
           <span className="ml-1.5">WhatsApp</span>
         </Button>
 
-        <Dialog>
-          <DialogTrigger className="flex h-10 items-center justify-center gap-1.5 rounded-2xl border border-amber-200 bg-white px-3 text-sm font-medium text-[#071a0e] hover:bg-amber-50">
-            <QrCode className="size-4" />
-            QR Code
-          </DialogTrigger>
-          <QrDialog link={link} slug={collection.slug ?? "payment"} title={collection.title} />
-        </Dialog>
+        {link && (
+          <Dialog>
+            <DialogTrigger className="flex h-10 items-center justify-center gap-1.5 rounded-2xl border border-amber-200 bg-white px-3 text-sm font-medium text-[#071a0e] hover:bg-amber-50">
+              <QrCode className="size-4" />
+              QR Code
+            </DialogTrigger>
+            <QrDialog link={link} slug={collection.slug ?? "payment"} title={collection.title} />
+          </Dialog>
+        )}
       </div>
     </div>
   );
