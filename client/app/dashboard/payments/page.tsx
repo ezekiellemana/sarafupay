@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, X } from "lucide-react";
+import { Download, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,7 @@ import { LoadingState } from "@/components/shared/LoadingState";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { GradientButton } from "@/components/shared/GradientButton";
-import { api, getApiErrorMessage } from "@/lib/api";
+import { api, apiUrl, getApiErrorMessage } from "@/lib/api";
 import { usePayments } from "@/hooks/usePayments";
 import { formatMoney } from "@/lib/formatters";
 import type { Payment } from "@/types";
@@ -88,9 +88,20 @@ export default function PaymentsPage() {
                 : "Your contribution payment records."}
             </p>
           </div>
-          <a href="/payment/start">
-            <GradientButton>Pay Contribution</GradientButton>
-          </a>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 gap-1.5 rounded-2xl text-muted-foreground"
+              onClick={() => window.open(`${apiUrl}/api/payments/export/csv`, "_blank")}
+              disabled={loading || payments.length === 0}
+            >
+              <Download className="size-3.5" /> Export CSV
+            </Button>
+            <a href="/payment/start">
+              <GradientButton>Pay Contribution</GradientButton>
+            </a>
+          </div>
         </div>
 
         {/* ── Filter bar ──────────────────────────────────────────────── */}

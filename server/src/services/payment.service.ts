@@ -225,3 +225,9 @@ export const getUserPayments = (userId: Types.ObjectId, filters: { status?: Paym
   }
   return Payment.find(query).populate("projectId", "title").sort({ createdAt: -1 });
 };
+
+export const exportUserPayments = (userId: Types.ObjectId) =>
+  Payment.find({ userId })
+    .populate("projectId", "title")
+    .sort({ createdAt: -1 })
+    .lean();

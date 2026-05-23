@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { Payment } from "../models/Payment.model";
 import { asyncHandler } from "../utils/asyncHandler";
-import { createContributionPayment, createPublicPayment, getUserPayments, verifyLocalPayment } from "../services/payment.service";
+import { createContributionPayment, createPublicPayment, exportUserPayments, getUserPayments, verifyLocalPayment } from "../services/payment.service";
 import { getMemberDashboard } from "../services/dashboard.service";
 
 export const createPaymentSchema = z.object({
@@ -91,6 +91,38 @@ export const verifyPayment = asyncHandler(async (req, res) => {
       payment: publicPayment
     }
   });
+});
+
+const csvEscape = (v: unknown): string => {
+  const s = String(v ?? "");
+  return s.includes(",") || s.includes('"') || s.includes("\n") ? `"${s.replace(/"/g, '""')}"` : s;
+};
+
+export const exportMyPaymentsCsvHandler = asyncHandler(async (req, res) => {
+  const payments = await exportUserPayments(req.user!._id);
+
+  const header = ["Date Created", "Date Paid", "Month", "Collection", "Amount", "Currency", "Status", "Method", "Reference", "Snippe Reference"];
+
+  const rows = payments.map((p) => {
+    const collection = (p.projectId as unknown as { title?: string } | null)?.title ?? "";
+    return [
+      p.createdAt ? new Date(p.createdAt).toISOString().slice(0, 10) : "",
+      p.paidAt    ? new Date(p.paidAt).toISOString().slice(0, 10)    : "",
+      p.monthPaidFor,
+      collection,
+      p.amount,
+      p.currency,
+      p.status,
+      p.paymentMethod ?? "",
+      p.externalReference,
+      p.snippeReference ?? ""
+    ].map(csvEscape).join(",");
+  });
+
+  const csv = [header.join(","), ...rows].join("\n");
+  res.setHeader("Content-Type", "text/csv");
+  res.setHeader("Content-Disposition", 'attachment; filename="sarafupay-payment-statement.csv"');
+  res.send(csv);
 });
 
 export const retryPayment = asyncHandler(async (req, res) => {

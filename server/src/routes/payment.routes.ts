@@ -3,6 +3,7 @@ import {
   createPaymentSchema,
   createPublicSession,
   createSession,
+  exportMyPaymentsCsvHandler,
   getPayment,
   listPaymentQuerySchema,
   myPayments,
@@ -26,6 +27,8 @@ router.get("/my-payments", protect, validate(listPaymentQuerySchema, "query"), m
 router.get("/my-summary", protect, mySummary);
 router.get("/verify/:reference", verifyPayment);
 router.post("/retry/:paymentId", protect, paymentLimiter, retryPayment);
+// Must be declared before /:id to avoid Express treating "export" as a payment ID
+router.get("/export/csv", protect, exportMyPaymentsCsvHandler);
 router.get("/:id", protect, getPayment);
 
 export default router;
