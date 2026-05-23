@@ -64,13 +64,17 @@ export const createCollection = async (ownerId: Types.ObjectId, input: CreateCol
   return collection;
 };
 
-export const getOwnerCollections = (ownerId: Types.ObjectId) =>
-  Project.find({ ownerId }).sort({ createdAt: -1 }).lean();
+export const getOwnerCollections = async (ownerId: Types.ObjectId) => {
+  const collections = await Project.find({ ownerId }).sort({ createdAt: -1 }).lean();
+  // Always compute publicPaymentLink from current CLIENT_URL so domain changes
+  // (e.g. Vercel → custom domain) are reflected without a data migration.
+  return collections.map((c) => ({ ...c, publicPaymentLink: `${env.CLIENT_URL}/pay/${c.slug}` }));
+};
 
 export const getCollectionByIdForOwner = async (id: string, ownerId: Types.ObjectId) => {
   const collection = await Project.findOne({ _id: id, ownerId }).lean();
   if (!collection) throw new AppError("Collection not found.", 404, "COLLECTION_NOT_FOUND");
-  return collection;
+  return { ...collection, publicPaymentLink: `${env.CLIENT_URL}/pay/${collection.slug}` };
 };
 
 const truncateName = (name: string): string => {
@@ -194,7 +198,7 @@ export const getCollectionSummary = async (collectionId: string, ownerId: Types.
   const progress = collection.targetAmount ? Math.min(100, Math.round((totalCollected / collection.targetAmount) * 100)) : 0;
 
   return {
-    collection,
+    collection: { ...collection, publicPaymentLink: `${env.CLIENT_URL}/pay/${collection.slug}` },
     totalCollected,
     contributorCount: stats?.contributorCount ?? 0,
     avgAmount: stats?.avgAmount ?? 0,
