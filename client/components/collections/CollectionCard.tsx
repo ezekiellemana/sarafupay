@@ -33,10 +33,7 @@ export function CollectionCard({ collection }: { collection: Collection }) {
       whileHover={{ y: -3 }}
       transition={{ duration: 0.25 }}
     >
-      <Card className="group relative overflow-hidden border border-white/70 bg-white/85 shadow-xl shadow-slate-900/5 backdrop-blur-xl transition-shadow hover:shadow-2xl">
-        {/* Top accent bar */}
-        <div className="h-1 w-full bg-linear-to-r from-[#16a34a] via-[#4ade80] to-[#f59e0b]" />
-
+      <Card className="group relative overflow-hidden border border-[#e5e0d6] bg-white shadow-sm shadow-[#0a1f12]/4 transition-shadow hover:shadow-md">
         <CardContent className="flex flex-col gap-4 p-5">
 
           {/* Header: emoji + title + status */}
@@ -90,7 +87,7 @@ export function CollectionCard({ collection }: { collection: Collection }) {
           )}
 
           {/* Actions */}
-          <div className="flex items-center gap-2 border-t border-slate-100/60 pt-3">
+          <div className="flex items-center gap-2 border-t border-[#e5e0d6] pt-3">
             {/* Copy Link — left */}
             <Button
               size="sm"

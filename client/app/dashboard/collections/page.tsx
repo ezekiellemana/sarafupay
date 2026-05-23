@@ -115,7 +115,7 @@ export default function CollectionsPage() {
         {!loading && !error && collections.length === 0 && (
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
             <EmptyState
-              icon={<Folders className="size-10 text-muted-foreground/40" />}
+              icon={<Folders className="size-6" />}
               title="No collections yet."
               description="Create your first collection to start raising money and sharing a payment link."
               action={
@@ -134,7 +134,7 @@ export default function CollectionsPage() {
           <div className="flex flex-col gap-4">
 
             {/* Filter + sort panel */}
-            <div className="flex flex-col gap-3 rounded-3xl border border-white/70 bg-white/80 p-4 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
+            <div className="flex flex-col gap-3 rounded-2xl border border-[#e5e0d6] bg-white p-4 shadow-sm shadow-[#0a1f12]/4">
 
               {/* Row 1: search input + sort select */}
               <div className="flex flex-col gap-3 sm:flex-row">
@@ -146,7 +146,7 @@ export default function CollectionsPage() {
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Search collections…"
-                    className="rounded-2xl border-white/70 bg-white/60 pl-9 pr-9"
+                    className="rounded-2xl border-[#e5e0d6] bg-white pl-9 pr-9"
                   />
                   {query && (
                     <button
@@ -164,7 +164,7 @@ export default function CollectionsPage() {
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as SortBy)}
-                    className="h-10 w-full appearance-none rounded-2xl border border-input bg-white/70 px-3 pr-8 text-sm font-medium text-[#071a0e] focus:outline-none focus:ring-2 focus:ring-[#16a34a]/20"
+                    className="h-10 w-full appearance-none rounded-2xl border border-input bg-white px-3 pr-8 text-sm font-medium text-[#071a0e] focus:outline-none focus:ring-2 focus:ring-[#16a34a]/20"
                   >
                     {SORT_OPTIONS.map((o) => (
                       <option key={o.value} value={o.value}>
@@ -189,7 +189,7 @@ export default function CollectionsPage() {
                           "whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all",
                           statusFilter === value
                             ? "bg-[#16a34a] text-white shadow-sm shadow-green-700/20"
-                            : "bg-white/70 text-muted-foreground ring-1 ring-border hover:bg-white hover:text-[#071a0e]"
+                            : "bg-white text-muted-foreground ring-1 ring-border hover:bg-[#faf7f2] hover:text-[#071a0e]"
                         )}
                       >
                         {label}
@@ -219,7 +219,7 @@ export default function CollectionsPage() {
             </p>
 
             {/* No-match state or card grid */}
-            <AnimatePresence mode="wait">
+            <AnimatePresence>
               {sorted.length === 0 ? (
                 <motion.div
                   key="no-match"
@@ -228,7 +228,7 @@ export default function CollectionsPage() {
                   exit={{ opacity: 0 }}
                 >
                   <EmptyState
-                    icon={<Search className="size-10 text-muted-foreground/40" />}
+                    icon={<Search className="size-6" />}
                     title="No collections match your filters."
                     description="Try a different search term or status filter."
                     action={
@@ -246,15 +246,8 @@ export default function CollectionsPage() {
                   exit={{ opacity: 0 }}
                   className="grid gap-5 sm:grid-cols-2"
                 >
-                  {sorted.map((c, i) => (
-                    <motion.div
-                      key={c._id}
-                      initial={{ opacity: 0, y: 16 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.04 }}
-                    >
-                      <CollectionCard collection={c} />
-                    </motion.div>
+                  {sorted.map((c) => (
+                    <CollectionCard key={c._id} collection={c} />
                   ))}
                 </motion.div>
               )}
