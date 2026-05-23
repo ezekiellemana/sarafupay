@@ -11,22 +11,22 @@ type Accent = "gold" | "green" | "blue" | "amber";
 
 const ACCENT: Record<Accent, { card: string; strip: string; icon: string }> = {
   gold: {
-    card: "border-amber-100/70 bg-gradient-to-br from-amber-50/80 to-white/95",
+    card: "border-amber-200 bg-amber-50",
     strip: "bg-amber-400",
     icon: "bg-amber-400/15 text-amber-600 ring-1 ring-amber-400/20",
   },
   green: {
-    card: "border-emerald-100/70 bg-gradient-to-br from-emerald-50/70 to-white/95",
+    card: "border-emerald-200 bg-emerald-50",
     strip: "bg-emerald-500",
     icon: "bg-emerald-500/12 text-emerald-600 ring-1 ring-emerald-500/15",
   },
   blue: {
-    card: "border-blue-100/70 bg-gradient-to-br from-blue-50/60 to-white/95",
+    card: "border-blue-200 bg-blue-50",
     strip: "bg-blue-500",
     icon: "bg-blue-500/12 text-blue-600 ring-1 ring-blue-500/15",
   },
   amber: {
-    card: "border-orange-100/70 bg-gradient-to-br from-orange-50/60 to-white/95",
+    card: "border-orange-200 bg-orange-50",
     strip: "bg-[#C4A237]",
     icon: "bg-[#C4A237]/15 text-[#C4A237] ring-1 ring-[#C4A237]/20",
   },
@@ -57,7 +57,7 @@ function HeroTile({
       whileHover={{ y: -3, scale: 1.01 }}
       transition={{ duration: 0.3, delay }}
       className={cn(
-        "relative overflow-hidden rounded-2xl border shadow-xl shadow-slate-900/5 backdrop-blur-xl",
+        "relative overflow-hidden rounded-2xl border shadow-sm shadow-[#0a1f12]/4",
         s.card,
       )}
     >
@@ -65,7 +65,7 @@ function HeroTile({
       <div className="flex items-start justify-between gap-3 px-6 pb-5 pt-5">
         <div className="min-w-0 flex-1">
           <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">{label}</p>
-          <p className="mt-2 text-[2rem] font-extrabold leading-none tracking-tight text-[#0B1F3A] xl:text-[2.25rem]">
+          <p className="mt-2 text-[2rem] font-extrabold leading-none tracking-tight text-[#071a0e] xl:text-[2.25rem]">
             <AnimatedNumber value={value} format={formatValue} />
           </p>
           <p className="mt-2 text-xs font-medium text-slate-500">{subStat}</p>

@@ -261,7 +261,7 @@ function StatusBarsGroup({
               <div className="mb-1.5 flex items-center justify-between gap-2">
                 <span className="text-xs font-medium capitalize text-slate-600">{status}</span>
                 <div className="flex shrink-0 items-center gap-2">
-                  <span className="text-xs font-bold text-[#0B1F3A]">{count.toLocaleString()}</span>
+                  <span className="text-xs font-bold text-[#071a0e]">{count.toLocaleString()}</span>
                   <span className="w-7 text-right text-[10px] text-slate-400">{pct}%</span>
                 </div>
               </div>
@@ -287,15 +287,15 @@ function AnalyticsPanel({ data }: { data: AdminDashboardData }) {
   const chartTotal = data.monthlyChart.reduce((s, m) => s + m.total, 0);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-100/60 bg-white/90 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
+    <div className="overflow-hidden rounded-2xl border border-[#e5e0d6] bg-white shadow-sm shadow-[#0a1f12]/4">
 
       {/* Panel header */}
-      <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+      <div className="flex items-center justify-between border-b border-[#e5e0d6] px-6 py-4">
         <div className="flex items-center gap-2.5">
           <span className="size-2 animate-pulse rounded-full bg-emerald-400" />
           <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600">Live</span>
           <span className="mx-1 text-slate-200">·</span>
-          <span className="text-sm font-bold text-[#0B1F3A]">Analytics Overview</span>
+          <span className="text-sm font-bold text-[#071a0e]">Analytics Overview</span>
         </div>
         {chartTotal > 0 && (
           <p className="hidden text-xs text-slate-400 sm:block">
@@ -309,7 +309,7 @@ function AnalyticsPanel({ data }: { data: AdminDashboardData }) {
       <div className="grid lg:grid-cols-[1fr_268px]">
 
         {/* Left — Monthly Revenue Chart */}
-        <div className="border-b border-slate-100 p-5 lg:border-b-0 lg:border-r lg:p-6">
+        <div className="border-b border-[#e5e0d6] p-5 lg:border-b-0 lg:border-r lg:p-6">
           <p className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
             Monthly Revenue — Completed Payments (last 12 months)
           </p>
@@ -357,8 +357,7 @@ function AnalyticsPanel({ data }: { data: AdminDashboardData }) {
                   <Tooltip
                     contentStyle={{
                       borderRadius: "0.875rem",
-                      border: "1px solid #e2e8f0",
-                      backdropFilter: "blur(12px)",
+                      border: "1px solid #e5e0d6",
                       fontSize: 12,
                     }}
                     formatter={(value) => [formatMoney(Number(value)), "Revenue"]}
@@ -395,7 +394,7 @@ function AnalyticsPanel({ data }: { data: AdminDashboardData }) {
             total={data.totalPayments}
             mounted={mounted}
           />
-          <div className="border-t border-slate-100" />
+          <div className="border-t border-[#e5e0d6]" />
           <StatusBarsGroup
             title="Collections"
             subtitle={`${data.totalCollections.toLocaleString()} total`}
@@ -434,9 +433,9 @@ function TopCollections({
   const barColor = ["#C4A237", "#19A254", "#19A254", "#94a3b8", "#94a3b8"];
 
   return (
-    <Card className="border-slate-100/60 bg-white/90 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
+    <Card className="border-[#e5e0d6] bg-white shadow-sm shadow-[#0a1f12]/4">
       <CardHeader className="flex-row items-center justify-between pb-4">
-        <CardTitle className="flex items-center gap-2 text-sm font-bold text-[#0B1F3A]">
+        <CardTitle className="flex items-center gap-2 text-sm font-bold text-[#071a0e]">
           <Trophy className="size-4 text-[#C4A237]" />
           Top Collections by Revenue
         </CardTitle>
@@ -471,7 +470,7 @@ function TopCollections({
                     >
                       {i + 1}
                     </span>
-                    <p className="min-w-0 flex-1 truncate text-[13px] font-semibold text-[#0B1F3A]">
+                    <p className="min-w-0 flex-1 truncate text-[13px] font-semibold text-[#071a0e]">
                       {col.title}
                     </p>
                     <div className="shrink-0 text-right">
@@ -509,9 +508,9 @@ function TopCollections({
 
 function LatestPaymentsFeed({ payments }: { payments: Payment[] }) {
   return (
-    <Card className="border-slate-100/60 bg-white/90 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
+    <Card className="border-[#e5e0d6] bg-white shadow-sm shadow-[#0a1f12]/4">
       <CardHeader className="flex-row items-center justify-between pb-4">
-        <CardTitle className="flex items-center gap-2 text-sm font-bold text-[#0B1F3A]">
+        <CardTitle className="flex items-center gap-2 text-sm font-bold text-[#071a0e]">
           <CreditCard className="size-4 text-emerald-500" />
           Latest Payments
         </CardTitle>
@@ -545,7 +544,7 @@ function LatestPaymentsFeed({ payments }: { payments: Payment[] }) {
                     {initial}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-semibold text-[#0B1F3A]">{name}</p>
+                    <p className="truncate text-[13px] font-semibold text-[#071a0e]">{name}</p>
                     <p className="truncate text-[11px] text-slate-400">{projectTitle(p)}</p>
                   </div>
                   <div className="shrink-0 text-right">
@@ -582,11 +581,11 @@ function ActivityPanel({
   loading: boolean;
 }) {
   return (
-    <Card className="border-slate-100/60 bg-white/90 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
+    <Card className="border-[#e5e0d6] bg-white shadow-sm shadow-[#0a1f12]/4">
       <CardHeader className="flex-row items-center justify-between pb-4">
         <div className="flex items-center gap-2.5">
           <span className="size-2 animate-pulse rounded-full bg-teal-400" />
-          <CardTitle className="text-sm font-bold text-[#0B1F3A]">Live Activity</CardTitle>
+          <CardTitle className="text-sm font-bold text-[#071a0e]">Live Activity</CardTitle>
         </div>
         <Link href="/admin/activity">
           <Button
@@ -623,7 +622,7 @@ function ActivityPanel({
                     {meta.icon}
                   </span>
                   <div className="min-w-0">
-                    <p className="text-[13px] font-medium leading-snug text-[#0B1F3A]">
+                    <p className="text-[13px] font-medium leading-snug text-[#071a0e]">
                       {event.description}
                     </p>
                     <p className="mt-0.5 text-[10px] text-slate-400">
@@ -668,7 +667,7 @@ export default function AdminPage() {
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#19A254]">
               Platform Admin
             </p>
-            <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#0B1F3A] sm:text-3xl">
+            <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#071a0e] sm:text-3xl">
               Command Centre
             </h1>
             <p className="mt-1.5 text-sm text-muted-foreground">
@@ -748,11 +747,11 @@ export default function AdminPage() {
 
             {/* G: Quick Actions */}
             <section>
-              <h2 className="mb-4 text-base font-bold text-[#0B1F3A]">Quick Actions</h2>
+              <h2 className="mb-4 text-base font-bold text-[#071a0e]">Quick Actions</h2>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 {QUICK_ACTIONS.map(({ href, label, desc, icon, accent }) => (
                   <Link key={href} href={href}>
-                    <div className="flex h-full cursor-pointer flex-col gap-3 rounded-2xl border border-slate-100/60 bg-white/85 p-4 shadow-lg shadow-slate-900/5 backdrop-blur-xl transition-all duration-200 hover:-translate-y-1 hover:shadow-xl">
+                    <div className="flex h-full cursor-pointer flex-col gap-3 rounded-2xl border border-[#e5e0d6] bg-white p-4 shadow-sm shadow-[#0a1f12]/4 transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
                       <span
                         className={cn(
                           "flex size-9 items-center justify-center rounded-xl",
@@ -762,7 +761,7 @@ export default function AdminPage() {
                         {icon}
                       </span>
                       <div>
-                        <p className="text-sm font-semibold text-[#0B1F3A]">{label}</p>
+                        <p className="text-sm font-semibold text-[#071a0e]">{label}</p>
                         <p className="mt-0.5 text-[11px] text-slate-500">{desc}</p>
                       </div>
                     </div>
@@ -770,14 +769,14 @@ export default function AdminPage() {
                 ))}
                 {/* Export CSV — action card */}
                 <div
-                  className="flex h-full cursor-pointer flex-col gap-3 rounded-2xl border border-dashed border-slate-200 bg-white/60 p-4 shadow-lg shadow-slate-900/5 backdrop-blur-xl transition-all duration-200 hover:-translate-y-1 hover:border-slate-300 hover:shadow-xl"
+                  className="flex h-full cursor-pointer flex-col gap-3 rounded-2xl border border-dashed border-[#e5e0d6] bg-white p-4 shadow-sm shadow-[#0a1f12]/4 transition-all duration-200 hover:-translate-y-1 hover:border-[#c9c3b9] hover:shadow-md"
                   onClick={downloadCsv}
                 >
                   <span className="flex size-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
                     <Download className="size-4.5" />
                   </span>
                   <div>
-                    <p className="text-sm font-semibold text-[#0B1F3A]">Export CSV</p>
+                    <p className="text-sm font-semibold text-[#071a0e]">Export CSV</p>
                     <p className="mt-0.5 text-[11px] text-slate-500">Download all payment records</p>
                   </div>
                 </div>
@@ -786,7 +785,7 @@ export default function AdminPage() {
 
             {/* System Health */}
             <section id="health">
-              <h2 className="mb-4 text-base font-bold text-[#0B1F3A]">System Health</h2>
+              <h2 className="mb-4 text-base font-bold text-[#071a0e]">System Health</h2>
               <SystemHealthCard />
             </section>
           </>

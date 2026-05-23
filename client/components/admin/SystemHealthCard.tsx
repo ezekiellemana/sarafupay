@@ -33,7 +33,7 @@ function StatusRow({ label, value, ok }: { label: string; value: string; ok?: bo
           "flex items-center gap-1.5 text-sm font-medium",
           ok === true && "text-emerald-600",
           ok === false && "text-red-500",
-          ok === undefined && "text-[#0B1F3A]"
+          ok === undefined && "text-[#071a0e]"
         )}
       >
         {ok !== undefined && (
@@ -80,7 +80,7 @@ export function SystemHealthCard() {
   const isOk = !error && health?.status === "ok";
 
   return (
-    <Card className="border-slate-100/60 bg-white/80 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
+    <Card className="border-[#e5e0d6] bg-white shadow-sm shadow-[#0a1f12]/4">
       <CardHeader className="flex-row items-center justify-between pb-4">
         <div className="flex items-center gap-3">
           <span
@@ -91,14 +91,14 @@ export function SystemHealthCard() {
               !loading && !isOk && "bg-red-500"
             )}
           />
-          <CardTitle className="text-[#0B1F3A]">System Health</CardTitle>
+          <CardTitle className="text-[#071a0e]">System Health</CardTitle>
         </div>
         <Button
           variant="ghost"
           size="sm"
           onClick={handleRefresh}
           disabled={loading}
-          className="gap-1.5 text-muted-foreground hover:text-[#0B1F3A]"
+          className="gap-1.5 text-muted-foreground hover:text-[#071a0e]"
         >
           <RefreshCw className={cn("size-4", loading && "animate-spin")} />
           Refresh
