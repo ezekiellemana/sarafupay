@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { collectionsApi } from "@/lib/collections";
 import { getApiErrorMessage } from "@/lib/api";
 import type { Collection, CollectionSummary, Payment } from "@/types";
@@ -27,21 +27,27 @@ export const useCollections = () => {
 export const useCollectionSummary = (id: string) => {
   const [summary, setSummary] = useState<CollectionSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [reloading, setReloading] = useState(false);
   const [error, setError] = useState("");
+  const loadedIdRef = useRef<string | null>(null);
 
   const load = () => {
     if (!id) return;
-    setLoading(true);
+    if (loadedIdRef.current === id) {
+      setReloading(true);
+    } else {
+      setLoading(true);
+    }
     collectionsApi.getSummary(id)
-      .then((res) => { setSummary(res.data); setError(""); })
+      .then((res) => { setSummary(res.data); setError(""); loadedIdRef.current = id; })
       .catch((err: unknown) => setError(getApiErrorMessage(err, "Unable to load summary.")))
-      .finally(() => setLoading(false));
+      .finally(() => { setLoading(false); setReloading(false); });
   };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/set-state-in-effect
   useEffect(() => { load(); }, [id]);
 
-  return { summary, loading, error, reload: load };
+  return { summary, loading, reloading, error, reload: load };
 };
 
 export const useCollectionPayments = (id: string) => {

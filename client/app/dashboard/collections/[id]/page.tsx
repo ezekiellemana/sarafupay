@@ -96,7 +96,7 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
           </Link>
         </div>
 
-        {loading && <LoadingState variant="detail" />}
+        {loading && !summary && <LoadingState variant="detail" />}
         {error && <ErrorState message={error} />}
 
         {summary && (
@@ -146,7 +146,7 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-9 shrink-0 whitespace-nowrap rounded-2xl gap-1.5 px-4 text-amber-600 hover:bg-amber-50"
+                      className="h-9 min-w-30 shrink-0 whitespace-nowrap rounded-2xl gap-1.5 px-4 text-amber-600 hover:bg-amber-50"
                       onClick={handlePause}
                       disabled={updating}
                     >
@@ -158,7 +158,7 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-9 shrink-0 whitespace-nowrap rounded-2xl gap-1.5 px-4 text-[#16a34a] hover:bg-green-50"
+                      className="h-9 min-w-32 shrink-0 whitespace-nowrap rounded-2xl gap-1.5 px-4 text-[#16a34a] hover:bg-green-50"
                       onClick={handleReactivate}
                       disabled={updating}
                     >
@@ -170,7 +170,7 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
                     <Dialog>
                       <DialogTrigger
                         disabled={archiving}
-                        className="inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-2xl border border-input bg-background px-4 text-sm font-medium text-destructive shadow-xs hover:bg-destructive/5 disabled:pointer-events-none disabled:opacity-50"
+                        className="inline-flex h-9 min-w-28 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-2xl border border-input bg-background px-4 text-sm font-medium text-destructive shadow-xs hover:bg-destructive/5 disabled:pointer-events-none disabled:opacity-50"
                       >
                         <Power className="size-3.5" /> {archiving ? "Closing…" : "Close"}
                       </DialogTrigger>
