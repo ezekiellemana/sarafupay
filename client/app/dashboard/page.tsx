@@ -25,6 +25,7 @@ import { AnimatedProgressBar } from "@/components/shared/AnimatedProgressBar";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
+import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
 import { COLLECTION_TYPE_EMOJIS } from "@/lib/collections";
 import { useAuth } from "@/hooks/useAuth";
 import { useDashboard } from "@/hooks/useDashboard";
@@ -113,6 +114,7 @@ export default function DashboardPage() {
   const hasMoreCollections = collections.length > displayCollections.length;
 
   const isLoading = walletLoading || collectionsLoading;
+  const shouldShowChecklist = !collectionsLoading && (collections.length === 0 || totalAcrossCollections === 0);
 
   return (
     <DashboardShell>
@@ -256,6 +258,16 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
+
+            {/* ── Onboarding checklist ─────────────────────────────────────── */}
+            {shouldShowChecklist && (
+              <OnboardingChecklist
+                hasCollections={collections.length > 0}
+                hasActiveLink={collections.some((c) => c.status === "active" && !!c.publicPaymentLink)}
+                hasContributors={totalContributors > 0}
+                hasPayments={totalAcrossCollections > 0}
+              />
+            )}
 
             {/* ── Connected summary panel ─────────────────────────────────── */}
             <div className="overflow-hidden rounded-2xl border border-[#e5e0d6] shadow-sm shadow-[#0a1f12]/4">
@@ -502,6 +514,38 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
+
+            {/* ── Payment reminder (project member, current month unpaid) ──── */}
+            {data && data.currentMonthPaymentStatus !== "completed" && (
+              <div className="rounded-2xl border border-amber-200 bg-[#fffbf0] px-5 py-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-amber-900">
+                      {data.currentMonthPaymentStatus === "pending"
+                        ? "Payment in progress"
+                        : "Contribute this month"}
+                    </p>
+                    <p className="mt-0.5 text-xs text-amber-700/70">
+                      {data.currentMonthPaymentStatus === "pending"
+                        ? "Your payment is being processed — it should complete shortly."
+                        : data.project.monthlyContributionAmount > 0
+                        ? `${formatMoney(data.project.monthlyContributionAmount, data.project.currency)} · Due ${formatDate(data.nextDueDate)}`
+                        : `Due ${formatDate(data.nextDueDate)}`}
+                    </p>
+                  </div>
+                  {data.currentMonthPaymentStatus !== "pending" && (
+                    <Link href="/payment/start" className="shrink-0">
+                      <Button
+                        size="sm"
+                        className="h-9 rounded-2xl bg-amber-500 px-5 text-sm font-semibold text-white hover:bg-amber-600"
+                      >
+                        Pay Now
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* ── Recent payments feed ────────────────────────────────────── */}
             {data && data.recentPayments.length > 0 && (

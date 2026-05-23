@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Copy, Eye, Pencil } from "lucide-react";
+import { Copy, ExternalLink, Eye, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -100,6 +100,16 @@ export function CollectionCard({ collection }: { collection: Collection }) {
             </Button>
 
             {/* Edit + View — right */}
+            {collection.publicPaymentLink && (
+              <a
+                href={collection.publicPaymentLink}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-9 items-center gap-1.5 rounded-xl px-3 text-xs font-medium text-muted-foreground hover:bg-blue-50 hover:text-blue-600"
+              >
+                <ExternalLink className="size-3.5" /> Open
+              </a>
+            )}
             <div className="ml-auto flex items-center gap-2">
               <Link href={`/dashboard/collections/${collection._id}/edit`}>
                 <Button
