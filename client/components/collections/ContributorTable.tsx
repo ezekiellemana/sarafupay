@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronUp, Search, SlidersHorizontal } from "lucide-react";
@@ -40,7 +40,7 @@ export function ContributorTable({ payments, emptyAction }: { payments: Payment[
     setAmountMax("");
   };
 
-  const filtered = payments.filter((p) => {
+  const filtered = useMemo(() => payments.filter((p) => {
     const q = search.toLowerCase();
     const matchesSearch =
       !q ||
@@ -60,7 +60,7 @@ export function ContributorTable({ payments, emptyAction }: { payments: Payment[
     const matchesAmountMax = !amountMax || p.amount <= Number(amountMax);
 
     return matchesSearch && matchesStatus && matchesDateFrom && matchesDateTo && matchesAmountMin && matchesAmountMax;
-  });
+  }), [payments, search, statusFilter, dateFrom, dateTo, amountMin, amountMax]);
 
   if (!payments.length) {
     return (
@@ -80,7 +80,7 @@ export function ContributorTable({ payments, emptyAction }: { payments: Payment[
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search by name, phone, email or reference…"
-            className="pl-9 rounded-2xl border-white/70 bg-white/80 backdrop-blur-sm"
+            className="pl-9 rounded-2xl border-[#e5e0d6] bg-white"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -98,16 +98,16 @@ export function ContributorTable({ payments, emptyAction }: { payments: Payment[
       </div>
 
       {/* Status pills */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex overflow-x-auto gap-2 pb-0.5">
         {STATUS_OPTIONS.map(({ value, label }) => (
           <button
             key={value}
             type="button"
             onClick={() => setStatusFilter(value)}
-            className={`rounded-xl px-3 py-1.5 text-xs font-medium transition-colors ${
+            className={`whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-medium transition-colors ${
               statusFilter === value
                 ? "bg-[#16a34a] text-white"
-                : "border border-white/70 bg-white/60 text-muted-foreground hover:border-[#16a34a]/50 hover:text-[#071a0e]"
+                : "border border-[#e5e0d6] bg-white text-muted-foreground hover:border-[#16a34a]/50 hover:text-[#071a0e]"
             }`}
           >
             {label}
@@ -125,7 +125,7 @@ export function ContributorTable({ payments, emptyAction }: { payments: Payment[
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden"
           >
-            <div className="rounded-2xl border border-white/70 bg-white/70 p-4 backdrop-blur-sm">
+            <div className="rounded-2xl border border-[#e5e0d6] bg-white p-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="flex flex-col gap-1.5">
                   <Label className="text-xs">Date from</Label>
@@ -169,23 +169,20 @@ export function ContributorTable({ payments, emptyAction }: { payments: Payment[
       </p>
 
       {/* Desktop table */}
-      <div className="hidden overflow-hidden rounded-3xl border border-white/70 bg-white/80 shadow-xl shadow-slate-900/5 backdrop-blur-xl md:block">
+      <div className="hidden overflow-hidden rounded-2xl border border-[#e5e0d6] bg-white shadow-sm shadow-[#0a1f12]/4 md:block">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-white/60 bg-slate-50/70">
+            <tr className="border-b border-[#e5e0d6] bg-[#faf7f2]">
               {["Payer", "Phone", "Amount", "Status", "Message", "Date"].map((h) => (
                 <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {filtered.map((p, i) => (
-              <motion.tr
+            {filtered.map((p) => (
+              <tr
                 key={p._id}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.03 }}
-                className="border-b border-slate-100/60 hover:bg-green-50/30 transition-colors"
+                className="border-b border-[#e5e0d6] hover:bg-green-50/50 transition-colors"
               >
                 <td className="px-4 py-3">
                   <p className="font-medium text-[#071a0e]">{p.customerName ?? "—"}</p>
@@ -196,7 +193,7 @@ export function ContributorTable({ payments, emptyAction }: { payments: Payment[
                 <td className="px-4 py-3"><PaymentStatusBadge status={p.status} /></td>
                 <td className="px-4 py-3 max-w-40 truncate text-muted-foreground">{p.payerMessage ?? "—"}</td>
                 <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(p.createdAt)}</td>
-              </motion.tr>
+              </tr>
             ))}
           </tbody>
         </table>
@@ -208,7 +205,7 @@ export function ContributorTable({ payments, emptyAction }: { payments: Payment[
       {/* Mobile cards */}
       <div className="flex flex-col gap-3 md:hidden">
         {filtered.map((p) => (
-          <div key={p._id} className="rounded-3xl border border-white/70 bg-white/85 p-4 shadow-lg shadow-slate-900/5 backdrop-blur-xl">
+          <div key={p._id} className="rounded-2xl border border-[#e5e0d6] bg-white p-4 shadow-sm shadow-[#0a1f12]/4">
             <div className="flex items-start justify-between gap-2">
               <div>
                 <p className="font-semibold text-[#071a0e]">{p.customerName ?? "Anonymous"}</p>

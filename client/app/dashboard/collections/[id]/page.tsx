@@ -221,7 +221,7 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
             )}
 
             {summary.monthlyChart.length > 0 && (
-              <Card className="border-white/70 bg-white/80 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
+              <Card className="border-[#e5e0d6] bg-white shadow-sm shadow-[#0a1f12]/4">
                 <CardHeader>
                   <CardTitle className="text-[#071a0e]">Collections Over Time</CardTitle>
                   <p className="text-xs text-muted-foreground">
@@ -259,7 +259,7 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
                           width={48}
                         />
                         <Tooltip
-                          contentStyle={{ borderRadius: "1rem", border: "1px solid #e2e8f0", backdropFilter: "blur(12px)" }}
+                          contentStyle={{ borderRadius: "1rem", border: "1px solid #e5e0d6" }}
                           formatter={(value: unknown) => [
                             formatMoney(Number(value), summary.collection.currency),
                             "Collected"
@@ -281,15 +281,10 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
 
             {/* ── Zone E: Contributors ─────────────────────────────────────── */}
             <section className="flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-[#071a0e]">
-                  Contributors{" "}
-                  <span className="ml-1 text-base font-normal text-muted-foreground">({payments.length})</span>
-                </h2>
-                <Button size="sm" variant="outline" className="rounded-2xl" onClick={handleExportCsv}>
-                  <Download className="mr-1.5 size-4" /> Export List
-                </Button>
-              </div>
+              <h2 className="text-xl font-bold text-[#071a0e]">
+                Contributors{" "}
+                <span className="ml-1 text-base font-normal text-muted-foreground">({payments.length})</span>
+              </h2>
               <ContributorTable
                 payments={payments}
                 emptyAction={
