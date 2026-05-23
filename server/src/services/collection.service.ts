@@ -144,7 +144,9 @@ export const updateCollection = async (id: string, ownerId: Types.ObjectId, upda
   return collection.save();
 };
 
-export const deleteCollection = async (id: string, ownerId: Types.ObjectId) => {
+// Soft-close: sets status to "closed". No records are deleted.
+// Permanent delete is a separate route if/when implemented.
+export const closeCollection = async (id: string, ownerId: Types.ObjectId) => {
   const collection = await Project.findOne({ _id: id, ownerId });
   if (!collection) throw new AppError("Collection not found.", 404, "COLLECTION_NOT_FOUND");
   collection.status = "closed";

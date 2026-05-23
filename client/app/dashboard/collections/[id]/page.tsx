@@ -27,7 +27,7 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
   const { id } = use(params);
   const { summary, loading, error, reload } = useCollectionSummary(id);
   const { payments } = useCollectionPayments(id);
-  const [archiving, setArchiving] = useState(false);
+  const [closing, setClosing] = useState(false);
   const [updating, setUpdating] = useState(false);
 
   const handleExportCsv = () => {
@@ -61,15 +61,15 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
     }
   };
 
-  const handleArchive = async () => {
-    setArchiving(true);
+  const handleClose = async () => {
+    setClosing(true);
     try {
-      await collectionsApi.archive(id);
+      await collectionsApi.close(id);
       toast.success("Collection closed.");
       window.location.href = "/dashboard/collections";
     } catch (err: unknown) {
       toast.error(getApiErrorMessage(err, "Failed to close collection."));
-      setArchiving(false);
+      setClosing(false);
     }
   };
 
@@ -169,10 +169,10 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
                   {summary.collection.status !== "closed" && (
                     <Dialog>
                       <DialogTrigger
-                        disabled={archiving}
+                        disabled={closing}
                         className="inline-flex h-9 min-w-28 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-2xl border border-input bg-background px-4 text-sm font-medium text-destructive shadow-xs hover:bg-destructive/5 disabled:pointer-events-none disabled:opacity-50"
                       >
-                        <Power className="size-3.5" /> {archiving ? "Closing…" : "Close"}
+                        <Power className="size-3.5" /> {closing ? "Closing…" : "Close"}
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
@@ -183,8 +183,8 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
                         </DialogHeader>
                         <DialogFooter>
                           <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
-                          <Button variant="destructive" onClick={handleArchive} disabled={archiving}>
-                            {archiving ? "Closing…" : "Yes, close it"}
+                          <Button variant="destructive" onClick={handleClose} disabled={closing}>
+                            {closing ? "Closing…" : "Yes, close it"}
                           </Button>
                         </DialogFooter>
                       </DialogContent>

@@ -3,7 +3,7 @@ import { asyncHandler } from "../utils/asyncHandler";
 import { AppError } from "../utils/AppError";
 import {
   createCollection,
-  deleteCollection,
+  closeCollection,
   getCollectionByIdForOwner,
   getCollectionPayments,
   getCollectionSummary,
@@ -63,8 +63,8 @@ export const updateCollectionHandler = asyncHandler(async (req, res) => {
   res.json({ success: true, message: "Collection updated.", data: { collection } });
 });
 
-export const deleteCollectionHandler = asyncHandler(async (req, res) => {
-  await deleteCollection(req.params.id as string, req.user!._id);
+export const closeCollectionHandler = asyncHandler(async (req, res) => {
+  await closeCollection(req.params.id as string, req.user!._id);
   res.json({ success: true, message: "Collection closed.", data: {} });
 });
 

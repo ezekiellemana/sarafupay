@@ -43,7 +43,7 @@ export const collectionsApi = {
   update: (id: string, data: Partial<CreateCollectionPayload & { status: string }>) =>
     api<{ collection: Collection }>(`/api/collections/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
 
-  archive: (id: string) =>
+  close: (id: string) =>
     api(`/api/collections/${id}`, { method: "DELETE" }),
 
   getPayments: (id: string) =>
