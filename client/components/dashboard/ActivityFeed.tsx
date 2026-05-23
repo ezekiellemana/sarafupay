@@ -56,6 +56,10 @@ export function ActivityFeed({ payments }: { payments: Payment[] }) {
       <div className="divide-y divide-slate-100">
         {payments.slice(0, 5).map((p) => {
           const isCompleted = p.status === "completed";
+          const collectionTitle =
+            p.projectId && typeof p.projectId === "object" && "title" in p.projectId
+              ? (p.projectId as { title: string }).title
+              : null;
           return (
             <div key={p._id} className="flex items-center gap-3 px-5 py-3.5">
               <span className={cn(
@@ -71,7 +75,9 @@ export function ActivityFeed({ payments }: { payments: Payment[] }) {
                 <p className="truncate text-sm font-semibold text-[#071a0e]">
                   {formatMonthPaidFor(p.monthPaidFor)} contribution
                 </p>
-                <p className="text-xs text-muted-foreground">{timeAgo(p.createdAt)}</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {collectionTitle ? `${collectionTitle} · ` : ""}{timeAgo(p.createdAt)}
+                </p>
               </div>
 
               <div className="flex flex-col items-end gap-1">

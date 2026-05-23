@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
+  Calendar,
   CheckCircle2,
   Clock3,
   CreditCard,
@@ -176,9 +177,9 @@ export default function DashboardPage() {
               <div className="pointer-events-none absolute -right-20 -top-20 size-64 rounded-full bg-[#d4a437]/10 blur-3xl" />
               <div className="pointer-events-none absolute -bottom-16 left-1/4 size-52 rounded-full bg-[#1f8b5a]/10 blur-3xl" />
 
-              <div className="relative grid grid-cols-3 divide-x divide-white/[0.07]">
+              <div className="relative grid grid-cols-2 sm:grid-cols-4">
                 {/* KPI 1 — Total raised */}
-                <div className="flex flex-col gap-2 pr-4 sm:pr-6">
+                <div className="flex flex-col gap-2 pb-4 pr-3 sm:pb-0 sm:pr-6">
                   <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-white/50">
                     <Wallet className="size-3" /> Total raised
                   </p>
@@ -189,7 +190,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* KPI 2 — Active collections */}
-                <div className="flex flex-col gap-2 px-4 sm:px-6">
+                <div className="flex flex-col gap-2 pb-4 pl-3 border-l border-white/[0.07] sm:pb-0 sm:px-6">
                   <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-white/50">
                     <Folders className="size-3" /> Active
                   </p>
@@ -205,7 +206,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* KPI 3 — Total contributors */}
-                <div className="flex flex-col gap-2 pl-4 sm:pl-6">
+                <div className="flex flex-col gap-2 pt-4 pr-3 border-t border-white/[0.07] sm:pt-0 sm:border-t-0 sm:border-l sm:px-6">
                   <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-white/50">
                     <Users className="size-3" /> Contributors
                   </p>
@@ -213,6 +214,41 @@ export default function DashboardPage() {
                     <AnimatedNumber value={totalContributors} format={(v) => v.toLocaleString()} />
                   </p>
                   <p className="text-[10px] text-white/35">total payments received</p>
+                </div>
+
+                {/* KPI 4 — This month status */}
+                <div className="flex flex-col gap-2 pt-4 pl-3 border-t border-l border-white/[0.07] sm:pt-0 sm:border-t-0 sm:pl-6">
+                  <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-white/50">
+                    <Calendar className="size-3" /> This month
+                  </p>
+                  {data ? (
+                    <span
+                      className={cn(
+                        "inline-flex w-fit items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold",
+                        data.currentMonthPaymentStatus === "completed"
+                          ? "bg-emerald-500/20 text-emerald-300"
+                          : data.currentMonthPaymentStatus === "pending"
+                          ? "bg-amber-500/20 text-amber-300"
+                          : "bg-red-500/20 text-red-300"
+                      )}
+                    >
+                      {data.currentMonthPaymentStatus === "completed" ? (
+                        <CheckCircle2 className="size-3" />
+                      ) : data.currentMonthPaymentStatus === "pending" ? (
+                        <Clock3 className="size-3" />
+                      ) : (
+                        <XCircle className="size-3" />
+                      )}
+                      {data.currentMonthPaymentStatus === "completed"
+                        ? "Paid"
+                        : data.currentMonthPaymentStatus === "pending"
+                        ? "Pending"
+                        : "Missed"}
+                    </span>
+                  ) : (
+                    <div className="h-5 w-16 animate-pulse rounded-full bg-white/10" />
+                  )}
+                  <p className="text-[10px] text-white/35">contribution status</p>
                 </div>
               </div>
             </div>
