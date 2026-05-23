@@ -13,10 +13,10 @@ export function MembersTable({ members, onView }: MembersTableProps) {
   return (
     <div>
       {/* Desktop table */}
-      <div className="hidden overflow-hidden rounded-3xl border border-white/70 bg-white/80 shadow-xl shadow-slate-900/5 backdrop-blur-xl md:block">
+      <div className="hidden overflow-hidden rounded-2xl border border-[#e5e0d6] bg-white shadow-sm shadow-[#0a1f12]/4 md:block">
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="bg-[#faf7f2]">
               <TableHead>Member</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Total paid</TableHead>
@@ -27,14 +27,14 @@ export function MembersTable({ members, onView }: MembersTableProps) {
           </TableHeader>
           <TableBody>
             {members.map((member) => (
-              <TableRow key={member._id} className="cursor-pointer" onClick={() => onView(member)}>
+              <TableRow key={member._id} className="cursor-pointer hover:bg-green-50/50" onClick={() => onView(member)}>
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-blue-500/10 text-sm font-bold text-blue-600">
                       {member.fullName.charAt(0).toUpperCase()}
                     </div>
                     <div className="min-w-0">
-                      <p className="truncate font-semibold text-[#0B1F3A]">{member.fullName}</p>
+                      <p className="truncate font-semibold text-[#071a0e]">{member.fullName}</p>
                       <p className="truncate text-xs text-slate-500">{member.email}</p>
                     </div>
                   </div>
@@ -44,7 +44,7 @@ export function MembersTable({ members, onView }: MembersTableProps) {
                     {member.isActive ? "Active" : "Inactive"}
                   </StatusBadge>
                 </TableCell>
-                <TableCell className="font-semibold text-[#0B1F3A]">
+                <TableCell className="font-semibold text-[#071a0e]">
                   {formatMoney(member.totalPaid ?? 0)}
                 </TableCell>
                 <TableCell>
@@ -76,7 +76,7 @@ export function MembersTable({ members, onView }: MembersTableProps) {
         {members.map((member) => (
           <div
             key={member._id}
-            className="cursor-pointer rounded-3xl border border-white/70 bg-white/80 p-4 shadow-xl shadow-slate-900/5 backdrop-blur-xl active:opacity-80"
+            className="cursor-pointer rounded-2xl border border-[#e5e0d6] bg-white p-4 shadow-sm shadow-[#0a1f12]/4 active:opacity-80"
             onClick={() => onView(member)}
           >
             <div className="flex items-start justify-between gap-3">
@@ -85,7 +85,7 @@ export function MembersTable({ members, onView }: MembersTableProps) {
                   {member.fullName.charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate font-semibold text-[#0B1F3A]">{member.fullName}</p>
+                  <p className="truncate font-semibold text-[#071a0e]">{member.fullName}</p>
                   <p className="truncate text-xs text-slate-500">{member.email}</p>
                 </div>
               </div>
@@ -96,7 +96,7 @@ export function MembersTable({ members, onView }: MembersTableProps) {
             <div className="mt-3 grid grid-cols-2 gap-3">
               <div>
                 <p className="text-xs font-medium text-slate-600">Total paid</p>
-                <p className="text-sm font-semibold text-[#0B1F3A]">{formatMoney(member.totalPaid ?? 0)}</p>
+                <p className="text-sm font-semibold text-[#071a0e]">{formatMoney(member.totalPaid ?? 0)}</p>
               </div>
               <div>
                 <p className="text-xs font-medium text-slate-600">Collections</p>

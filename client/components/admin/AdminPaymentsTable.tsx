@@ -25,10 +25,10 @@ export function AdminPaymentsTable({ payments, onView }: AdminPaymentsTableProps
   return (
     <div>
       {/* Desktop table — shown at lg+ due to 8 columns */}
-      <div className="hidden overflow-hidden rounded-3xl border border-white/70 bg-white/80 shadow-xl shadow-slate-900/5 backdrop-blur-xl lg:block">
+      <div className="hidden overflow-hidden rounded-2xl border border-[#e5e0d6] bg-white shadow-sm shadow-[#0a1f12]/4 lg:block">
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="bg-[#faf7f2]">
               <TableHead>Date</TableHead>
               <TableHead>Payer</TableHead>
               <TableHead>Collection</TableHead>
@@ -41,18 +41,18 @@ export function AdminPaymentsTable({ payments, onView }: AdminPaymentsTableProps
           </TableHeader>
           <TableBody>
             {payments.map((p) => (
-              <TableRow key={p._id} className="cursor-pointer" onClick={() => onView?.(p)}>
+              <TableRow key={p._id} className="cursor-pointer hover:bg-green-50/50" onClick={() => onView?.(p)}>
                 <TableCell className="text-xs text-slate-500">
                   {formatDate(p.paidAt ?? p.createdAt)}
                 </TableCell>
                 <TableCell>
-                  <p className="font-semibold text-[#0B1F3A]">{payerName(p)}</p>
+                  <p className="font-semibold text-[#071a0e]">{payerName(p)}</p>
                   {p.monthPaidFor && <p className="text-xs text-slate-500">{p.monthPaidFor}</p>}
                 </TableCell>
                 <TableCell className="max-w-36">
-                  <p className="truncate text-sm font-semibold text-[#0B1F3A]">{collectionTitle(p)}</p>
+                  <p className="truncate text-sm font-semibold text-[#071a0e]">{collectionTitle(p)}</p>
                 </TableCell>
-                <TableCell className="font-semibold text-[#0B1F3A]">
+                <TableCell className="font-semibold text-[#071a0e]">
                   {formatMoney(p.amount, p.currency)}
                 </TableCell>
                 <TableCell>
@@ -89,16 +89,16 @@ export function AdminPaymentsTable({ payments, onView }: AdminPaymentsTableProps
         {payments.map((p) => (
           <div
             key={p._id}
-            className={`rounded-3xl border border-white/70 bg-white/80 p-4 shadow-xl shadow-slate-900/5 backdrop-blur-xl ${onView ? "cursor-pointer active:opacity-80" : ""}`}
+            className={`rounded-2xl border border-[#e5e0d6] bg-white p-4 shadow-sm shadow-[#0a1f12]/4 ${onView ? "cursor-pointer active:opacity-80" : ""}`}
             onClick={() => onView?.(p)}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="font-semibold text-[#0B1F3A]">{payerName(p)}</p>
+                <p className="font-semibold text-[#071a0e]">{payerName(p)}</p>
                 <p className="truncate text-xs text-slate-500">{collectionTitle(p)}</p>
               </div>
               <div className="shrink-0 text-right">
-                <p className="font-bold text-[#0B1F3A]">{formatMoney(p.amount, p.currency)}</p>
+                <p className="font-bold text-[#071a0e]">{formatMoney(p.amount, p.currency)}</p>
                 <div className="mt-1">
                   <StatusBadge status={p.status}>{p.status}</StatusBadge>
                 </div>
@@ -107,11 +107,11 @@ export function AdminPaymentsTable({ payments, onView }: AdminPaymentsTableProps
             <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
               <div>
                 <p className="font-medium text-slate-600">Date</p>
-                <p className="font-medium text-[#0B1F3A]">{formatDate(p.paidAt ?? p.createdAt)}</p>
+                <p className="font-medium text-[#071a0e]">{formatDate(p.paidAt ?? p.createdAt)}</p>
               </div>
               <div>
                 <p className="font-medium text-slate-600">Method</p>
-                <p className="font-medium text-[#0B1F3A]">{p.paymentMethod ?? "—"}</p>
+                <p className="font-medium text-[#071a0e]">{p.paymentMethod ?? "—"}</p>
               </div>
             </div>
             {(p.snippeReference ?? p.externalReference) && (

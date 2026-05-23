@@ -28,10 +28,10 @@ export function CollectionsTable({ collections, onView }: CollectionsTableProps)
   return (
     <div>
       {/* Desktop table — shown at lg+ due to 8 columns */}
-      <div className="hidden overflow-hidden rounded-3xl border border-white/70 bg-white/80 shadow-xl shadow-slate-900/5 backdrop-blur-xl lg:block">
+      <div className="hidden overflow-hidden rounded-2xl border border-[#e5e0d6] bg-white shadow-sm shadow-[#0a1f12]/4 lg:block">
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="bg-[#faf7f2]">
               <TableHead>Collection</TableHead>
               <TableHead>Owner</TableHead>
               <TableHead>Status</TableHead>
@@ -44,10 +44,10 @@ export function CollectionsTable({ collections, onView }: CollectionsTableProps)
           </TableHeader>
           <TableBody>
             {collections.map((col) => (
-              <TableRow key={col._id} className="cursor-pointer" onClick={() => onView(col)}>
+              <TableRow key={col._id} className="cursor-pointer hover:bg-green-50/50" onClick={() => onView(col)}>
                 <TableCell>
                   <div className="min-w-0">
-                    <p className="truncate font-semibold text-[#0B1F3A]">{col.title}</p>
+                    <p className="truncate font-semibold text-[#071a0e]">{col.title}</p>
                     {col.slug && (
                       <p className="truncate text-xs text-slate-500">/{col.slug}</p>
                     )}
@@ -56,7 +56,7 @@ export function CollectionsTable({ collections, onView }: CollectionsTableProps)
                 <TableCell>
                   {col.owner ? (
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-[#0B1F3A]">{col.owner.fullName}</p>
+                      <p className="truncate text-sm font-semibold text-[#071a0e]">{col.owner.fullName}</p>
                       <p className="truncate text-xs text-slate-500">{col.owner.email}</p>
                     </div>
                   ) : (
@@ -69,7 +69,7 @@ export function CollectionsTable({ collections, onView }: CollectionsTableProps)
                 <TableCell className="text-xs text-slate-500">
                   {TYPE_LABELS[col.collectionType ?? ""] ?? col.collectionType ?? "—"}
                 </TableCell>
-                <TableCell className="font-semibold text-[#0B1F3A]">
+                <TableCell className="font-semibold text-[#071a0e]">
                   {formatMoney(col.totalCollected)}
                 </TableCell>
                 <TableCell>
@@ -101,12 +101,12 @@ export function CollectionsTable({ collections, onView }: CollectionsTableProps)
         {collections.map((col) => (
           <div
             key={col._id}
-            className="cursor-pointer rounded-3xl border border-white/70 bg-white/80 p-4 shadow-xl shadow-slate-900/5 backdrop-blur-xl active:opacity-80"
+            className="cursor-pointer rounded-2xl border border-[#e5e0d6] bg-white p-4 shadow-sm shadow-[#0a1f12]/4 active:opacity-80"
             onClick={() => onView(col)}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="truncate font-semibold text-[#0B1F3A]">{col.title}</p>
+                <p className="truncate font-semibold text-[#071a0e]">{col.title}</p>
                 {col.slug && <p className="truncate text-xs text-slate-500">/{col.slug}</p>}
                 {col.owner && (
                   <p className="mt-0.5 truncate text-xs text-slate-500">{col.owner.fullName}</p>
@@ -122,7 +122,7 @@ export function CollectionsTable({ collections, onView }: CollectionsTableProps)
             <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
               <div>
                 <p className="text-xs font-medium text-slate-600">Total collected</p>
-                <p className="font-semibold text-[#0B1F3A]">{formatMoney(col.totalCollected)}</p>
+                <p className="font-semibold text-[#071a0e]">{formatMoney(col.totalCollected)}</p>
               </div>
               <div>
                 <p className="text-xs font-medium text-slate-600">Contributors</p>
