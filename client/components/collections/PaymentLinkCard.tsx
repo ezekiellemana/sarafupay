@@ -57,6 +57,7 @@ export function PaymentLinkCard({ collection }: { collection: Collection }) {
   const link = collection.publicPaymentLink ?? "";
 
   const copyLink = () => {
+    if (!link) { toast.error("Payment link is not available for this collection."); return; }
     navigator.clipboard.writeText(link);
     setCopied(true);
     toast.success("Payment link copied!");
@@ -64,16 +65,17 @@ export function PaymentLinkCard({ collection }: { collection: Collection }) {
   };
 
   const shareWhatsApp = () => {
+    if (!link) { toast.error("Payment link is not available for this collection."); return; }
     const text = encodeURIComponent(`${collection.title}\n\nPay here: ${link}`);
     window.open(`https://wa.me/?text=${text}`, "_blank", "noopener,noreferrer");
   };
 
   return (
-    <div className="glass-gold rounded-3xl p-5">
+    <div className="rounded-2xl border border-amber-200 bg-[#fffbf0] p-5">
       <p className="text-xs font-semibold uppercase tracking-wider text-amber-800/70">Public Payment Link</p>
       <p className="mt-1 text-xs text-amber-700/60">Share this link with anyone who should contribute.</p>
 
-      <div className="mt-3 flex items-center gap-2 overflow-hidden rounded-2xl border border-amber-200/60 bg-white/70 px-3 py-2.5">
+      <div className="mt-3 flex items-center gap-2 overflow-hidden rounded-xl border border-amber-200 bg-white px-3 py-2.5">
         <ExternalLink className="size-3.5 shrink-0 text-amber-600" />
         <span className="flex-1 truncate text-sm font-medium text-[#071a0e]">{link}</span>
       </div>
@@ -103,7 +105,7 @@ export function PaymentLinkCard({ collection }: { collection: Collection }) {
         <Button
           size="sm"
           variant="outline"
-          className="h-10 rounded-2xl border-green-200/70 bg-green-50/60 text-green-800 hover:bg-green-100/80"
+          className="h-10 rounded-2xl border-green-200 bg-green-50 text-green-800 hover:bg-green-100"
           onClick={shareWhatsApp}
         >
           <WhatsAppIcon />
@@ -111,7 +113,7 @@ export function PaymentLinkCard({ collection }: { collection: Collection }) {
         </Button>
 
         <Dialog>
-          <DialogTrigger className="flex h-10 items-center justify-center gap-1.5 rounded-2xl border border-amber-200/60 bg-white/60 px-3 text-sm font-medium text-[#071a0e] hover:bg-white/80">
+          <DialogTrigger className="flex h-10 items-center justify-center gap-1.5 rounded-2xl border border-amber-200 bg-white px-3 text-sm font-medium text-[#071a0e] hover:bg-amber-50">
             <QrCode className="size-4" />
             QR Code
           </DialogTrigger>

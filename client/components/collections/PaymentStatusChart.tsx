@@ -31,7 +31,7 @@ export function PaymentStatusChart({ payments }: { payments: Payment[] }) {
   if (!total) return null;
 
   return (
-    <Card className="border-white/70 bg-white/80 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
+    <Card className="border-[#e5e0d6] bg-white shadow-sm shadow-[#0a1f12]/4">
       <CardHeader className="pb-2">
         <CardTitle className="text-base text-[#071a0e]">Payment Breakdown</CardTitle>
       </CardHeader>

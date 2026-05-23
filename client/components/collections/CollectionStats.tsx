@@ -14,12 +14,12 @@ export function CollectionStats({ summary }: { summary: CollectionSummary }) {
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="overflow-hidden rounded-3xl border border-white/70 bg-white/85 shadow-xl shadow-slate-900/5 backdrop-blur-xl"
+      className="overflow-hidden rounded-2xl border border-[#e5e0d6] bg-white shadow-sm shadow-[#0a1f12]/4"
     >
       {/* Headline: total collected */}
-      <div className="border-b border-slate-100 px-6 pb-5 pt-6">
+      <div className="border-b border-[#e5e0d6] px-6 pb-5 pt-6">
         <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Total Collected</p>
-        <p className="mt-1 text-4xl font-extrabold tracking-tight text-[#16a34a]">
+        <p className="mt-1 truncate text-3xl font-extrabold tracking-tight text-[#16a34a] sm:text-4xl">
           <AnimatedNumber value={totalCollected} format={(v) => formatMoney(v, collection.currency)} />
         </p>
         {collection.targetAmount ? (
@@ -32,7 +32,7 @@ export function CollectionStats({ summary }: { summary: CollectionSummary }) {
       </div>
 
       {/* Mini-stats row */}
-      <div className="grid grid-cols-2 divide-x divide-slate-100 border-b border-slate-100">
+      <div className="grid grid-cols-2 divide-x divide-[#e5e0d6] border-b border-[#e5e0d6]">
         <div className="px-5 py-4">
           <p className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
             <Users className="size-3.5" /> Contributors

@@ -29,7 +29,7 @@ export function TopContributors({ payments, currency }: { payments: Payment[]; c
   }, [payments]);
 
   return (
-    <Card className="border-white/70 bg-white/80 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
+    <Card className="border-[#e5e0d6] bg-white shadow-sm shadow-[#0a1f12]/4">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base text-[#071a0e]">
           <Trophy className="size-4 text-amber-500" /> Top Contributors
