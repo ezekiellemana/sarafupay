@@ -210,6 +210,14 @@ export const getCollectionSummary = async (collectionId: string, ownerId: Types.
   };
 };
 
+export const getOwnerRecentActivity = (ownerId: Types.ObjectId, limit = 10) =>
+  Payment.find({ ownerId })
+    .sort({ createdAt: -1 })
+    .limit(Math.min(limit, 20))
+    .populate("projectId", "title slug status")
+    .select("amount currency status customerName paymentMethod createdAt paidAt projectId")
+    .lean();
+
 export const refreshCollectionStats = async (projectId: Types.ObjectId) => {
   const [stats] = await Payment.aggregate([
     { $match: { projectId, status: "completed" } },

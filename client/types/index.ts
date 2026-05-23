@@ -270,6 +270,21 @@ export type CollectionSummary = {
   monthlyChart: { month: string; total: number; count: number }[];
 };
 
+export type CollectionActivity = {
+  _id: string;
+  collectionId: string | null;
+  collectionTitle: string;
+  collectionSlug: string;
+  collectionStatus: string;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  customerName: string | null;
+  paymentMethod: string | null;
+  createdAt: string;
+  paidAt: string | null;
+};
+
 export type ApiResponse<T> = {
   success: boolean;
   message: string;

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { collectionsApi } from "@/lib/collections";
 import { getApiErrorMessage } from "@/lib/api";
-import type { Collection, CollectionSummary, Payment } from "@/types";
+import type { Collection, CollectionActivity, CollectionSummary, Payment } from "@/types";
 
 export const useCollections = () => {
   const [collections, setCollections] = useState<Collection[]>([]);
@@ -48,6 +48,21 @@ export const useCollectionSummary = (id: string) => {
   useEffect(() => { load(); }, [id]);
 
   return { summary, loading, reloading, error, reload: load };
+};
+
+export const useCollectionActivity = () => {
+  const [activity, setActivity] = useState<CollectionActivity[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    collectionsApi.getActivity()
+      .then((res) => { setActivity(res.data.activity); setError(""); })
+      .catch((err: unknown) => setError(getApiErrorMessage(err, "Unable to load activity.")))
+      .finally(() => setLoading(false));
+  }, []);
+
+  return { activity, loading, error };
 };
 
 export const useCollectionPayments = (id: string) => {

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  collectionActivityHandler,
   collectionPaymentsHandler,
   collectionSummaryHandler,
   createCollectionHandler,
@@ -23,6 +24,8 @@ router.get("/public/:slug", publicCollectionLimiter, publicCollectionHandler);
 
 // Protected routes
 router.get("/my", protect, myCollections);
+// Must be before /:id to prevent Express treating "activity" as a collection ID
+router.get("/activity", protect, collectionActivityHandler);
 router.post("/", protect, validate(createCollectionSchema), createCollectionHandler);
 router.get("/:id", protect, getCollectionHandler);
 router.patch("/:id", protect, validate(updateCollectionSchema), updateCollectionHandler);

@@ -25,12 +25,13 @@ import { AnimatedProgressBar } from "@/components/shared/AnimatedProgressBar";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
+import { CollectionActivityFeed } from "@/components/dashboard/CollectionActivityFeed";
 import { MonthCoverageGrid } from "@/components/dashboard/MonthCoverageGrid";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
 import { COLLECTION_TYPE_EMOJIS } from "@/lib/collections";
 import { useAuth } from "@/hooks/useAuth";
 import { useDashboard } from "@/hooks/useDashboard";
-import { useCollections } from "@/hooks/useCollections";
+import { useCollectionActivity, useCollections } from "@/hooks/useCollections";
 import { formatDate, formatMoney } from "@/lib/formatters";
 import type { PaymentStatus } from "@/types";
 
@@ -85,6 +86,7 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const { data, loading: walletLoading, error: walletError, noProject } = useDashboard();
   const { collections, loading: collectionsLoading } = useCollections();
+  const { activity, loading: activityLoading } = useCollectionActivity();
 
   const firstName = user?.fullName?.split(" ")[0] ?? "there";
   const today = new Intl.DateTimeFormat("en-TZ", {
@@ -113,6 +115,11 @@ export default function DashboardPage() {
     [activeCollections, collections]
   );
   const hasMoreCollections = collections.length > displayCollections.length;
+
+  const activeCollectionLink = useMemo(
+    () => collections.find((c) => c.status === "active" && !!c.publicPaymentLink)?.publicPaymentLink,
+    [collections]
+  );
 
   const isLoading = walletLoading || collectionsLoading;
   const shouldShowChecklist = !collectionsLoading && (collections.length === 0 || totalAcrossCollections === 0);
@@ -515,6 +522,15 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
+
+            {/* ── Collection activity (payments received as owner) ─────────── */}
+            {collections.length > 0 && (
+              <CollectionActivityFeed
+                activity={activity}
+                loading={activityLoading}
+                activeCollectionLink={activeCollectionLink}
+              />
+            )}
 
             {/* ── Payment reminder (project member, current month unpaid) ──── */}
             {data && data.currentMonthPaymentStatus !== "completed" && (

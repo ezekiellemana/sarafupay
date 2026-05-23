@@ -1,5 +1,5 @@
 import { api } from "@/lib/api";
-import type { Collection, CollectionSummary, Payment } from "@/types";
+import type { Collection, CollectionActivity, CollectionSummary, Payment } from "@/types";
 
 export type CreateCollectionPayload = {
   title: string;
@@ -51,6 +51,9 @@ export const collectionsApi = {
 
   getSummary: (id: string) =>
     api<CollectionSummary>(`/api/collections/${id}/summary`),
+
+  getActivity: () =>
+    api<{ activity: CollectionActivity[] }>("/api/collections/activity"),
 
   exportCsv: (id: string) => {
     const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";

@@ -8,6 +8,7 @@ import {
   getCollectionPayments,
   getCollectionSummary,
   getOwnerCollections,
+  getOwnerRecentActivity,
   getPublicCollectionBySlug,
   updateCollection
 } from "../services/collection.service";
@@ -104,6 +105,34 @@ export const exportCollectionCsvHandler = asyncHandler(async (req, res) => {
   res.setHeader("Content-Type", "text/csv");
   res.setHeader("Content-Disposition", `attachment; filename=sarafupay-${title}-contributors.csv`);
   res.send([header, ...lines].join("\n"));
+});
+
+export const collectionActivityHandler = asyncHandler(async (req, res) => {
+  const raw = parseInt(String(req.query.limit ?? "10"), 10);
+  const limit = isNaN(raw) || raw < 1 ? 10 : Math.min(raw, 20);
+  const payments = await getOwnerRecentActivity(req.user!._id, limit);
+
+  type PopulatedProject = { _id: { toString(): string }; title?: string; slug?: string; status?: string };
+
+  const activity = payments.map((p) => {
+    const project = p.projectId as unknown as PopulatedProject | null;
+    return {
+      _id: p._id,
+      collectionId: project?._id?.toString() ?? null,
+      collectionTitle: project?.title ?? "Unknown collection",
+      collectionSlug: project?.slug ?? "",
+      collectionStatus: project?.status ?? "",
+      amount: p.amount,
+      currency: p.currency,
+      status: p.status,
+      customerName: p.customerName ?? null,
+      paymentMethod: p.paymentMethod ?? null,
+      createdAt: p.createdAt,
+      paidAt: p.paidAt ?? null,
+    };
+  });
+
+  res.json({ success: true, message: "Activity loaded.", data: { activity } });
 });
 
 const csv = (value: string) => `"${String(value).replace(/"/g, '""')}"`;
