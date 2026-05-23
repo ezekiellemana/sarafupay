@@ -94,7 +94,7 @@ export default function PaymentsPage() {
         </div>
 
         {/* ── Filter bar ──────────────────────────────────────────────── */}
-        <div className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-xl shadow-slate-900/5 backdrop-blur-xl">
+        <div className="rounded-2xl border border-[#e5e0d6] bg-white p-4 shadow-sm shadow-[#0a1f12]/4">
           <div className="flex flex-col gap-3 sm:flex-row">
 
             {/* Search — full-width on mobile, flex-1 on desktop */}
@@ -104,7 +104,7 @@ export default function PaymentsPage() {
                 placeholder="Search by reference or name…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="h-10 rounded-2xl border-white/70 bg-white/60 pl-9 pr-9"
+                className="h-10 rounded-2xl border-[#e5e0d6] bg-white pl-9 pr-9"
               />
               {search && (
                 <button
@@ -123,7 +123,7 @@ export default function PaymentsPage() {
                 type="month"
                 value={month}
                 onChange={(e) => setMonth(e.target.value)}
-                className="h-10 min-w-0 flex-1 rounded-2xl border-white/70 bg-white/60 sm:w-40 sm:flex-none"
+                className="h-10 min-w-0 flex-1 rounded-2xl border-[#e5e0d6] bg-white sm:w-40 sm:flex-none"
               />
               <Select value={status} onValueChange={(v) => setStatus(v ?? "all")}>
                 <SelectTrigger className="h-10 min-w-0 flex-1 rounded-2xl sm:w-40 sm:flex-none">
@@ -170,7 +170,7 @@ export default function PaymentsPage() {
             <PaymentTable payments={payments} onRetry={retry} />
           ) : hasFilters ? (
             <EmptyState
-              icon={<Search className="size-10 text-muted-foreground/40" />}
+              icon={<Search className="size-6" />}
               title="No payments match your filters."
               description="Try a different month, status, or search term."
               action={

@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { PaymentReceiptDialog } from "@/components/payments/PaymentReceiptDialog";
 import { PaymentStatusBadge } from "@/components/payments/PaymentStatusBadge";
@@ -20,10 +19,10 @@ export function PaymentTable({ payments, onRetry }: { payments: Payment[]; onRet
   return (
     <>
       {/* ── Desktop table ───────────────────────────────────────────── */}
-      <div className="hidden overflow-hidden rounded-3xl border border-white/70 bg-white/80 shadow-xl shadow-slate-900/5 backdrop-blur-xl md:block">
+      <div className="hidden overflow-hidden rounded-2xl border border-[#e5e0d6] bg-white shadow-sm shadow-[#0a1f12]/4 md:block">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-white/60 bg-slate-50/70">
+            <tr className="border-b border-[#e5e0d6] bg-[#faf7f2]">
               {["Date", "Month", "Amount", "Status", ""].map((h, i) => (
                 <th
                   key={i}
@@ -35,13 +34,10 @@ export function PaymentTable({ payments, onRetry }: { payments: Payment[]; onRet
             </tr>
           </thead>
           <tbody>
-            {payments.map((payment, i) => (
-              <motion.tr
+            {payments.map((payment) => (
+              <tr
                 key={payment._id}
-                initial={{ opacity: 0, x: -6 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.03 }}
-                className="border-b border-slate-100/60 transition-colors hover:bg-green-50/20"
+                className="border-b border-[#e5e0d6] transition-colors hover:bg-green-50/50"
               >
                 <td className="px-5 py-3.5">
                   <p className="font-medium text-[#071a0e]">{formatDate(payment.paidAt ?? payment.createdAt)}</p>
@@ -65,7 +61,7 @@ export function PaymentTable({ payments, onRetry }: { payments: Payment[]; onRet
                     <span className="text-sm text-muted-foreground">—</span>
                   )}
                 </td>
-              </motion.tr>
+              </tr>
             ))}
           </tbody>
         </table>
@@ -73,13 +69,10 @@ export function PaymentTable({ payments, onRetry }: { payments: Payment[]; onRet
 
       {/* ── Mobile cards ────────────────────────────────────────────── */}
       <div className="flex flex-col gap-3 md:hidden">
-        {payments.map((payment, i) => (
-          <motion.div
+        {payments.map((payment) => (
+          <div
             key={payment._id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.04 }}
-            className="rounded-3xl border border-white/70 bg-white/85 p-4 shadow-xl shadow-slate-900/5 backdrop-blur-xl"
+            className="rounded-2xl border border-[#e5e0d6] bg-white p-4 shadow-sm shadow-[#0a1f12]/4"
           >
             {/* Amount + status */}
             <div className="flex items-start justify-between gap-3">
@@ -102,7 +95,7 @@ export function PaymentTable({ payments, onRetry }: { payments: Payment[]; onRet
 
             {/* Action */}
             {(payment.status === "completed" || onRetry) && (
-              <div className="mt-3 border-t border-slate-100/60 pt-3">
+              <div className="mt-3 border-t border-[#e5e0d6] pt-3">
                 {payment.status === "completed" ? (
                   <PaymentReceiptDialog payment={payment} />
                 ) : onRetry ? (
@@ -112,7 +105,7 @@ export function PaymentTable({ payments, onRetry }: { payments: Payment[]; onRet
                 ) : null}
               </div>
             )}
-          </motion.div>
+          </div>
         ))}
       </div>
     </>

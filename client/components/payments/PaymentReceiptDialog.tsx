@@ -35,7 +35,7 @@ export function PaymentReceiptDialog({ payment }: { payment: Payment }) {
         <Separator />
         <div className="grid gap-2 sm:grid-cols-2">
           <Button className="rounded-2xl" onClick={copyReference} variant="outline"><Copy data-icon="inline-start" /> Copy Reference</Button>
-          <Button className="rounded-2xl bg-[#0B1F3A] text-white" onClick={printReceipt}>Print / Download Receipt</Button>
+          <Button className="rounded-2xl bg-[#071a0e] text-white" onClick={printReceipt}>Print / Download Receipt</Button>
         </div>
       </DialogContent>
     </Dialog>
@@ -44,7 +44,7 @@ export function PaymentReceiptDialog({ payment }: { payment: Payment }) {
 
 function ReceiptRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-2xl bg-background/80 p-3">
+    <div className="flex items-center justify-between gap-4 rounded-2xl bg-[#faf7f2] p-3">
       <span className="text-muted-foreground">{label}</span>
       <span className="text-right font-medium">{value}</span>
     </div>

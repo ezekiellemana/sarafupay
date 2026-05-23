@@ -10,7 +10,7 @@ export function EmptyState({ title, description, action, icon }: { title: string
         {icon ?? <WalletCards />}
       </div>
       <div>
-        <h3 className="text-lg font-bold text-[#0B1F3A]">{title}</h3>
+        <h3 className="text-lg font-bold text-[#071a0e]">{title}</h3>
         <p className="mt-1.5 text-sm font-medium text-slate-600">{description}</p>
       </div>
       {action}
