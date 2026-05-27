@@ -4,6 +4,7 @@ import {
   createPublicSession,
   createSession,
   exportMyPaymentsCsvHandler,
+  feePreviewHandler,
   getPayment,
   listPaymentQuerySchema,
   myPayments,
@@ -18,8 +19,9 @@ import { validate } from "../middleware/validate.middleware";
 
 const router = Router();
 
-// Public route — no auth required
+// Public routes — no auth required
 router.post("/create-public-session", publicPaymentLimiter, validate(publicPaymentSchema), createPublicSession);
+router.get("/fee-preview", publicPaymentLimiter, feePreviewHandler);
 
 // Protected routes
 router.post("/create-session", protect, paymentLimiter, validate(createPaymentSchema), createSession);

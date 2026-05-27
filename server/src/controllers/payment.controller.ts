@@ -3,6 +3,9 @@ import { Payment } from "../models/Payment.model";
 import { asyncHandler } from "../utils/asyncHandler";
 import { createContributionPayment, createPublicPayment, exportUserPayments, getUserPayments, verifyLocalPayment } from "../services/payment.service";
 import { getMemberDashboard } from "../services/dashboard.service";
+import { calculateContributionFee } from "../services/fee.service";
+import { AppError } from "../utils/AppError";
+import { env } from "../config/env";
 
 export const createPaymentSchema = z.object({
   projectId: z.string().optional(),
@@ -22,6 +25,60 @@ export const publicPaymentSchema = z.object({
   payerEmail: z.string().email("Use a valid email.").optional().or(z.literal("")),
   amount: z.coerce.number().min(1, "Amount must be at least 1."),
   payerMessage: z.string().max(300).optional()
+});
+
+const feePreviewQuerySchema = z.object({
+  amount: z.coerce.number().int("Amount must be a whole number.").positive("Amount must be a positive integer."),
+  channel: z.enum(["mobile_money", "card", "unknown"]).default("mobile_money")
+});
+
+export const feePreviewHandler = asyncHandler(async (req, res) => {
+  const parsed = feePreviewQuerySchema.safeParse(req.query);
+  if (!parsed.success) {
+    throw new AppError(parsed.error.issues[0]?.message ?? "Invalid query parameters.", 400, "INVALID_QUERY");
+  }
+  const { amount, channel } = parsed.data;
+
+  if (!env.FEES_ENABLED) {
+    return res.json({
+      success: true,
+      message: "Fee preview loaded.",
+      data: {
+        feesEnabled: false,
+        contributionAmount: amount,
+        serviceFee: 0,
+        totalChargedAmount: amount,
+        ownerReceivableAmount: amount,
+        feeRate: 0,
+        feeMin: 0,
+        feeMax: null,
+        feeVersion: 0,
+        paymentChannel: channel
+      }
+    });
+  }
+
+  if (channel === "card") {
+    throw new AppError("Card payments are not currently enabled.", 400, "CARD_PAYMENTS_DISABLED");
+  }
+
+  const result = calculateContributionFee(amount, channel);
+  return res.json({
+    success: true,
+    message: "Fee preview loaded.",
+    data: {
+      feesEnabled: true,
+      contributionAmount: result.contributionAmount,
+      serviceFee: result.serviceFee,
+      totalChargedAmount: result.totalChargedAmount,
+      ownerReceivableAmount: result.ownerReceivableAmount,
+      feeRate: result.feeRate,
+      feeMin: result.feeMin,
+      feeMax: result.feeMax,
+      feeVersion: result.feeVersion,
+      paymentChannel: result.paymentChannel
+    }
+  });
 });
 
 export const createSession = asyncHandler(async (req, res) => {
