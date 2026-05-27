@@ -8,6 +8,8 @@ import { getCurrentMonth } from "../utils/dateHelpers";
 import { createPaymentSession, normalizeSnippeWebhookEvent, verifyPayment as verifySnippePayment } from "./snippe.service";
 import { notifyPaymentStatusChanged } from "./notification.service";
 import { refreshCollectionStats } from "./collection.service";
+import { calculateContributionFee } from "./fee.service";
+import { env } from "../config/env";
 
 const finalStatuses: PaymentStatus[] = ["completed", "failed", "expired", "cancelled"];
 
@@ -22,12 +24,25 @@ export const createContributionPayment = async (user: IUser, projectId?: string,
   if (duplicate) throw new AppError("You already paid for this month.", 409, "MONTH_ALREADY_PAID");
 
   const externalReference = generateExternalReference(monthPaidFor, user._id.toString());
-  const amount = project.suggestedAmount ?? project.monthlyContributionAmount;
+  const contributionAmount = project.suggestedAmount ?? project.monthlyContributionAmount;
+
+  const feeEnabled = env.FEES_ENABLED;
+  const feeResult = feeEnabled ? calculateContributionFee(contributionAmount, "mobile_money") : null;
+  const snippeAmount = feeResult?.totalChargedAmount ?? contributionAmount;
+
   const payment = await Payment.create({
     ownerId: project.ownerId ?? project.createdBy,
     userId: user._id,
     projectId: project._id,
-    amount,
+    amount: contributionAmount,
+    ...(feeResult && {
+      contributionAmount: feeResult.contributionAmount,
+      serviceFee: feeResult.serviceFee,
+      totalChargedAmount: feeResult.totalChargedAmount,
+      feeVersion: feeResult.feeVersion,
+      paymentChannel: feeResult.paymentChannel,
+      providerFee: 0
+    }),
     currency: project.currency,
     status: "pending",
     externalReference,
@@ -41,18 +56,23 @@ export const createContributionPayment = async (user: IUser, projectId?: string,
       projectId: project._id.toString(),
       monthPaidFor,
       externalReference,
-      purpose: project.collectionType ?? "monthly_contribution"
+      purpose: project.collectionType ?? "monthly_contribution",
+      ...(feeResult && {
+        contributionAmount: String(feeResult.contributionAmount),
+        serviceFee: String(feeResult.serviceFee)
+      })
     }
   });
 
   try {
     const session = await createPaymentSession({
-      amount: payment.amount,
+      amount: snippeAmount,
       currency: payment.currency,
       description: `${project.title} - ${monthPaidFor}`,
       lineItemName: project.title,
       externalReference,
       allowCustomAmount: false,
+      allowedMethods: feeEnabled ? ["mobile_money"] : undefined,
       customer: { name: user.fullName, phone: user.phoneNumber, email: user.email },
       metadata: payment.metadata as Record<string, string>
     });
@@ -89,11 +109,24 @@ export const createPublicPayment = async (input: PublicPaymentInput) => {
 
   const month = getCurrentMonth();
   const externalReference = generateExternalReference(month, `${Date.now()}`);
+  const contributionAmount = effectiveAmount;
+
+  const feeEnabled = env.FEES_ENABLED;
+  const feeResult = feeEnabled ? calculateContributionFee(contributionAmount, "mobile_money") : null;
+  const snippeAmount = feeResult?.totalChargedAmount ?? contributionAmount;
 
   const payment = await Payment.create({
     ownerId: project.ownerId ?? project.createdBy,
     projectId: project._id,
-    amount: effectiveAmount,
+    amount: contributionAmount,
+    ...(feeResult && {
+      contributionAmount: feeResult.contributionAmount,
+      serviceFee: feeResult.serviceFee,
+      totalChargedAmount: feeResult.totalChargedAmount,
+      feeVersion: feeResult.feeVersion,
+      paymentChannel: feeResult.paymentChannel,
+      providerFee: 0
+    }),
     currency: project.currency,
     status: "pending",
     externalReference,
@@ -109,18 +142,23 @@ export const createPublicPayment = async (input: PublicPaymentInput) => {
       externalReference,
       purpose: project.collectionType ?? "custom",
       payerName: input.payerName,
-      payerPhone: input.payerPhone
+      payerPhone: input.payerPhone,
+      ...(feeResult && {
+        contributionAmount: String(feeResult.contributionAmount),
+        serviceFee: String(feeResult.serviceFee)
+      })
     }
   });
 
   try {
     const session = await createPaymentSession({
-      amount: payment.amount,
+      amount: snippeAmount,
       currency: payment.currency,
       description: project.paymentPurpose ?? project.title,
       lineItemName: project.title,
       externalReference,
-      allowCustomAmount: project.allowCustomAmount,
+      allowCustomAmount: feeEnabled ? false : project.allowCustomAmount,
+      allowedMethods: feeEnabled ? ["mobile_money"] : undefined,
       customer: { name: input.payerName, phone: input.payerPhone, email: input.payerEmail },
       metadata: payment.metadata as Record<string, string>
     });

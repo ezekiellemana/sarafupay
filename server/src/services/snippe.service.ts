@@ -10,6 +10,7 @@ export type CreateSessionInput = {
   lineItemName?: string;
   externalReference: string;
   allowCustomAmount?: boolean;
+  allowedMethods?: string[];
   customer?: {
     name?: string;
     phone?: string;
@@ -53,7 +54,7 @@ export const createPaymentSession = async (input: CreateSessionInput): Promise<S
   const payload: Record<string, unknown> = {
     amount: input.amount,
     currency: input.currency,
-    allowed_methods: ["mobile_money", "card"],
+    allowed_methods: input.allowedMethods ?? ["mobile_money", "card"],
     ...(env.SNIPPE_PROFILE_ID && { profile_id: env.SNIPPE_PROFILE_ID }),
     allow_custom_amount: input.allowCustomAmount ?? false,
     customer: input.customer,
