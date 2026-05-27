@@ -8,7 +8,7 @@ import { getCurrentMonth } from "../utils/dateHelpers";
 import { createPaymentSession, normalizeSnippeWebhookEvent, verifyPayment as verifySnippePayment } from "./snippe.service";
 import { notifyPaymentStatusChanged } from "./notification.service";
 import { refreshCollectionStats } from "./collection.service";
-import { calculateContributionFee } from "./fee.service";
+import { calculateContributionFee, mapSnippeChannel, calculateProviderFee } from "./fee.service";
 import { env } from "../config/env";
 
 const finalStatuses: PaymentStatus[] = ["completed", "failed", "expired", "cancelled"];
@@ -229,8 +229,25 @@ export const handleSnippeWebhook = async (payload: unknown) => {
   payment.customerEmail = data.customer?.email ?? payment.customerEmail;
   payment.rawWebhookPayload = payload as Record<string, unknown>;
 
+  const rawChannel = data.payment_channel ?? data.payment_method;
+  const confirmedChannel = mapSnippeChannel(rawChannel);
+  if (payment.feeVersion >= 1 && confirmedChannel !== "unknown" && confirmedChannel !== payment.paymentChannel) {
+    console.warn(`[F4] Channel mismatch on ${payment.externalReference}: created=${payment.paymentChannel}, webhook=${confirmedChannel}`);
+  }
+  payment.paymentChannel = confirmedChannel;
+
   if (eventStatus === "completed") {
     payment.paidAt = data.completed_at ? new Date(data.completed_at) : new Date();
+
+    if (data.amount?.value != null && payment.totalChargedAmount != null) {
+      if (Math.abs(data.amount.value - payment.totalChargedAmount) > 1) {
+        console.warn(`[F4] Amount mismatch on ${payment.externalReference}: webhook=${data.amount.value}, stored=${payment.totalChargedAmount}`);
+      }
+    }
+
+    if (payment.feeVersion >= 1 && payment.totalChargedAmount && payment.totalChargedAmount > 0 && payment.serviceFee > 0) {
+      payment.providerFee = calculateProviderFee(payment.totalChargedAmount, payment.paymentChannel);
+    }
   }
 
   await payment.save();

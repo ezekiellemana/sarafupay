@@ -81,6 +81,31 @@ export function calculateContributionFee(
 }
 
 /**
+ * Normalize a raw Snippe payment channel/method string to our PaymentChannel enum.
+ * Never throws — unknown or missing values map to "unknown".
+ */
+export function mapSnippeChannel(raw: string | null | undefined): PaymentChannel {
+  if (!raw) return "unknown";
+  const v = raw.toLowerCase().trim();
+  const MOBILE_MONEY = ["mobile_money", "mobile", "momo", "mpesa", "tigopesa", "airtel_money", "halopesa", "vodacom", "tigo", "airtel", "halotel", "ttcl"];
+  const CARD = ["card", "visa", "mastercard", "amex", "credit_card", "debit_card", "credit", "debit"];
+  if (MOBILE_MONEY.some(k => v === k || v.includes(k))) return "mobile_money";
+  if (CARD.some(k => v === k || v.includes(k))) return "card";
+  return "unknown";
+}
+
+/**
+ * Estimate the provider fee SarafuPay pays on a completed payment.
+ * Based on confirmed channel from Snippe webhook.
+ * Unknown channel returns 0 — admin reviews manually.
+ */
+export function calculateProviderFee(totalChargedAmount: number, channel: PaymentChannel): number {
+  if (channel === "mobile_money") return Math.ceil(totalChargedAmount * 0.005);
+  if (channel === "card") return Math.ceil(totalChargedAmount * 0.03);
+  return 0;
+}
+
+/**
  * Calculate the total amount that must be deducted from the owner's wallet
  * to fulfil a withdrawal request.
  *
