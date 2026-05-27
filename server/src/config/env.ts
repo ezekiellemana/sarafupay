@@ -22,7 +22,10 @@ const envSchema = z.object({
   ADMIN_PASSWORD: z.string().optional(),
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
-  GOOGLE_CALLBACK_URL: z.string().url().optional()
+  GOOGLE_CALLBACK_URL: z.string().url().optional(),
+  // Reserved for future fee integration (Phase F3D). When absent or "false",
+  // payment creation behaves exactly as it does today — no fees are applied.
+  FEES_ENABLED: z.string().optional().transform((v) => v === "true")
 });
 
 export const env = envSchema.parse({
@@ -44,7 +47,8 @@ export const env = envSchema.parse({
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
-  GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL
+  GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL,
+  FEES_ENABLED: process.env.FEES_ENABLED
 });
 
 export const isProduction = env.NODE_ENV === "production";

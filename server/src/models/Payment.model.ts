@@ -12,6 +12,9 @@ export interface IPayment {
   // Fee tracking fields. Phase F1 is additive only; payment charging still uses amount unchanged.
   // Legacy documents may not have contributionAmount — future aggregations should use $ifNull(contributionAmount, amount).
   contributionAmount?: number;
+  // totalChargedAmount = contributionAmount + serviceFee — amount actually sent to Snippe.
+  // Absent on legacy (feeVersion 0) payments. Present on feeVersion 1+ payments only.
+  totalChargedAmount?: number;
   serviceFee: number;
   providerFee: number;
   paymentChannel: "mobile_money" | "card" | "unknown";
@@ -47,6 +50,8 @@ const paymentSchema = new Schema<IPayment>(
     amount: { type: Number, required: true, min: 1 },
     // Fee tracking fields — Phase F1 additive only. See IPayment for full notes.
     contributionAmount: { type: Number, default: function(this: { amount: number }) { return this.amount; } },
+    // Reserved for feeVersion 1+ payments. Not set on legacy documents.
+    totalChargedAmount: { type: Number },
     serviceFee:     { type: Number, default: 0 },
     providerFee:    { type: Number, default: 0 },
     paymentChannel: { type: String, enum: ["mobile_money", "card", "unknown"], default: "unknown" },
