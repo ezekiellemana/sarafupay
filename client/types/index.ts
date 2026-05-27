@@ -285,6 +285,19 @@ export type CollectionActivity = {
   paidAt: string | null;
 };
 
+export type FeePreview = {
+  feesEnabled: boolean;
+  contributionAmount: number;
+  serviceFee: number;
+  totalChargedAmount: number;
+  ownerReceivableAmount: number;
+  feeRate: number;
+  feeMin: number;
+  feeMax: number | null;
+  feeVersion: number;
+  paymentChannel: "mobile_money" | "card" | "unknown";
+};
+
 export type ApiResponse<T> = {
   success: boolean;
   message: string;

@@ -8,12 +8,16 @@ import { DashboardShell } from "@/components/layout/DashboardShell";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { formatMoney, currentMonth } from "@/lib/formatters";
-import type { Project } from "@/types";
+import type { FeePreview, Project } from "@/types";
+import { FeeBreakdownCard } from "@/components/payments/FeeBreakdownCard";
+import { paymentsApi } from "@/lib/payments";
 
 export default function PaymentStartPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectId, setProjectId] = useState("");
   const [loading, setLoading] = useState(false);
+  const [feePreview, setFeePreview] = useState<FeePreview | null>(null);
+  const [feeLoading, setFeeLoading] = useState(false);
 
   useEffect(() => {
     api<{ projects: Project[] }>("/api/projects").then((res) => {
@@ -23,6 +27,19 @@ export default function PaymentStartPage() {
   }, []);
 
   const selected = projects.find((project) => project._id === projectId);
+
+  useEffect(() => {
+    if (!selected) { setFeePreview(null); setFeeLoading(false); return; }
+    const amount = selected.monthlyContributionAmount;
+    if (!amount || !Number.isInteger(amount) || amount < 1) { setFeePreview(null); return; }
+    let cancelled = false;
+    setFeeLoading(true);
+    paymentsApi.getFeePreview(amount)
+      .then((res) => { if (!cancelled) { setFeePreview(res.data); setFeeLoading(false); } })
+      .catch(() => { if (!cancelled) { setFeePreview(null); setFeeLoading(false); } });
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId]);
 
   const startPayment = async () => {
     setLoading(true);
@@ -109,6 +126,12 @@ export default function PaymentStartPage() {
               </div>
             </div>
 
+            <FeeBreakdownCard
+              preview={feePreview}
+              loading={feeLoading}
+              currency={selected?.currency ?? "TZS"}
+            />
+
             {/* CTA button */}
             <button
               type="button"
@@ -121,6 +144,8 @@ export default function PaymentStartPage() {
                   <Loader2 className="size-4 animate-spin" />
                   Creating session…
                 </>
+              ) : feePreview?.feesEnabled && feePreview.totalChargedAmount ? (
+                `Continue — Total ${formatMoney(feePreview.totalChargedAmount, selected?.currency ?? "TZS")}`
               ) : (
                 "Continue to Snippe Payment"
               )}

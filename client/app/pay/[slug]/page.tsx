@@ -15,7 +15,9 @@ import { FloatingBlobBackground } from "@/components/shared/FloatingBlobBackgrou
 import { collectionsApi, COLLECTION_TYPE_EMOJIS, COLLECTION_TYPE_LABELS } from "@/lib/collections";
 import { getApiErrorMessage } from "@/lib/api";
 import { formatDate, formatMoney } from "@/lib/formatters";
-import type { Collection } from "@/types";
+import type { Collection, FeePreview } from "@/types";
+import { FeeBreakdownCard } from "@/components/payments/FeeBreakdownCard";
+import { paymentsApi } from "@/lib/payments";
 
 type FormValues = {
   payerName: string;
@@ -31,6 +33,8 @@ export default function PublicPayPage({ params }: { params: Promise<{ slug: stri
   const [notFound, setNotFound] = useState(false);
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
+  const [feePreview, setFeePreview] = useState<FeePreview | null>(null);
+  const [feeLoading, setFeeLoading] = useState(false);
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormValues>({
     defaultValues: { payerName: "", payerPhone: "", payerEmail: "", amount: "", payerMessage: "" }
@@ -49,6 +53,23 @@ export default function PublicPayPage({ params }: { params: Promise<{ slug: stri
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
   }, [slug, setValue]);
+
+  useEffect(() => {
+    const parsed = Number(amountValue);
+    if (!amountValue || !Number.isFinite(parsed) || !Number.isInteger(parsed) || parsed < 1) {
+      setFeePreview(null);
+      setFeeLoading(false);
+      return;
+    }
+    setFeeLoading(true);
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      paymentsApi.getFeePreview(parsed)
+        .then((res) => { if (!cancelled) { setFeePreview(res.data); setFeeLoading(false); } })
+        .catch(() => { if (!cancelled) { setFeePreview(null); setFeeLoading(false); } });
+    }, 400);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [amountValue]);
 
   const onSubmit = async (values: FormValues) => {
     if (!collection) return;
@@ -299,6 +320,8 @@ export default function PublicPayPage({ params }: { params: Promise<{ slug: stri
                 <Input id="payerMessage" placeholder="Any message for the organizer…" className="h-11 rounded-2xl" {...register("payerMessage")} />
               </div>
 
+              <FeeBreakdownCard preview={feePreview} loading={feeLoading} currency={collection.currency} />
+
               <button
                 type="submit"
                 disabled={paying}
@@ -306,12 +329,17 @@ export default function PublicPayPage({ params }: { params: Promise<{ slug: stri
               >
                 {paying
                   ? <><Loader2 className="size-4 animate-spin" /> Creating payment…</>
-                  : <>Pay Now <ArrowRight className="size-4" /></>
+                  : feePreview?.feesEnabled && feePreview.totalChargedAmount
+                    ? <>{formatMoney(feePreview.totalChargedAmount, collection.currency)} <ArrowRight className="size-4" /></>
+                    : <>Pay Now <ArrowRight className="size-4" /></>
                 }
               </button>
 
               <p className="text-center text-xs text-muted-foreground">
-                You&apos;ll be redirected to Snippe secure checkout to complete payment.
+                {feePreview?.feesEnabled && feePreview.serviceFee > 0
+                  ? <>{formatMoney(feePreview.ownerReceivableAmount, collection.currency)} goes to the collection. You&apos;ll be redirected to Snippe secure checkout.</>
+                  : <>You&apos;ll be redirected to Snippe secure checkout to complete payment.</>
+                }
               </p>
             </form>
               </>
