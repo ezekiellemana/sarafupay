@@ -19,7 +19,7 @@ export function Footer() {
             </p>
           </div>
 
-          {/* Link groups — sm: stacked beside brand; md: 3 equal cols */}
+          {/* Link groups — sm: stacked beside brand; md: 4 equal cols */}
           <div className="flex flex-col gap-8 md:col-span-3 md:flex-row md:gap-10">
 
             {/* Product */}
@@ -29,6 +29,8 @@ export function Footer() {
                 <Link href="#features" className="py-1.5 text-sm text-white/90 transition-colors hover:text-[#F2D37A]">Features</Link>
                 <Link href="#how" className="py-1.5 text-sm text-white/90 transition-colors hover:text-[#F2D37A]">How it works</Link>
                 <Link href="#uses" className="py-1.5 text-sm text-white/90 transition-colors hover:text-[#F2D37A]">Use cases</Link>
+                <Link href="/pricing" className="py-1.5 text-sm text-white/90 transition-colors hover:text-[#F2D37A]">Pricing</Link>
+                <Link href="/faq" className="py-1.5 text-sm text-white/90 transition-colors hover:text-[#F2D37A]">FAQ</Link>
               </div>
             </div>
 
@@ -47,8 +49,11 @@ export function Footer() {
               <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-white/60">Company</p>
               <div className="flex flex-col gap-0.5">
                 <Link href="/about" className="py-1.5 text-sm text-white/90 transition-colors hover:text-[#F2D37A]">About</Link>
+                <Link href="/contact" className="py-1.5 text-sm text-white/90 transition-colors hover:text-[#F2D37A]">Contact</Link>
                 <Link href="/terms" className="py-1.5 text-sm text-white/90 transition-colors hover:text-[#F2D37A]">Terms of Service</Link>
                 <Link href="/privacy" className="py-1.5 text-sm text-white/90 transition-colors hover:text-[#F2D37A]">Privacy Policy</Link>
+                <Link href="/refund-policy" className="py-1.5 text-sm text-white/90 transition-colors hover:text-[#F2D37A]">Refund Policy</Link>
+                <Link href="/withdrawal-policy" className="py-1.5 text-sm text-white/90 transition-colors hover:text-[#F2D37A]">Withdrawal Policy</Link>
               </div>
             </div>
 

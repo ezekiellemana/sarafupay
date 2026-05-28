@@ -9,7 +9,8 @@ import { BrandLogo } from "@/components/shared/BrandLogo";
 const NAV_LINKS = [
   { href: "#features", label: "Features" },
   { href: "#how", label: "How it works" },
-  { href: "#uses", label: "Use cases" },
+  { href: "/pricing", label: "Pricing" },
+  { href: "/faq", label: "FAQ" },
 ];
 
 export function Navbar() {
