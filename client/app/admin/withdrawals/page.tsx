@@ -6,6 +6,8 @@ import {
   ArrowDownToLine,
   CheckCircle2,
   Banknote,
+  TrendingUp,
+  Receipt,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -169,31 +171,65 @@ export default function AdminWithdrawalsPage() {
 
         {/* KPI cards */}
         {kpiSummary && (
-          <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-            <KpiCard
-              label="Pending"
-              value={kpiSummary.pendingCount}
-              icon={<Clock className="size-4" />}
-              accent="amber"
-            />
-            <KpiCard
-              label="In Progress"
-              value={kpiSummary.activeCount}
-              icon={<ArrowDownToLine className="size-4" />}
-              accent="blue"
-            />
-            <KpiCard
-              label="Paid"
-              value={kpiSummary.paidCount}
-              icon={<CheckCircle2 className="size-4" />}
-              accent="green"
-            />
-            <KpiCard
-              label="Total Requested"
-              value={formatMoney(kpiSummary.totalRequested)}
-              icon={<Banknote className="size-4" />}
-              accent="slate"
-            />
+          <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+              <KpiCard
+                label="Pending"
+                value={kpiSummary.pendingCount}
+                icon={<Clock className="size-4" />}
+                accent="amber"
+              />
+              <KpiCard
+                label="In Progress"
+                value={kpiSummary.activeCount}
+                icon={<ArrowDownToLine className="size-4" />}
+                accent="blue"
+              />
+              <KpiCard
+                label="Paid"
+                value={kpiSummary.paidCount}
+                icon={<CheckCircle2 className="size-4" />}
+                accent="green"
+              />
+              <KpiCard
+                label="Total Requested"
+                value={formatMoney(kpiSummary.totalRequested)}
+                icon={<Banknote className="size-4" />}
+                accent="slate"
+              />
+            </div>
+
+            {kpiSummary.paidCount > 0 && (
+              <div className="flex flex-col gap-1.5">
+                <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+                  <KpiCard
+                    label="Paid Volume"
+                    value={formatMoney(kpiSummary.paidVolume)}
+                    icon={<ArrowDownToLine className="size-4" />}
+                    accent="green"
+                  />
+                  <KpiCard
+                    label="Fees Collected"
+                    value={formatMoney(kpiSummary.feesCollected)}
+                    icon={<Banknote className="size-4" />}
+                    accent="amber"
+                  />
+                  <KpiCard
+                    label="Provider Costs"
+                    value={formatMoney(kpiSummary.providerCosts)}
+                    icon={<Receipt className="size-4" />}
+                    accent="slate"
+                  />
+                  <KpiCard
+                    label="Net Margin"
+                    value={formatMoney(kpiSummary.netMargin)}
+                    icon={<TrendingUp className="size-4" />}
+                    accent="green"
+                  />
+                </div>
+                <p className="text-[10px] text-slate-400">Paid withdrawals only.</p>
+              </div>
+            )}
           </div>
         )}
 

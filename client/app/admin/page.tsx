@@ -735,7 +735,10 @@ export default function AdminPage() {
             <AnalyticsPanel data={data} />
 
             {/* E: Platform Revenue */}
-            <AdminRevenueCards summary={data.revenueSummary} />
+            <AdminRevenueCards
+              summary={data.revenueSummary}
+              withdrawalRevenueSummary={data.withdrawalRevenueSummary}
+            />
 
             {/* F: Performance / Ranking Panel */}
             <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">

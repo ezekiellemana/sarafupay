@@ -174,6 +174,18 @@ export type AdminDashboardData = {
     unknownChannelCount: number;
     byChannel: { channel: string; count: number; serviceFee: number; providerFee: number; netRevenue: number }[];
   };
+  // withdrawal revenue (paid withdrawals only)
+  withdrawalRevenueSummary: {
+    paidWithdrawalVolume: number;
+    withdrawalFeesCollected: number;
+    withdrawalProviderCosts: number;
+    netWithdrawalMargin: number;
+    withdrawalFeesThisMonth: number;
+    withdrawalCostsThisMonth: number;
+    withdrawalVolumeThisMonth: number;
+    pendingLiability: number;
+    lockedDeductions: number;
+  };
 };
 
 export type ActivityEventType = "user_registered" | "collection_created" | "payment_completed";
@@ -424,6 +436,12 @@ export type AdminWithdrawalSummary = {
   activeCount: number;
   paidCount: number;
   totalRequested: number;
+  paidVolume: number;
+  feesCollected: number;
+  providerCosts: number;
+  netMargin: number;
+  pendingLiability: number;
+  lockedDeductions: number;
 };
 
 export type ApiResponse<T> = {

@@ -272,19 +272,35 @@ export async function adminListWithdrawals(query: AdminWithdrawalQuery) {
 }
 
 async function adminSummary() {
-  const [pending, active, paid, totalAgg] = await Promise.all([
+  const [pending, active, paid, totalAgg, paidFinancialAgg, lockedFinancialAgg] = await Promise.all([
     Withdrawal.countDocuments({ status: "pending" }),
     Withdrawal.countDocuments({ status: { $in: ["approved", "processing"] } }),
     Withdrawal.countDocuments({ status: "paid" }),
     Withdrawal.aggregate<{ total: number }>([
       { $group: { _id: null, total: { $sum: "$requestedAmount" } } },
     ]),
+    Withdrawal.aggregate<{ paidVolume: number; feesCollected: number; providerCosts: number }>([
+      { $match: { status: "paid" } },
+      { $group: { _id: null, paidVolume: { $sum: "$ownerReceives" }, feesCollected: { $sum: "$withdrawalFee" }, providerCosts: { $sum: "$providerFee" } } },
+    ]),
+    Withdrawal.aggregate<{ pendingLiability: number; lockedDeductions: number }>([
+      { $match: { status: { $in: [...LOCKED_STATUSES] } } },
+      { $group: { _id: null, pendingLiability: { $sum: "$ownerReceives" }, lockedDeductions: { $sum: "$totalDeducted" } } },
+    ]),
   ]);
+  const feesCollected = paidFinancialAgg[0]?.feesCollected ?? 0;
+  const providerCosts = paidFinancialAgg[0]?.providerCosts ?? 0;
   return {
     pendingCount: pending,
     activeCount: active,
     paidCount: paid,
     totalRequested: totalAgg[0]?.total ?? 0,
+    paidVolume: paidFinancialAgg[0]?.paidVolume ?? 0,
+    feesCollected,
+    providerCosts,
+    netMargin: feesCollected - providerCosts,
+    pendingLiability: lockedFinancialAgg[0]?.pendingLiability ?? 0,
+    lockedDeductions: lockedFinancialAgg[0]?.lockedDeductions ?? 0,
   };
 }
 

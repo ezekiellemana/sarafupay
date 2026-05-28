@@ -1,13 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { AlertTriangle, DollarSign, Receipt, TrendingUp, Hash } from "lucide-react";
+import { AlertTriangle, ArrowDownToLine, Banknote, DollarSign, Receipt, TrendingUp, Hash } from "lucide-react";
 import { AnimatedNumber } from "@/components/shared/AnimatedNumber";
 import { formatMoney } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import type { AdminDashboardData } from "@/types";
 
 type RevenueSummary = AdminDashboardData["revenueSummary"];
+type WithdrawalRevenueSummary = AdminDashboardData["withdrawalRevenueSummary"];
 
 const ACCENT_CONFIG = {
   gold:   { card: "border-amber-200 bg-amber-50",    strip: "bg-amber-400",    icon: "bg-amber-400/15 text-amber-600 ring-1 ring-amber-400/20" },
@@ -76,8 +77,15 @@ function RevenueTile({
   );
 }
 
-export function AdminRevenueCards({ summary }: { summary: RevenueSummary }) {
+export function AdminRevenueCards({
+  summary,
+  withdrawalRevenueSummary,
+}: {
+  summary: RevenueSummary;
+  withdrawalRevenueSummary?: WithdrawalRevenueSummary;
+}) {
   const hasData = summary.feePaymentCount > 0;
+  const hasWithdrawalData = (withdrawalRevenueSummary?.withdrawalFeesCollected ?? 0) > 0;
 
   return (
     <section className="flex flex-col gap-4">
@@ -186,6 +194,68 @@ export function AdminRevenueCards({ summary }: { summary: RevenueSummary }) {
           </div>
         )}
       </div>
+
+      {/* ── Withdrawal Earnings subsection ── */}
+      {withdrawalRevenueSummary !== undefined && (
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <ArrowDownToLine className="size-4 text-amber-500" />
+            <h3 className="text-base font-bold text-[#071a0e]">Withdrawal Earnings</h3>
+            <span className="text-xs text-slate-400">· paid withdrawals only</span>
+          </div>
+
+          {!hasWithdrawalData ? (
+            <div className="rounded-2xl border border-[#e5e0d6] bg-white px-6 py-8 text-center shadow-sm shadow-[#0a1f12]/4">
+              <p className="text-sm text-slate-400">No paid withdrawals yet.</p>
+              <p className="mt-1 text-xs text-slate-300">Withdrawal fee revenue appears here once an admin marks a withdrawal as paid.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <RevenueTile
+                label="Withdrawal Fees Collected"
+                value={withdrawalRevenueSummary.withdrawalFeesCollected}
+                formatValue={(v) => formatMoney(Math.round(v))}
+                subStat={`This month: ${formatMoney(withdrawalRevenueSummary.withdrawalFeesThisMonth)}`}
+                icon={<Banknote className="size-6" />}
+                accent="gold"
+                delay={0}
+              />
+              <RevenueTile
+                label="Payout Costs"
+                value={withdrawalRevenueSummary.withdrawalProviderCosts}
+                formatValue={(v) => formatMoney(Math.round(v))}
+                subStat={`This month: ${formatMoney(withdrawalRevenueSummary.withdrawalCostsThisMonth)}`}
+                icon={<ArrowDownToLine className="size-6" />}
+                accent="orange"
+                delay={0.06}
+              />
+              <RevenueTile
+                label="Net Withdrawal Margin"
+                value={withdrawalRevenueSummary.netWithdrawalMargin}
+                formatValue={(v) => formatMoney(Math.round(v))}
+                subStat={`Volume paid out: ${formatMoney(withdrawalRevenueSummary.paidWithdrawalVolume)}`}
+                icon={<TrendingUp className="size-6" />}
+                accent="green"
+                delay={0.12}
+              />
+            </div>
+          )}
+
+          {/* Combined platform net */}
+          {hasWithdrawalData && (
+            <div className="flex items-center justify-between rounded-2xl border border-[#e5e0d6] bg-[#f9f7f4] px-5 py-3.5 shadow-sm shadow-[#0a1f12]/4">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="size-4 text-[#19A254]" />
+                <p className="text-sm font-bold text-[#071a0e]">Combined Platform Net</p>
+                <span className="text-xs text-slate-400">payments + withdrawals</span>
+              </div>
+              <p className="text-lg font-extrabold text-[#035034]">
+                {formatMoney(Math.round(summary.netPlatformRevenue + withdrawalRevenueSummary.netWithdrawalMargin))}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
     </section>
   );
 }

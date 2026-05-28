@@ -2,6 +2,7 @@ import { Types } from "mongoose";
 import { Payment } from "../models/Payment.model";
 import { Project } from "../models/Project.model";
 import { User } from "../models/User.model";
+import { Withdrawal } from "../models/Withdrawal.model";
 import { AppError } from "../utils/AppError";
 import { getCurrentMonth, getNextDueDate, monthRange } from "../utils/dateHelpers";
 
@@ -38,6 +39,8 @@ export const getMemberDashboard = async (userId: Types.ObjectId) => {
 
 export const getAdminDashboard = async () => {
   const currentMonth = getCurrentMonth();
+  const monthStart = new Date(`${currentMonth}-01`);
+  const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0, 23, 59, 59, 999);
 
   const [
     collectedResult,
@@ -57,6 +60,9 @@ export const getAdminDashboard = async () => {
     revenueThisMonthRaw,
     unknownChannelCount,
     channelBreakdownRaw,
+    wdrAllTimeRaw,
+    wdrThisMonthRaw,
+    wdrLockedRaw,
   ] = await Promise.all([
     Payment.aggregate<{ total: number }>([
       { $match: { status: "completed" } },
@@ -110,6 +116,18 @@ export const getAdminDashboard = async () => {
     Payment.aggregate<{ _id: string; count: number; serviceFee: number; providerFee: number }>([
       { $match: { status: "completed", feeVersion: { $gte: 1 } } },
       { $group: { _id: "$paymentChannel", count: { $sum: 1 }, serviceFee: { $sum: "$serviceFee" }, providerFee: { $sum: "$providerFee" } } }
+    ]),
+    Withdrawal.aggregate<{ paidVolume: number; feesCollected: number; providerCosts: number }>([
+      { $match: { status: "paid" } },
+      { $group: { _id: null, paidVolume: { $sum: "$ownerReceives" }, feesCollected: { $sum: "$withdrawalFee" }, providerCosts: { $sum: "$providerFee" } } }
+    ]),
+    Withdrawal.aggregate<{ feesThisMonth: number; costsThisMonth: number; volumeThisMonth: number }>([
+      { $match: { status: "paid", paidAt: { $gte: monthStart, $lte: monthEnd } } },
+      { $group: { _id: null, feesThisMonth: { $sum: "$withdrawalFee" }, costsThisMonth: { $sum: "$providerFee" }, volumeThisMonth: { $sum: "$ownerReceives" } } }
+    ]),
+    Withdrawal.aggregate<{ pendingLiability: number; lockedDeductions: number }>([
+      { $match: { status: { $in: ["pending", "approved", "processing"] } } },
+      { $group: { _id: null, pendingLiability: { $sum: "$ownerReceives" }, lockedDeductions: { $sum: "$totalDeducted" } } }
     ]),
   ]);
 
@@ -169,6 +187,17 @@ export const getAdminDashboard = async () => {
       feePaymentCount,
       unknownChannelCount,
       byChannel,
+    },
+    withdrawalRevenueSummary: {
+      paidWithdrawalVolume: wdrAllTimeRaw[0]?.paidVolume ?? 0,
+      withdrawalFeesCollected: wdrAllTimeRaw[0]?.feesCollected ?? 0,
+      withdrawalProviderCosts: wdrAllTimeRaw[0]?.providerCosts ?? 0,
+      netWithdrawalMargin: (wdrAllTimeRaw[0]?.feesCollected ?? 0) - (wdrAllTimeRaw[0]?.providerCosts ?? 0),
+      withdrawalFeesThisMonth: wdrThisMonthRaw[0]?.feesThisMonth ?? 0,
+      withdrawalCostsThisMonth: wdrThisMonthRaw[0]?.costsThisMonth ?? 0,
+      withdrawalVolumeThisMonth: wdrThisMonthRaw[0]?.volumeThisMonth ?? 0,
+      pendingLiability: wdrLockedRaw[0]?.pendingLiability ?? 0,
+      lockedDeductions: wdrLockedRaw[0]?.lockedDeductions ?? 0,
     },
   };
 };
