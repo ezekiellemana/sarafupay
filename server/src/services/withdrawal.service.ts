@@ -22,6 +22,7 @@ export type WithdrawalBalanceResult = {
   lockedWithdrawals: number;
   paidWithdrawals: number;
   availableForWithdrawal: number;
+  withdrawalFee: number;
   minimumWithdrawalAmount: number;
   minimumBalanceRequired: number;
 };
@@ -62,6 +63,7 @@ async function computeBalance(projectId: Types.ObjectId): Promise<WithdrawalBala
     lockedWithdrawals,
     paidWithdrawals,
     availableForWithdrawal,
+    withdrawalFee: feeInfo.withdrawalFee,
     minimumWithdrawalAmount: feeInfo.minimumWithdrawalAmount,
     minimumBalanceRequired: feeInfo.minimumWithdrawalAmount + feeInfo.withdrawalFee,
   };

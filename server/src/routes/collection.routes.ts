@@ -13,6 +13,12 @@ import {
   updateCollectionHandler,
   updateCollectionSchema
 } from "../controllers/collection.controller";
+import {
+  withdrawalSummaryHandler,
+  listWithdrawalsHandler,
+  createWithdrawalHandler,
+  cancelWithdrawalHandler,
+} from "../controllers/withdrawal.controller";
 import { protect } from "../middleware/auth.middleware";
 import { validate } from "../middleware/validate.middleware";
 import { publicCollectionLimiter } from "../middleware/rateLimit.middleware";
@@ -34,5 +40,11 @@ router.delete("/:id", protect, closeCollectionHandler);
 router.get("/:id/payments", protect, collectionPaymentsHandler);
 router.get("/:id/summary", protect, collectionSummaryHandler);
 router.get("/:id/export/csv", protect, exportCollectionCsvHandler);
+
+// Withdrawal sub-routes — owner only
+router.get("/:id/withdrawal-summary", protect, withdrawalSummaryHandler);
+router.get("/:id/withdrawals", protect, listWithdrawalsHandler);
+router.post("/:id/withdrawals", protect, ...createWithdrawalHandler);
+router.patch("/:id/withdrawals/:withdrawalId/cancel", protect, cancelWithdrawalHandler);
 
 export default router;
