@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { collectionsApi } from "@/lib/collections";
 import { getApiErrorMessage } from "@/lib/api";
-import type { Collection, CollectionActivity, CollectionSummary, Payment } from "@/types";
+import type { Collection, CollectionActivity, CollectionSummary, Payment, WithdrawalRecord, WithdrawalSummary } from "@/types";
 
 export const useCollections = () => {
   const [collections, setCollections] = useState<Collection[]>([]);
@@ -79,4 +79,32 @@ export const useCollectionPayments = (id: string) => {
   }, [id]);
 
   return { payments, loading, error };
+};
+
+export const useWithdrawalData = (collectionId: string) => {
+  const [summary, setSummary] = useState<WithdrawalSummary | null>(null);
+  const [withdrawals, setWithdrawals] = useState<WithdrawalRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const load = useCallback(() => {
+    if (!collectionId) return;
+    setLoading(true);
+    Promise.all([
+      collectionsApi.getWithdrawalSummary(collectionId),
+      collectionsApi.getWithdrawals(collectionId),
+    ])
+      .then(([summaryRes, withdrawalsRes]) => {
+        setSummary(summaryRes.data);
+        setWithdrawals(withdrawalsRes.data.withdrawals);
+        setError("");
+      })
+      .catch((err: unknown) => setError(getApiErrorMessage(err, "Unable to load withdrawal data.")))
+      .finally(() => setLoading(false));
+  }, [collectionId]);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [collectionId]);
+
+  return { summary, withdrawals, loading, error, reload: load };
 };

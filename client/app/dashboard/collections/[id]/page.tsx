@@ -21,12 +21,15 @@ import { SafeChartContainer } from "@/components/shared/SafeChartContainer";
 import { TopContributors } from "@/components/collections/TopContributors";
 import { collectionsApi, COLLECTION_TYPE_EMOJIS, COLLECTION_TYPE_LABELS } from "@/lib/collections";
 import { getApiErrorMessage } from "@/lib/api";
-import { useCollectionSummary, useCollectionPayments } from "@/hooks/useCollections";
+import { useCollectionSummary, useCollectionPayments, useWithdrawalData } from "@/hooks/useCollections";
+import { WithdrawalSummaryCard } from "@/components/collections/WithdrawalSummaryCard";
+import { WithdrawalHistoryList } from "@/components/collections/WithdrawalHistoryList";
 
 export default function CollectionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { summary, loading, error, reload } = useCollectionSummary(id);
   const { payments } = useCollectionPayments(id);
+  const { summary: withdrawalSummary, withdrawals, reload: reloadWithdrawal } = useWithdrawalData(id);
   const [closing, setClosing] = useState(false);
   const [updating, setUpdating] = useState(false);
 
@@ -296,6 +299,25 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
                 }
               />
             </section>
+
+            {/* ── Zone F: Withdrawal ───────────────────────────────────────── */}
+            {withdrawalSummary && (
+              <section className="flex flex-col gap-4">
+                <h2 className="text-xl font-bold text-[#071a0e]">Withdraw Funds</h2>
+                <WithdrawalSummaryCard
+                  summary={withdrawalSummary}
+                  collectionId={id}
+                  currency={summary.collection.currency}
+                  onSuccess={reloadWithdrawal}
+                />
+                <WithdrawalHistoryList
+                  collectionId={id}
+                  withdrawals={withdrawals}
+                  currency={summary.collection.currency}
+                  onSuccess={reloadWithdrawal}
+                />
+              </section>
+            )}
           </>
         )}
       </div>

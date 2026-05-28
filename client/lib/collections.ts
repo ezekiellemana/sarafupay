@@ -1,5 +1,15 @@
 import { api } from "@/lib/api";
-import type { Collection, CollectionActivity, CollectionSummary, Payment } from "@/types";
+import type { Collection, CollectionActivity, CollectionSummary, Payment, WithdrawalSummary, WithdrawalRecord } from "@/types";
+
+export type CreateWithdrawalPayload = {
+  requestedAmount: number;
+  destinationType: "mobile_money" | "bank";
+  recipientName: string;
+  recipientPhone?: string;
+  bankName?: string;
+  bankAccountNumber?: string;
+  ownerNote?: string;
+};
 
 export type CreateCollectionPayload = {
   title: string;
@@ -64,7 +74,24 @@ export const collectionsApi = {
     api<{ checkout_url: string; payment: { externalReference: string } }>("/api/payments/create-public-session", {
       method: "POST",
       body: JSON.stringify(data)
-    })
+    }),
+
+  getWithdrawalSummary: (id: string) =>
+    api<WithdrawalSummary>(`/api/collections/${id}/withdrawal-summary`),
+
+  getWithdrawals: (id: string) =>
+    api<{ withdrawals: WithdrawalRecord[] }>(`/api/collections/${id}/withdrawals`),
+
+  createWithdrawal: (id: string, data: CreateWithdrawalPayload) =>
+    api<{ withdrawal: WithdrawalRecord }>(`/api/collections/${id}/withdrawals`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  cancelWithdrawal: (id: string, withdrawalId: string) =>
+    api<{ withdrawal: WithdrawalRecord }>(`/api/collections/${id}/withdrawals/${withdrawalId}/cancel`, {
+      method: "PATCH",
+    }),
 };
 
 export const COLLECTION_TYPE_LABELS: Record<string, string> = {

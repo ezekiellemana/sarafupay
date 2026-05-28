@@ -304,6 +304,50 @@ export type CollectionActivity = {
   paidAt: string | null;
 };
 
+export type WithdrawalStatus =
+  | "pending"
+  | "approved"
+  | "processing"
+  | "paid"
+  | "rejected"
+  | "failed"
+  | "cancelled";
+
+export type WithdrawalSummary = {
+  completedContributions: number;
+  lockedWithdrawals: number;
+  paidWithdrawals: number;
+  availableForWithdrawal: number;
+  withdrawalFee: number;
+  minimumWithdrawalAmount: number;
+  minimumBalanceRequired: number;
+};
+
+export type WithdrawalRecord = {
+  id: string;
+  status: WithdrawalStatus;
+  requestedAmount: number;
+  withdrawalFee: number;
+  totalDeducted: number;
+  ownerReceives: number;
+  currency: string;
+  destinationType: "mobile_money" | "bank";
+  recipientName: string;
+  maskedRecipientPhone?: string;
+  maskedBankAccountNumber?: string;
+  bankName?: string;
+  requestedAt: string;
+  approvedAt?: string;
+  processingAt?: string;
+  paidAt?: string;
+  rejectedAt?: string;
+  failedAt?: string;
+  cancelledAt?: string;
+  adminNote?: string;
+  rejectionReason?: string;
+  payoutReference?: string;
+};
+
 export type FeePreview = {
   feesEnabled: boolean;
   contributionAmount: number;
