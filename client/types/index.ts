@@ -361,6 +361,71 @@ export type FeePreview = {
   paymentChannel: "mobile_money" | "card" | "unknown";
 };
 
+export type AdminWithdrawalListItem = {
+  id: string;
+  status: WithdrawalStatus;
+  requestedAmount: number;
+  withdrawalFee: number;
+  totalDeducted: number;
+  ownerReceives: number;
+  currency: string;
+  destinationType: "mobile_money" | "bank";
+  ownerName: string;
+  ownerEmail: string;
+  collectionTitle: string;
+  collectionSlug?: string;
+  maskedRecipientPhone?: string;
+  maskedBankAccountNumber?: string;
+  requestedAt: string;
+  approvedAt?: string;
+  processingAt?: string;
+  paidAt?: string;
+  rejectedAt?: string;
+  failedAt?: string;
+  cancelledAt?: string;
+};
+
+export type AdminWithdrawalDetail = {
+  id: string;
+  status: WithdrawalStatus;
+  requestedAmount: number;
+  withdrawalFee: number;
+  providerFee: number;
+  totalDeducted: number;
+  ownerReceives: number;
+  currency: string;
+  destinationType: "mobile_money" | "bank";
+  recipientName: string;
+  recipientPhone?: string;
+  bankName?: string;
+  bankAccountNumber?: string;
+  ownerNote?: string;
+  adminNote?: string;
+  rejectionReason?: string;
+  payoutReference?: string;
+  owner: { id: string; fullName: string; email: string; phoneNumber?: string };
+  collection: { id: string; title: string; slug?: string };
+  balanceSnapshot: { completedContributions: number; lockedWithdrawals: number; paidWithdrawals: number; availableForWithdrawal: number };
+  liveBalance: { completedContributions: number; lockedWithdrawals: number; paidWithdrawals: number; availableForWithdrawal: number };
+  approvedBy?: string;
+  rejectedBy?: string;
+  paidBy?: string;
+  requestedAt: string;
+  approvedAt?: string;
+  processingAt?: string;
+  paidAt?: string;
+  rejectedAt?: string;
+  failedAt?: string;
+  cancelledAt?: string;
+};
+
+export type AdminWithdrawalSummary = {
+  pendingCount: number;
+  activeCount: number;
+  paidCount: number;
+  totalRequested: number;
+};
+
 export type ApiResponse<T> = {
   success: boolean;
   message: string;

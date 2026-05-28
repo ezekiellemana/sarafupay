@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Activity,
+  ArrowDownToLine,
   BarChart3,
   Folders,
   FolderKanban,
@@ -29,6 +30,7 @@ const icons: Record<string, React.ReactNode> = {
   "Platform Overview": <Shield />,
   Projects: <FolderKanban />,
   Members: <Users />,
+  Withdrawals: <ArrowDownToLine />,
   Activity: <Activity />,
   Settings: <Settings />,
 };
