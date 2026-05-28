@@ -188,6 +188,40 @@ export function PaymentDetailDrawer({ payment, open, onClose }: PaymentDetailDra
                 </div>
               </section>
 
+              {/* Fee Accounting — admin only, feeVersion >= 1 */}
+              {(detail.feeVersion ?? 0) >= 1 ? (
+                <section>
+                  <SectionTitle>Fee Accounting</SectionTitle>
+                  <div className="rounded-2xl border border-amber-100 bg-amber-50/40 px-5 py-4 space-y-2.5">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-slate-500">Contribution amount</span>
+                      <span className="font-medium text-[#071a0e]">{formatMoney(detail.contributionAmount, detail.currency)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-slate-500">Service fee</span>
+                      <span className="font-medium text-amber-700">{formatMoney(detail.serviceFee, detail.currency)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-slate-500">Total charged to payer</span>
+                      <span className="font-medium text-[#071a0e]">{formatMoney(detail.totalChargedAmount ?? detail.amount, detail.currency)}</span>
+                    </div>
+                    <div className="h-px bg-amber-200/50" />
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-slate-500">Provider cost</span>
+                      <span className="font-medium text-slate-500">{formatMoney(detail.providerFee, detail.currency)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm font-bold">
+                      <span className="text-[#071a0e]">Net platform revenue</span>
+                      <span className="text-[#035034]">{formatMoney(detail.serviceFee - detail.providerFee, detail.currency)}</span>
+                    </div>
+                    <div className="flex items-center justify-between pt-1 text-xs text-slate-400">
+                      <span>Channel · v{detail.feeVersion}</span>
+                      <span className="capitalize">{(detail.paymentChannel ?? "unknown").replace("_", " ")}</span>
+                    </div>
+                  </div>
+                </section>
+              ) : null}
+
               {/* Amount */}
               <section>
                 <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 px-5 py-5">

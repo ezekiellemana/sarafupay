@@ -239,6 +239,12 @@ export const getAdminPayment = asyncHandler(async (req, res) => {
         ? { fullName: collectionOwner.fullName, email: collectionOwner.email }
         : null,
       webhookReceived: Boolean(payment.rawWebhookPayload),
+      contributionAmount: payment.contributionAmount ?? payment.amount,
+      serviceFee: payment.serviceFee,
+      totalChargedAmount: payment.totalChargedAmount,
+      providerFee: payment.providerFee,
+      paymentChannel: payment.paymentChannel,
+      feeVersion: payment.feeVersion,
     },
   });
 });

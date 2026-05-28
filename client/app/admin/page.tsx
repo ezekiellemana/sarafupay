@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { AdminStatsCards } from "@/components/admin/AdminStatsCards";
+import { AdminRevenueCards } from "@/components/admin/AdminRevenueCards";
 import { SystemHealthCard } from "@/components/admin/SystemHealthCard";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { SafeChartContainer } from "@/components/shared/SafeChartContainer";
@@ -311,7 +312,7 @@ function AnalyticsPanel({ data }: { data: AdminDashboardData }) {
         {/* Left — Monthly Revenue Chart */}
         <div className="border-b border-[#e5e0d6] p-5 lg:border-b-0 lg:border-r lg:p-6">
           <p className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-            Monthly Revenue — Completed Payments (last 12 months)
+            Monthly Contribution Volume — Completed Payments (last 12 months)
           </p>
           <div className="h-48 lg:h-64">
             {data.monthlyChart.length === 0 ? (
@@ -733,19 +734,22 @@ export default function AdminPage() {
             {/* D: Main Analytics Panel */}
             <AnalyticsPanel data={data} />
 
-            {/* E: Performance / Ranking Panel */}
+            {/* E: Platform Revenue */}
+            <AdminRevenueCards summary={data.revenueSummary} />
+
+            {/* F: Performance / Ranking Panel */}
             <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
               <TopCollections collections={data.topCollections ?? []} />
               <LatestPaymentsFeed payments={data.latestCompletedPayments} />
             </div>
 
-            {/* F: Live Activity Panel (full width) */}
+            {/* G: Live Activity Panel (full width) */}
             <ActivityPanel
               events={activityData?.events ?? []}
               loading={activityLoading}
             />
 
-            {/* G: Quick Actions */}
+            {/* H: Quick Actions */}
             <section>
               <h2 className="mb-4 text-base font-bold text-[#071a0e]">Quick Actions</h2>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">

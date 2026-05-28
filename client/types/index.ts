@@ -161,6 +161,19 @@ export type AdminDashboardData = {
   latestCompletedPayments: Payment[];
   // top collections by revenue
   topCollections: { title: string; slug: string; total: number; count: number }[];
+  // platform revenue (fee-tracked payments only)
+  revenueSummary: {
+    grossContributionVolume: number;
+    grossPlatformFees: number;
+    providerCosts: number;
+    netPlatformRevenue: number;
+    grossPlatformFeesThisMonth: number;
+    providerCostsThisMonth: number;
+    netPlatformRevenueThisMonth: number;
+    feePaymentCount: number;
+    unknownChannelCount: number;
+    byChannel: { channel: string; count: number; serviceFee: number; providerFee: number; netRevenue: number }[];
+  };
 };
 
 export type ActivityEventType = "user_registered" | "collection_created" | "payment_completed";
@@ -228,6 +241,12 @@ export type AdminPaymentDetail = {
   collection: { title: string; slug?: string } | null;
   collectionOwner: { fullName: string; email: string } | null;
   webhookReceived: boolean;
+  contributionAmount: number;
+  serviceFee: number;
+  totalChargedAmount?: number;
+  providerFee: number;
+  paymentChannel: string;
+  feeVersion: number;
 };
 
 export type AdminCollection = {

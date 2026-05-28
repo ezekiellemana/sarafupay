@@ -53,6 +53,10 @@ export const getAdminDashboard = async () => {
     recentUsers,
     latestCompletedPayments,
     topCollectionsRaw,
+    revenueAllTimeRaw,
+    revenueThisMonthRaw,
+    unknownChannelCount,
+    channelBreakdownRaw,
   ] = await Promise.all([
     Payment.aggregate<{ total: number }>([
       { $match: { status: "completed" } },
@@ -94,6 +98,19 @@ export const getAdminDashboard = async () => {
       { $unwind: { path: "$project", preserveNullAndEmptyArrays: true } },
       { $project: { _id: 0, title: { $ifNull: ["$project.title", "Unknown"] }, slug: { $ifNull: ["$project.slug", ""] }, total: 1, count: 1 } },
     ]),
+    Payment.aggregate<{ grossPlatformFees: number; providerCosts: number; feePaymentCount: number }>([
+      { $match: { status: "completed", feeVersion: { $gte: 1 } } },
+      { $group: { _id: null, grossPlatformFees: { $sum: "$serviceFee" }, providerCosts: { $sum: "$providerFee" }, feePaymentCount: { $sum: 1 } } }
+    ]),
+    Payment.aggregate<{ grossPlatformFeesThisMonth: number; providerCostsThisMonth: number }>([
+      { $match: { status: "completed", feeVersion: { $gte: 1 }, monthPaidFor: currentMonth } },
+      { $group: { _id: null, grossPlatformFeesThisMonth: { $sum: "$serviceFee" }, providerCostsThisMonth: { $sum: "$providerFee" } } }
+    ]),
+    Payment.countDocuments({ status: "completed", feeVersion: { $gte: 1 }, paymentChannel: "unknown" }),
+    Payment.aggregate<{ _id: string; count: number; serviceFee: number; providerFee: number }>([
+      { $match: { status: "completed", feeVersion: { $gte: 1 } } },
+      { $group: { _id: "$paymentChannel", count: { $sum: 1 }, serviceFee: { $sum: "$serviceFee" }, providerFee: { $sum: "$providerFee" } } }
+    ]),
   ]);
 
   const totalCollected = collectedResult[0]?.total ?? 0;
@@ -102,6 +119,21 @@ export const getAdminDashboard = async () => {
   const paidMembersThisMonth = paidThisMonthIds.length;
   const totalPayments = statusCounts.reduce((sum, s) => sum + s.count, 0);
   const totalCollections = projectStatusCounts.reduce((sum, s) => sum + s.count, 0);
+
+  const grossPlatformFees = revenueAllTimeRaw[0]?.grossPlatformFees ?? 0;
+  const providerCosts = revenueAllTimeRaw[0]?.providerCosts ?? 0;
+  const feePaymentCount = revenueAllTimeRaw[0]?.feePaymentCount ?? 0;
+  const netPlatformRevenue = grossPlatformFees - providerCosts;
+  const grossPlatformFeesThisMonth = revenueThisMonthRaw[0]?.grossPlatformFeesThisMonth ?? 0;
+  const providerCostsThisMonth = revenueThisMonthRaw[0]?.providerCostsThisMonth ?? 0;
+  const netPlatformRevenueThisMonth = grossPlatformFeesThisMonth - providerCostsThisMonth;
+  const byChannel = channelBreakdownRaw.map(({ _id, count, serviceFee, providerFee }) => ({
+    channel: _id,
+    count,
+    serviceFee,
+    providerFee,
+    netRevenue: serviceFee - providerFee,
+  }));
 
   return {
     // existing fields — backward compatible
@@ -126,6 +158,18 @@ export const getAdminDashboard = async () => {
     recentUsers,
     latestCompletedPayments,
     topCollections: topCollectionsRaw,
+    revenueSummary: {
+      grossContributionVolume: totalCollected,
+      grossPlatformFees,
+      providerCosts,
+      netPlatformRevenue,
+      grossPlatformFeesThisMonth,
+      providerCostsThisMonth,
+      netPlatformRevenueThisMonth,
+      feePaymentCount,
+      unknownChannelCount,
+      byChannel,
+    },
   };
 };
 
