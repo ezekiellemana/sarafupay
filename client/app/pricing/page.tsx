@@ -20,6 +20,15 @@ export const metadata: Metadata = {
   description:
     "Simple, transparent pricing. No setup fees, no subscriptions. SarafuPay charges a small service fee per contribution. Collection owners always receive the full contribution amount.",
   robots: { index: true, follow: true },
+  openGraph: {
+    title: "SarafuPay Pricing — No Setup Fees, No Subscriptions",
+    description: "3% service fee on mobile money contributions (min TZS 300, max TZS 5,000). Collection owners pay nothing. You only pay when money moves.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SarafuPay Pricing",
+    description: "No setup fees. No subscriptions. 3% service fee on mobile money. Collection owners receive the full contribution amount.",
+  },
 };
 
 function SectionLabel({ children }: { children: React.ReactNode }) {

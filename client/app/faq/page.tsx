@@ -19,6 +19,15 @@ export const metadata: Metadata = {
   description:
     "Frequently asked questions about SarafuPay — how collections work, contribution fees, withdrawal fees, payment methods, security, and how to contact support.",
   robots: { index: true, follow: true },
+  openGraph: {
+    title: "SarafuPay FAQ — Common Questions Answered",
+    description: "Everything you need to know about SarafuPay: fees, withdrawals, payment methods, security, and support. Tanzania's payment collection platform.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SarafuPay FAQ",
+    description: "Common questions about fees, withdrawals, payment methods, and security on SarafuPay.",
+  },
 };
 
 type FAQItem = { q: string; a: React.ReactNode };

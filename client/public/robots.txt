@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /api
+
+Sitemap: https://sarafupay.app/sitemap.xml

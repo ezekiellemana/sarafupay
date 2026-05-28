@@ -7,8 +7,18 @@ import { FloatingBlobBackground } from "@/components/shared/FloatingBlobBackgrou
 import { GradientButton } from "@/components/shared/GradientButton";
 
 export const metadata: Metadata = {
-  title: "About",
-  description: "Learn what SarafuPay is, how it works, and the everyday use cases it was built for — from weddings and events to group savings and charity drives.",
+  title: "About SarafuPay",
+  description: "Learn what SarafuPay is, how it works, and the everyday use cases it was built for — from weddings and events to group savings and charity drives across Tanzania.",
+  robots: { index: true, follow: true },
+  openGraph: {
+    title: "About SarafuPay — Tanzania's Payment Collection Platform",
+    description: "Learn what SarafuPay is, how it works, and the everyday use cases it was built for — from weddings and events to group savings and charity drives across Tanzania.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "About SarafuPay",
+    description: "Learn what SarafuPay is and how it works for groups, events, and community projects in Tanzania.",
+  },
 };
 
 const useCases = [
