@@ -81,9 +81,10 @@ const FAQ_GROUPS: FAQGroup[] = [
         q: "How much are withdrawal fees?",
         a: (
           <>
-            There is a flat <strong>TZS 2,000 withdrawal fee</strong> per request, plus an estimated provider payout
-            cost of approximately TZS 1,500. For example, requesting TZS 100,000 would result in TZS 96,500 sent to
-            your mobile money account. See the{" "}
+            There is a flat <strong>TZS 2,000 withdrawal fee</strong> per request. The fee is added on top of the
+            amount you request and deducted from your collection balance — you receive exactly the amount you requested.
+            For example, requesting TZS 100,000 means TZS 102,000 is deducted from your balance and TZS 100,000 is
+            sent to your mobile money account. See the{" "}
             <Link href="/withdrawal-policy" className="font-medium text-[#035034] underline-offset-2 hover:underline">
               Withdrawal Policy
             </Link>{" "}

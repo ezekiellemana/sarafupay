@@ -193,21 +193,21 @@ export default function WithdrawalPolicyPage() {
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <StatCard label="Minimum withdrawal" value="TZS 10,000" sub="Before fees" accent="slate" />
                 <StatCard label="Withdrawal fee" value="TZS 2,000" sub="Deducted from balance" accent="amber" />
-                <StatCard label="Minimum you receive" value="TZS 8,500" sub="After fee + payout cost" accent="green" />
+                <StatCard label="You receive" value="Full amount" sub="Fee is added on top, not deducted from payout" accent="green" />
               </div>
               <p className="mt-2">
                 The minimum withdrawal amount is <strong className="text-slate-700">TZS 10,000</strong>. This is the
-                amount you request — the withdrawal fee and payout processing cost are deducted before funds are sent to you.
+                amount you request — and the amount you receive. The withdrawal fee is added on top and deducted from your collection balance together with the requested amount.
               </p>
               <Callout variant="info">
-                To withdraw TZS 10,000 minimum, your available balance must be at least TZS 10,000. The withdrawal fee (TZS 2,000) and payout cost (est. TZS 1,500) are deducted from your balance — not from the amount you receive.
+                To request TZS 10,000, your available balance must be at least TZS 12,000 (TZS 10,000 requested + TZS 2,000 withdrawal fee). You receive the full TZS 10,000 — the fee comes from your balance on top.
               </Callout>
             </Section>
 
             <Section id="fee" icon={<ArrowDownToLine className="size-5" />} title="3. Withdrawal Fee">
               <p>
                 A flat <strong className="text-slate-700">withdrawal fee of TZS 2,000</strong> applies to every withdrawal request.
-                This fee covers the cost of manually reviewing and processing your request, plus payout infrastructure costs.
+                The fee is added on top of the amount you request and deducted from your collection balance together with the requested amount. You receive exactly the amount you requested.
               </p>
 
               <div className="overflow-hidden rounded-xl border border-[#e5e0d6]">
@@ -217,9 +217,9 @@ export default function WithdrawalPolicyPage() {
                 <div className="divide-y divide-[#f5f2ed]">
                   {[
                     { label: "Requested amount", value: "TZS 100,000" },
-                    { label: "Withdrawal fee (flat)", value: "− TZS 2,000" },
-                    { label: "Payout cost (estimated)", value: "− TZS 1,500" },
-                    { label: "You receive", value: "TZS 96,500", bold: true },
+                    { label: "Withdrawal fee (added on top)", value: "+ TZS 2,000" },
+                    { label: "Total deducted from your balance", value: "TZS 102,000" },
+                    { label: "You receive", value: "TZS 100,000", bold: true },
                   ].map(({ label, value, bold }) => (
                     <div key={label} className={cn("flex items-center justify-between px-4 py-3", bold && "bg-emerald-50/60")}>
                       <p className="text-sm text-slate-600">{label}</p>
@@ -229,7 +229,7 @@ export default function WithdrawalPolicyPage() {
                 </div>
               </div>
               <p className="text-xs text-slate-400">
-                The payout cost is an estimated provider fee that may vary slightly. The exact amount is shown in your withdrawal request before you submit.
+                The exact fee breakdown is shown in your withdrawal request before you submit.
               </p>
             </Section>
 

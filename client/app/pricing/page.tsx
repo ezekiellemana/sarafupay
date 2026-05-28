@@ -303,10 +303,10 @@ export default function PricingPage() {
             <p className="mb-3 text-sm font-semibold text-slate-600">Example: requesting TZS 100,000</p>
             <div className="overflow-hidden rounded-2xl border border-[#e5e0d6] bg-white shadow-sm shadow-[#0a1f12]/4">
               <div className="divide-y divide-[#f5f2ed] px-6">
-                <ExampleRow label="Requested amount" value="TZS 100,000" />
-                <ExampleRow label="Withdrawal fee (flat)" value="− TZS 2,000" />
-                <ExampleRow label="Payout cost (estimated)" value="− TZS 1,500" note="Provider payout cost" />
-                <ExampleRow label="You receive" value="TZS 96,500" highlight />
+                <ExampleRow label="Requested amount" value="TZS 100,000" note="Amount you request" />
+                <ExampleRow label="Withdrawal fee" value="+ TZS 2,000" note="Added on top — deducted from your balance" />
+                <ExampleRow label="Total deducted from balance" value="TZS 102,000" />
+                <ExampleRow label="You receive" value="TZS 100,000" highlight />
               </div>
             </div>
             <p className="mt-2 text-xs text-slate-400">
