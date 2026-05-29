@@ -3,6 +3,11 @@ import { env } from "../config/env";
 import { AppError } from "../utils/AppError";
 import { verifySnippeSignature } from "../utils/webhookVerifier";
 
+// SNIPPE_BASE_URL is required in production (fail-fast in env.ts).
+// In development it falls back to the documented default so the server
+// starts without setting the var — but payment calls will fail without a real key anyway.
+const SNIPPE_API_BASE = (env.SNIPPE_BASE_URL ?? "https://api.snippe.sh").replace(/\/$/, "");
+
 export type CreateSessionInput = {
   amount: number;
   currency: string;
@@ -81,7 +86,7 @@ export const createPaymentSession = async (input: CreateSessionInput): Promise<S
   };
 
   const response = await axios.post(
-    `${env.SNIPPE_BASE_URL.replace(/\/$/, "")}/api/v1/sessions`,
+    `${SNIPPE_API_BASE}/api/v1/sessions`,
     payload,
     {
       headers: {
@@ -96,7 +101,7 @@ export const createPaymentSession = async (input: CreateSessionInput): Promise<S
 
 export const verifyPayment = async (reference: string) => {
   ensureConfigured();
-  const response = await axios.get(`${env.SNIPPE_BASE_URL.replace(/\/$/, "")}/api/v1/sessions/${reference}`, {
+  const response = await axios.get(`${SNIPPE_API_BASE}/api/v1/sessions/${reference}`, {
     headers: { Authorization: `Bearer ${env.SNIPPE_API_KEY}` }
   });
   return normalizeSnippePaymentResponse(response.data);

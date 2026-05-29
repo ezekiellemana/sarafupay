@@ -23,7 +23,7 @@ Set these on your backend hosting platform (Railway, Render, Fly, etc.).
 | `COOKIE_NAME` | Optional | `sarafupay_token` | Must match `proxy.ts` hardcoded value |
 | `SNIPPE_API_KEY` | **Required** | `sk_live_...` | Server will not start without this in production |
 | `SNIPPE_WEBHOOK_SECRET` | **Required** | `whsec_...` | Server will not start without this in production |
-| `SNIPPE_BASE_URL` | **Required** | `https://api.snippe.sh` | ⚠️ Confirm correct URL with Snippe — env.ts default is `https://api.snippe.me`, .env.example says `https://api.snippe.sh`. Set explicitly. |
+| `SNIPPE_BASE_URL` | **Required** | `https://api.snippe.sh` | Server will not start without this in production. No default in production — must be set explicitly |
 | `SNIPPE_PROFILE_ID` | **Required** | `prof_...` | Your Snippe merchant profile ID |
 | `FEES_ENABLED` | **Required** | `true` | ⚠️ Must be `true` in production. If absent or `false`, no service fees are charged to contributors |
 | `GOOGLE_CLIENT_ID` | Optional | `xxx.apps.googleusercontent.com` | Google OAuth. Google login disabled if absent |
@@ -126,7 +126,8 @@ NEXT_PUBLIC_POSTHOG_ENABLED=false
 - [ ] Set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_CALLBACK_URL` in backend env
 
 ### Snippe
-- [ ] Confirm correct `SNIPPE_BASE_URL` with Snippe (`api.snippe.sh` vs `api.snippe.me`)
+
+- [ ] Set `SNIPPE_BASE_URL=https://api.snippe.sh` in backend env (server will not start without it in production)
 - [ ] Configure Snippe webhook URL: `https://api.sarafupay.app/api/webhooks/snippe`
 - [ ] Configure Snippe payment return/redirect URL: `https://sarafupay.app/payment/complete` (or equivalent)
 - [ ] Confirm `SNIPPE_PROFILE_ID` matches your live merchant account

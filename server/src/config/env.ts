@@ -14,7 +14,7 @@ const envSchema = z.object({
   COOKIE_NAME: z.string().default("sarafupay_token"),
   SNIPPE_API_KEY: z.string().optional(),
   SNIPPE_WEBHOOK_SECRET: z.string().optional(),
-  SNIPPE_BASE_URL: z.string().url().default("https://api.snippe.me"),
+  SNIPPE_BASE_URL: z.string().url().optional(),
   SNIPPE_PROFILE_ID: z.string().optional(),
   ADMIN_NAME: z.string().optional(),
   ADMIN_EMAIL: z.string().email().optional(),
@@ -67,6 +67,7 @@ if (isProduction) {
   const missing: string[] = [];
   if (!env.SNIPPE_API_KEY) missing.push("SNIPPE_API_KEY");
   if (!env.SNIPPE_WEBHOOK_SECRET) missing.push("SNIPPE_WEBHOOK_SECRET");
+  if (!env.SNIPPE_BASE_URL) missing.push("SNIPPE_BASE_URL");
   if (missing.length > 0) {
     throw new Error(
       `[env] Missing required production environment variable(s): ${missing.join(", ")}. ` +
