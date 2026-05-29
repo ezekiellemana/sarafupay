@@ -38,6 +38,7 @@ export default function AdminProjectsPage() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  const [refreshKey, setRefreshKey] = useState(0);
   const debouncedSearch = useDebouncedValue(search);
 
   // Reset to page 1 whenever search or filter changes
@@ -68,7 +69,7 @@ export default function AdminProjectsPage() {
         setError(getApiErrorMessage(err, "Unable to load collections."));
         setLoading(false);
       });
-  }, [debouncedSearch, statusFilter, page]);
+  }, [debouncedSearch, statusFilter, page, refreshKey]);
 
   const handleStatusChange = (collectionId: string, status: AdminCollection["status"]) => {
     setCollections((prev) =>
@@ -129,7 +130,7 @@ export default function AdminProjectsPage() {
           <ErrorState
             message={error}
             action={
-              <Button className="rounded-2xl" variant="outline" onClick={() => setPage((p) => p)}>
+              <Button className="rounded-2xl" variant="outline" onClick={() => setRefreshKey((k) => k + 1)}>
                 Retry
               </Button>
             }

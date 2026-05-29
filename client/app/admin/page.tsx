@@ -132,18 +132,25 @@ function buildAlerts(data: AdminDashboardData): AttentionAlert[] {
   const pausedOrClosed =
     (data.projectsByStatus.find((s) => s.status === "paused")?.count ?? 0) +
     (data.projectsByStatus.find((s) => s.status === "closed")?.count ?? 0);
+  const pendingWithdrawalLiability = data.withdrawalRevenueSummary?.pendingLiability ?? 0;
   return [
     data.failedPayments > 0 && {
       level: "error" as const,
       label: `${data.failedPayments} failed payment${data.failedPayments !== 1 ? "s" : ""}`,
       hint: "May need investigation or member follow-up.",
-      href: "/admin/payments",
+      href: "/admin/payments?status=failed",
+    },
+    pendingWithdrawalLiability > 0 && {
+      level: "warning" as const,
+      label: "Pending withdrawal requests",
+      hint: "Review and process withdrawal requests in the queue.",
+      href: "/admin/withdrawals?status=pending",
     },
     data.pendingPayments > 0 && {
       level: "warning" as const,
       label: `${data.pendingPayments} pending payment${data.pendingPayments !== 1 ? "s" : ""}`,
       hint: "Awaiting payment gateway confirmation.",
-      href: "/admin/payments",
+      href: "/admin/payments?status=pending",
     },
     inactiveUsers > 0 && {
       level: "info" as const,

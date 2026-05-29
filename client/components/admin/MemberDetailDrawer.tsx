@@ -13,7 +13,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { formatDate, formatMoney } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
-import { AlertTriangle, CheckCircle2, FolderKanban, Loader2, UserX, UserCheck } from "lucide-react";
+import { AlertTriangle, Check, CheckCircle2, Copy, FolderKanban, Loader2, UserX, UserCheck } from "lucide-react";
 import type { Member, MemberDetail, Payment, Project } from "@/types";
 
 // ─── helpers ───────────────────────────────────────────────────────────────
@@ -40,6 +40,19 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
     <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
       {children}
     </p>
+  );
+}
+
+function CopyBtn({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={() => navigator.clipboard.writeText(value).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); })}
+      title="Copy"
+      className="ml-1.5 shrink-0 rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+    >
+      {copied ? <Check className="size-3 text-emerald-600" /> : <Copy className="size-3" />}
+    </button>
   );
 }
 
@@ -163,7 +176,12 @@ export function MemberDetailDrawer({
                 <SectionTitle>Profile</SectionTitle>
                 <div className="divide-y divide-slate-100">
                   <InfoRow label="Name" value={detail.user.fullName} />
-                  <InfoRow label="Email" value={detail.user.email} />
+                  <InfoRow label="Email" value={
+                    <span className="flex items-center">
+                      <span>{detail.user.email}</span>
+                      <CopyBtn value={detail.user.email} />
+                    </span>
+                  } />
                   <InfoRow label="Phone" value={detail.user.phoneNumber} />
                   <InfoRow
                     label="Role"

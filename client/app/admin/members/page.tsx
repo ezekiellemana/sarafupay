@@ -36,6 +36,7 @@ export default function AdminMembersPage() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  const [refreshKey, setRefreshKey] = useState(0);
   const debouncedSearch = useDebouncedValue(search);
 
   // Reset to page 1 whenever search or filter changes
@@ -67,7 +68,7 @@ export default function AdminMembersPage() {
         setError(getApiErrorMessage(err, "Unable to load members."));
         setLoading(false);
       });
-  }, [debouncedSearch, statusFilter, page]);
+  }, [debouncedSearch, statusFilter, page, refreshKey]);
 
   const handleStatusChange = (memberId: string, isActive: boolean) => {
     setMembers((prev) =>
@@ -129,7 +130,7 @@ export default function AdminMembersPage() {
           <ErrorState
             message={error}
             action={
-              <Button className="rounded-2xl" variant="outline" onClick={() => setPage((p) => p)}>
+              <Button className="rounded-2xl" variant="outline" onClick={() => setRefreshKey((k) => k + 1)}>
                 Retry
               </Button>
             }

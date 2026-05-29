@@ -11,7 +11,7 @@ import {
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { formatDate, formatMoney } from "@/lib/formatters";
-import { CreditCard, Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { Check, Copy, CreditCard, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import type { AdminPaymentDetail, Payment } from "@/types";
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
@@ -30,6 +30,19 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
     <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
       {children}
     </p>
+  );
+}
+
+function CopyBtn({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={() => navigator.clipboard.writeText(value).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); })}
+      title="Copy"
+      className="ml-1.5 shrink-0 rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+    >
+      {copied ? <Check className="size-3 text-emerald-600" /> : <Copy className="size-3" />}
+    </button>
   );
 }
 
@@ -113,8 +126,18 @@ export function PaymentDetailDrawer({ payment, open, onClose }: PaymentDetailDra
               <section>
                 <SectionTitle>References</SectionTitle>
                 <div className="divide-y divide-slate-100">
-                  <InfoRow label="Snippe ref" value={detail.snippeReference ?? "—"} />
-                  <InfoRow label="External ref" value={detail.externalReference} />
+                  <InfoRow label="Snippe ref" value={
+                    <span className="flex items-center">
+                      <span>{detail.snippeReference ?? "—"}</span>
+                      {detail.snippeReference && <CopyBtn value={detail.snippeReference} />}
+                    </span>
+                  } />
+                  <InfoRow label="External ref" value={
+                    <span className="flex items-center">
+                      <span>{detail.externalReference}</span>
+                      {detail.externalReference && <CopyBtn value={detail.externalReference} />}
+                    </span>
+                  } />
                   <InfoRow label="Month" value={detail.monthPaidFor} />
                   <InfoRow label="Method" value={detail.paymentMethod ?? "—"} />
                   <InfoRow

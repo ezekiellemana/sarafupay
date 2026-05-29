@@ -14,6 +14,9 @@ import { api, getApiErrorMessage } from "@/lib/api";
 import { formatDate, formatMoney } from "@/lib/formatters";
 import {
   AlertTriangle,
+  Check,
+  Copy,
+  ExternalLink,
   FolderKanban,
   Loader2,
   PauseCircle,
@@ -53,6 +56,19 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
     <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
       {children}
     </p>
+  );
+}
+
+function CopyBtn({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={() => navigator.clipboard.writeText(value).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); })}
+      title="Copy"
+      className="ml-1.5 shrink-0 rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+    >
+      {copied ? <Check className="size-3 text-emerald-600" /> : <Copy className="size-3" />}
+    </button>
   );
 }
 
@@ -185,6 +201,25 @@ export function CollectionDetailDrawer({
                     label="Slug"
                     value={detail.collection.slug ? `/${detail.collection.slug}` : "—"}
                   />
+                  {detail.collection.slug && (
+                    <InfoRow
+                      label="Public link"
+                      value={
+                        <span className="flex items-center gap-1.5 flex-wrap">
+                          <a
+                            href={`https://sarafupay.app/pay/${detail.collection.slug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-[#035034] hover:underline underline-offset-2"
+                          >
+                            <ExternalLink className="size-3 shrink-0" />
+                            <span>Open</span>
+                          </a>
+                          <CopyBtn value={`https://sarafupay.app/pay/${detail.collection.slug}`} />
+                        </span>
+                      }
+                    />
+                  )}
                   <InfoRow
                     label="Type"
                     value={

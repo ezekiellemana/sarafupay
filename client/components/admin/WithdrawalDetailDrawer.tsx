@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, ArrowDownToLine, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { Check, Copy, Loader2, ArrowDownToLine, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
 import {
   Sheet,
@@ -37,6 +37,19 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-slate-500">{children}</p>
+  );
+}
+
+function CopyBtn({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={() => navigator.clipboard.writeText(value).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); })}
+      title="Copy"
+      className="ml-1.5 shrink-0 rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+    >
+      {copied ? <Check className="size-3 text-emerald-600" /> : <Copy className="size-3" />}
+    </button>
   );
 }
 
@@ -94,7 +107,7 @@ export function WithdrawalDetailDrawer({ item, open, onClose, onActionSuccess }:
         await api(`${url}/reject`, { method: "PATCH", body: JSON.stringify({ rejectionReason: actionInput }) });
         toast.success("Withdrawal rejected.");
       } else if (action === "processing") {
-        await api(`${url}/mark-processing`, { method: "PATCH", body: "{}" });
+        await api(`${url}/mark-processing`, { method: "PATCH", body: JSON.stringify({}) });
         toast.success("Marked as processing.");
       } else if (action === "paid") {
         if (!actionInput.trim()) { toast.error("Payout reference is required."); setActing(false); return; }
@@ -242,7 +255,14 @@ export function WithdrawalDetailDrawer({ item, open, onClose, onActionSuccess }:
                   <div className="divide-y divide-slate-100">
                     <InfoRow label="Method" value={detail.destinationType === "mobile_money" ? "Mobile Money" : "Bank Transfer"} />
                     <InfoRow label="Recipient" value={detail.recipientName} />
-                    {detail.recipientPhone && <InfoRow label="Phone" value={detail.recipientPhone} />}
+                    {detail.recipientPhone && (
+                      <InfoRow label="Phone" value={
+                        <span className="flex items-center">
+                          <span>{detail.recipientPhone}</span>
+                          <CopyBtn value={detail.recipientPhone} />
+                        </span>
+                      } />
+                    )}
                     {detail.bankName && <InfoRow label="Bank" value={detail.bankName} />}
                     {detail.bankAccountNumber && <InfoRow label="Account no." value={detail.bankAccountNumber} />}
                     {detail.ownerNote && <InfoRow label="Owner note" value={detail.ownerNote} />}
@@ -254,7 +274,12 @@ export function WithdrawalDetailDrawer({ item, open, onClose, onActionSuccess }:
                   <SectionTitle>Owner</SectionTitle>
                   <div className="divide-y divide-slate-100">
                     <InfoRow label="Name" value={detail.owner.fullName} />
-                    <InfoRow label="Email" value={detail.owner.email} />
+                    <InfoRow label="Email" value={
+                      <span className="flex items-center">
+                        <span>{detail.owner.email}</span>
+                        <CopyBtn value={detail.owner.email} />
+                      </span>
+                    } />
                     {detail.owner.phoneNumber && <InfoRow label="Phone" value={detail.owner.phoneNumber} />}
                     <InfoRow label="Collection" value={detail.collection.title} />
                   </div>
@@ -284,8 +309,9 @@ export function WithdrawalDetailDrawer({ item, open, onClose, onActionSuccess }:
                   </div>
                 </section>
 
-                {/* Admin metadata */}
-                {(detail.adminNote || detail.rejectionReason || detail.payoutReference) && (
+                {/* Admin metadata — always show audit trail when present */}
+                {(detail.adminNote || detail.rejectionReason || detail.payoutReference ||
+                  detail.approvedBy || detail.rejectedBy || detail.paidBy) && (
                   <section>
                     <SectionTitle>Admin Notes</SectionTitle>
                     <div className="divide-y divide-slate-100">
@@ -296,9 +322,14 @@ export function WithdrawalDetailDrawer({ item, open, onClose, onActionSuccess }:
                           value={<span className="text-red-600">{detail.rejectionReason}</span>}
                         />
                       )}
-                      {detail.payoutReference && <InfoRow label="Payout ref" value={<span className="font-mono">{detail.payoutReference}</span>} />}
-                    </div>
-                    <div className="mt-2 divide-y divide-slate-100">
+                      {detail.payoutReference && (
+                        <InfoRow label="Payout ref" value={
+                          <span className="flex items-center">
+                            <span className="font-mono">{detail.payoutReference}</span>
+                            <CopyBtn value={detail.payoutReference} />
+                          </span>
+                        } />
+                      )}
                       {detail.approvedBy && <InfoRow label="Approved by" value={detail.approvedBy} />}
                       {detail.rejectedBy && <InfoRow label="Rejected by" value={detail.rejectedBy} />}
                       {detail.paidBy && <InfoRow label="Paid by" value={detail.paidBy} />}
