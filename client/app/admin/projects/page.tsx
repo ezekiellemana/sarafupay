@@ -13,8 +13,10 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { cn } from "@/lib/utils";
-import { FolderKanban } from "lucide-react";
+import { ChevronLeft, ChevronRight, FolderKanban } from "lucide-react";
 import type { AdminCollection } from "@/types";
+
+const LIMIT = 25;
 
 type StatusFilter = "all" | "active" | "paused" | "draft" | "closed";
 
@@ -33,17 +35,32 @@ export default function AdminProjectsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selected, setSelected] = useState<AdminCollection | null>(null);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const debouncedSearch = useDebouncedValue(search);
 
+  // Reset to page 1 whenever search or filter changes
   useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, statusFilter]);
+
+  // Fetch on any dependency change
+  useEffect(() => {
+    setLoading(true);
     const params = new URLSearchParams();
     if (debouncedSearch) params.set("search", debouncedSearch);
     if (statusFilter !== "all") params.set("status", statusFilter);
-    const path = `/api/admin/collections${params.toString() ? `?${params}` : ""}`;
+    params.set("page", String(page));
+    params.set("limit", String(LIMIT));
 
-    api<{ collections: AdminCollection[] }>(path)
+    api<{ collections: AdminCollection[]; total: number; page: number; totalPages: number; limit: number }>(
+      `/api/admin/collections?${params}`
+    )
       .then((res) => {
         setCollections(res.data.collections);
+        setTotal(res.data.total);
+        setTotalPages(res.data.totalPages);
         setError("");
         setLoading(false);
       })
@@ -51,7 +68,7 @@ export default function AdminProjectsPage() {
         setError(getApiErrorMessage(err, "Unable to load collections."));
         setLoading(false);
       });
-  }, [debouncedSearch, statusFilter]);
+  }, [debouncedSearch, statusFilter, page]);
 
   const handleStatusChange = (collectionId: string, status: AdminCollection["status"]) => {
     setCollections((prev) =>
@@ -61,6 +78,9 @@ export default function AdminProjectsPage() {
       prev?._id === collectionId ? { ...prev, status } : prev
     );
   };
+
+  const rangeStart = total === 0 ? 0 : (page - 1) * LIMIT + 1;
+  const rangeEnd   = Math.min(page * LIMIT, total);
 
   return (
     <DashboardShell admin>
@@ -97,12 +117,19 @@ export default function AdminProjectsPage() {
           </div>
         </div>
 
+        {/* Result count */}
+        {!loading && !error && total > 0 && (
+          <p className="text-sm text-slate-500">
+            Showing {rangeStart}–{rangeEnd} of {total} collection{total !== 1 ? "s" : ""}
+          </p>
+        )}
+
         {loading && <LoadingState label="Loading collections…" />}
-        {error && (
+        {!loading && error && (
           <ErrorState
             message={error}
             action={
-              <Button className="rounded-2xl" variant="outline" onClick={() => window.location.reload()}>
+              <Button className="rounded-2xl" variant="outline" onClick={() => setPage((p) => p)}>
                 Retry
               </Button>
             }
@@ -124,6 +151,37 @@ export default function AdminProjectsPage() {
             collections={collections}
             onView={(col) => setSelected(col)}
           />
+        )}
+
+        {/* Pagination controls */}
+        {!loading && !error && totalPages > 1 && (
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-slate-500">
+              Page {page} of {totalPages}
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 gap-1.5 rounded-2xl"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => p - 1)}
+              >
+                <ChevronLeft className="size-3.5" />
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 gap-1.5 rounded-2xl"
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Next
+                <ChevronRight className="size-3.5" />
+              </Button>
+            </div>
+          </div>
         )}
       </div>
 

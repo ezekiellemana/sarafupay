@@ -9,6 +9,10 @@ import { env } from "../config/env";
 
 export const members = asyncHandler(async (req, res) => {
   const search = String(req.query.search ?? "");
+  const page   = Math.max(1, parseInt(String(req.query.page  ?? "1"),  10) || 1);
+  const limit  = Math.min(100, Math.max(1, parseInt(String(req.query.limit ?? "25"), 10) || 25));
+  const skip   = (page - 1) * limit;
+
   const query: Record<string, unknown> = { role: "member" };
   if (search) {
     query.$or = [
@@ -20,13 +24,22 @@ export const members = asyncHandler(async (req, res) => {
   if (req.query.isActive === "true") query.isActive = true;
   if (req.query.isActive === "false") query.isActive = false;
 
-  const [users, payments, collectionsCounts] = await Promise.all([
-    User.find(query).select("-passwordHash").sort({ createdAt: -1 }).lean(),
+  const [total, users] = await Promise.all([
+    User.countDocuments(query),
+    User.find(query).select("-passwordHash").sort({ createdAt: -1 }).skip(skip).limit(limit).lean()
+  ]);
+
+  // Scope aggregations to only the users on this page
+  const userIds = users.map((u) => u._id);
+  const [payments, collectionsCounts] = await Promise.all([
     Payment.aggregate([
-      { $match: { status: "completed" } },
+      { $match: { status: "completed", userId: { $in: userIds } } },
       { $group: { _id: "$userId", totalPaid: { $sum: "$amount" }, paidMonths: { $addToSet: "$monthPaidFor" } } }
     ]),
-    Project.aggregate([{ $group: { _id: "$ownerId", count: { $sum: 1 } } }])
+    Project.aggregate([
+      { $match: { ownerId: { $in: userIds } } },
+      { $group: { _id: "$ownerId", count: { $sum: 1 } } }
+    ])
   ]);
 
   const paymentMap = new Map(payments.map((p) => [String(p._id), p]));
@@ -39,7 +52,11 @@ export const members = asyncHandler(async (req, res) => {
     collectionsCount: collectionsMap.get(user._id.toString()) ?? 0
   }));
 
-  res.json({ success: true, message: "Members loaded.", data: { members: enriched } });
+  res.json({
+    success: true,
+    message: "Members loaded.",
+    data: { members: enriched, total, page, totalPages: Math.ceil(total / limit), limit }
+  });
 });
 
 export const getMember = asyncHandler(async (req, res) => {
@@ -101,45 +118,53 @@ export const updateMemberStatus = asyncHandler(async (req, res) => {
 export const getAdminCollections = asyncHandler(async (req, res) => {
   const search = String(req.query.search ?? "").trim();
   const status = req.query.status as string | undefined;
+  const page   = Math.max(1, parseInt(String(req.query.page  ?? "1"),  10) || 1);
+  const limit  = Math.min(100, Math.max(1, parseInt(String(req.query.limit ?? "25"), 10) || 25));
+  const skip   = (page - 1) * limit;
 
   const filter: Record<string, unknown> = {};
   if (status && status !== "all") filter.status = status;
 
-  const projects = await Project.find(filter).sort({ createdAt: -1 }).lean();
+  if (search) {
+    const re = new RegExp(search, "i");
+    // Find users whose name or email matches, then include their collections via ownerId
+    const matchingOwners = await User.find({ $or: [{ fullName: re }, { email: re }] })
+      .select("_id")
+      .lean();
+    filter.$or = [
+      { title: re },
+      { slug: re },
+      ...(matchingOwners.length ? [{ ownerId: { $in: matchingOwners.map((u) => u._id) } }] : [])
+    ];
+  }
 
+  const [total, projects] = await Promise.all([
+    Project.countDocuments(filter),
+    Project.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean()
+  ]);
+
+  // Fetch owners only for projects on this page
   const ownerIdSet = new Set(
     projects.filter((p) => p.ownerId).map((p) => p.ownerId!.toString())
   );
   const owners = ownerIdSet.size
-    ? await User.find({ _id: { $in: [...ownerIdSet] } })
-        .select("fullName email")
-        .lean()
+    ? await User.find({ _id: { $in: [...ownerIdSet] } }).select("fullName email").lean()
     : [];
   const ownerMap = new Map(
-    owners.map((o) => [
-      o._id.toString(),
-      { _id: o._id.toString(), fullName: o.fullName, email: o.email },
-    ])
+    owners.map((o) => [o._id.toString(), { _id: o._id.toString(), fullName: o.fullName, email: o.email }])
   );
 
   type OwnerInfo = { _id: string; fullName: string; email: string };
-  let enriched = projects.map((p) => ({
+  const enriched = projects.map((p) => ({
     ...p,
     owner: p.ownerId ? (ownerMap.get(p.ownerId.toString()) ?? null) : null as OwnerInfo | null,
   }));
 
-  if (search) {
-    const re = new RegExp(search, "i");
-    enriched = enriched.filter(
-      (p) =>
-        re.test(p.title) ||
-        re.test(p.slug ?? "") ||
-        re.test(p.owner?.fullName ?? "") ||
-        re.test(p.owner?.email ?? "")
-    );
-  }
-
-  res.json({ success: true, message: "Collections loaded.", data: { collections: enriched } });
+  res.json({
+    success: true,
+    message: "Collections loaded.",
+    data: { collections: enriched, total, page, totalPages: Math.ceil(total / limit), limit }
+  });
 });
 
 export const getAdminCollection = asyncHandler(async (req, res) => {

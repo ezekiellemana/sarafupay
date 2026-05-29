@@ -13,8 +13,10 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { cn } from "@/lib/utils";
-import { Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, Users } from "lucide-react";
 import type { Member } from "@/types";
+
+const LIMIT = 25;
 
 type StatusFilter = "all" | "active" | "inactive";
 
@@ -31,18 +33,33 @@ export default function AdminMembersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const debouncedSearch = useDebouncedValue(search);
 
+  // Reset to page 1 whenever search or filter changes
   useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, statusFilter]);
+
+  // Fetch on any dependency change
+  useEffect(() => {
+    setLoading(true);
     const params = new URLSearchParams();
     if (debouncedSearch) params.set("search", debouncedSearch);
     if (statusFilter === "active") params.set("isActive", "true");
     if (statusFilter === "inactive") params.set("isActive", "false");
-    const path = `/api/admin/members${params.toString() ? `?${params}` : ""}`;
+    params.set("page", String(page));
+    params.set("limit", String(LIMIT));
 
-    api<{ members: Member[] }>(path)
+    api<{ members: Member[]; total: number; page: number; totalPages: number; limit: number }>(
+      `/api/admin/members?${params}`
+    )
       .then((res) => {
         setMembers(res.data.members);
+        setTotal(res.data.total);
+        setTotalPages(res.data.totalPages);
         setError("");
         setLoading(false);
       })
@@ -50,7 +67,7 @@ export default function AdminMembersPage() {
         setError(getApiErrorMessage(err, "Unable to load members."));
         setLoading(false);
       });
-  }, [debouncedSearch, statusFilter]);
+  }, [debouncedSearch, statusFilter, page]);
 
   const handleStatusChange = (memberId: string, isActive: boolean) => {
     setMembers((prev) =>
@@ -60,6 +77,9 @@ export default function AdminMembersPage() {
       prev?._id === memberId ? { ...prev, isActive } : prev,
     );
   };
+
+  const rangeStart = total === 0 ? 0 : (page - 1) * LIMIT + 1;
+  const rangeEnd   = Math.min(page * LIMIT, total);
 
   return (
     <DashboardShell admin>
@@ -96,13 +116,20 @@ export default function AdminMembersPage() {
           </div>
         </div>
 
+        {/* Result count */}
+        {!loading && !error && total > 0 && (
+          <p className="text-sm text-slate-500">
+            Showing {rangeStart}–{rangeEnd} of {total} member{total !== 1 ? "s" : ""}
+          </p>
+        )}
+
         {/* States */}
         {loading && <LoadingState label="Loading members…" />}
-        {error && (
+        {!loading && error && (
           <ErrorState
             message={error}
             action={
-              <Button className="rounded-2xl" variant="outline" onClick={() => window.location.reload()}>
+              <Button className="rounded-2xl" variant="outline" onClick={() => setPage((p) => p)}>
                 Retry
               </Button>
             }
@@ -124,6 +151,37 @@ export default function AdminMembersPage() {
             members={members}
             onView={(member) => setSelectedMember(member)}
           />
+        )}
+
+        {/* Pagination controls */}
+        {!loading && !error && totalPages > 1 && (
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-slate-500">
+              Page {page} of {totalPages}
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 gap-1.5 rounded-2xl"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => p - 1)}
+              >
+                <ChevronLeft className="size-3.5" />
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 gap-1.5 rounded-2xl"
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Next
+                <ChevronRight className="size-3.5" />
+              </Button>
+            </div>
+          </div>
         )}
       </div>
 
