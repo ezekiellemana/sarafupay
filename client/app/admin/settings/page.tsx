@@ -203,6 +203,45 @@ export default function AdminSettingsPage() {
 
         {settings && (
           <div className="flex flex-col gap-6">
+            {/* ── Readiness Summary ── */}
+            <section>
+              <SectionTitle>Production readiness</SectionTitle>
+              <Card>
+                <CardBody>
+                  {(() => {
+                    const paymentsOk = settings.snippeApiKeyConfigured && settings.snippeWebhookSecretConfigured && !!settings.snippeBaseUrl;
+                    const feesOk     = settings.feesEnabled;
+                    const emailOk    = settings.resendConfigured && settings.emailFromConfigured && settings.adminNotificationEmailConfigured;
+                    const googleOk   = settings.googleOAuthConfigured;
+                    const items: { label: string; ok: boolean; note?: string }[] = [
+                      { label: "Payments configured",    ok: paymentsOk, note: paymentsOk ? undefined : "Snippe API key, webhook secret, or base URL missing" },
+                      { label: "Webhooks configured",    ok: settings.snippeWebhookSecretConfigured },
+                      { label: "Service fees enabled",   ok: feesOk,     note: feesOk ? undefined : "FEES_ENABLED is not true — no service fees are collected" },
+                      { label: "Email notifications",    ok: emailOk,    note: emailOk ? undefined : "One or more Resend config values missing" },
+                      { label: "Google OAuth",           ok: googleOk,   note: googleOk ? undefined : "Disabled — Google login unavailable" },
+                    ];
+                    return items.map(({ label, ok, note }) => (
+                      <div key={label} className="flex items-center gap-3 py-3.5">
+                        <span className="flex-1 text-sm font-medium text-[#071a0e]">{label}</span>
+                        {note && !ok && (
+                          <span className="hidden truncate text-xs text-slate-400 sm:block">{note}</span>
+                        )}
+                        {ok ? (
+                          <span className="flex shrink-0 items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                            <CheckCircle2 className="size-3.5" /> Configured
+                          </span>
+                        ) : (
+                          <span className="flex shrink-0 items-center gap-1 rounded-full border border-amber-100 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                            <XCircle className="size-3.5" /> Not configured
+                          </span>
+                        )}
+                      </div>
+                    ));
+                  })()}
+                </CardBody>
+              </Card>
+            </section>
+
             {/* ── Safe URLs ── */}
             <section>
               <SectionTitle>Safe URLs</SectionTitle>
@@ -226,21 +265,15 @@ export default function AdminSettingsPage() {
                   <ConfigRow label="Cookie name" value={settings.cookieName} />
                   <ConfigRow label="JWT expires in" value={settings.jwtExpiresIn} />
                   <ConfigRow
-                    label="Support email"
+                    label="Fees enabled"
                     value={
-                      settings.supportEmail ?? (
-                        <span className="text-sm text-muted-foreground">
-                          Not configured
+                      settings.feesEnabled ? (
+                        <span className="rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                          true — fees active
                         </span>
-                      )
-                    }
-                  />
-                  <ConfigRow
-                    label="App version"
-                    value={
-                      settings.appVersion ?? (
-                        <span className="text-sm text-muted-foreground">
-                          Not configured (set APP_VERSION env var)
+                      ) : (
+                        <span className="rounded-full border border-amber-100 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                          false — no fees collected
                         </span>
                       )
                     }

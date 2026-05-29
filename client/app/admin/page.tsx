@@ -27,6 +27,7 @@ import type { ActivityEvent, AdminDashboardData, Payment } from "@/types";
 import {
   Activity,
   AlertTriangle,
+  ArrowDownToLine,
   ArrowRight,
   Calendar,
   CheckCircle2,
@@ -133,12 +134,19 @@ function buildAlerts(data: AdminDashboardData): AttentionAlert[] {
     (data.projectsByStatus.find((s) => s.status === "paused")?.count ?? 0) +
     (data.projectsByStatus.find((s) => s.status === "closed")?.count ?? 0);
   const pendingWithdrawalLiability = data.withdrawalRevenueSummary?.pendingLiability ?? 0;
+  const unknownChannelCount = data.revenueSummary?.unknownChannelCount ?? 0;
   return [
     data.failedPayments > 0 && {
       level: "error" as const,
       label: `${data.failedPayments} failed payment${data.failedPayments !== 1 ? "s" : ""}`,
       hint: "May need investigation or member follow-up.",
       href: "/admin/payments?status=failed",
+    },
+    unknownChannelCount > 0 && {
+      level: "warning" as const,
+      label: `${unknownChannelCount} payment${unknownChannelCount !== 1 ? "s" : ""} with unknown channel`,
+      hint: "Fee tracking may be incomplete — revenue metrics may under-count.",
+      href: "/admin/payments",
     },
     pendingWithdrawalLiability > 0 && {
       level: "warning" as const,
@@ -650,13 +658,14 @@ function ActivityPanel({
 // ── G: Quick Actions ───────────────────────────────────────────────────────
 
 const QUICK_ACTIONS = [
-  { href: "/admin/members",  label: "Members",       desc: "View and manage users",          icon: <Users className="size-4.5" />,    accent: "bg-blue-500/10 text-blue-600" },
-  { href: "/admin/projects", label: "Collections",   desc: "Monitor active collections",     icon: <FolderKanban className="size-4.5" />, accent: "bg-amber-500/10 text-amber-600" },
-  { href: "/admin/payments", label: "Payments",      desc: "Search and filter transactions", icon: <History className="size-4.5" />,  accent: "bg-emerald-500/10 text-emerald-600" },
-  { href: "/admin/activity", label: "Activity",      desc: "Latest platform events",         icon: <Activity className="size-4.5" />, accent: "bg-teal-500/10 text-teal-600" },
-  { href: "/admin/audit",    label: "Audit",         desc: "Production readiness",           icon: <ShieldCheck className="size-4.5" />, accent: "bg-slate-500/10 text-slate-600" },
-  { href: "/admin/settings", label: "Settings",      desc: "Config and secret status",       icon: <Settings className="size-4.5" />, accent: "bg-indigo-500/10 text-indigo-600" },
-  { href: "/admin#health",   label: "System Health", desc: "Backend status and uptime",      icon: <Shield className="size-4.5" />,   accent: "bg-purple-500/10 text-purple-600" },
+  { href: "/admin/members",     label: "Members",       desc: "View and manage users",          icon: <Users className="size-4.5" />,           accent: "bg-blue-500/10 text-blue-600" },
+  { href: "/admin/projects",    label: "Collections",   desc: "Monitor active collections",     icon: <FolderKanban className="size-4.5" />,     accent: "bg-amber-500/10 text-amber-600" },
+  { href: "/admin/payments",    label: "Payments",      desc: "Search and filter transactions", icon: <History className="size-4.5" />,          accent: "bg-emerald-500/10 text-emerald-600" },
+  { href: "/admin/withdrawals", label: "Withdrawals",   desc: "Review and process payouts",     icon: <ArrowDownToLine className="size-4.5" />,  accent: "bg-orange-500/10 text-orange-600" },
+  { href: "/admin/activity",    label: "Activity",      desc: "Latest platform events",         icon: <Activity className="size-4.5" />,         accent: "bg-teal-500/10 text-teal-600" },
+  { href: "/admin/audit",       label: "Audit",         desc: "System status checks",           icon: <ShieldCheck className="size-4.5" />,      accent: "bg-slate-500/10 text-slate-600" },
+  { href: "/admin/settings",    label: "Settings",      desc: "Config and secret status",       icon: <Settings className="size-4.5" />,         accent: "bg-indigo-500/10 text-indigo-600" },
+  { href: "/admin#health",      label: "System Health", desc: "Backend status and uptime",      icon: <Shield className="size-4.5" />,           accent: "bg-purple-500/10 text-purple-600" },
 ];
 
 // ── Page ───────────────────────────────────────────────────────────────────

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type React from "react";
 import { RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,7 +25,7 @@ function formatUptime(seconds: number) {
   return `${s}s`;
 }
 
-function StatusRow({ label, value, ok }: { label: string; value: string; ok?: boolean }) {
+function StatusRow({ label, value, ok }: { label: string; value: React.ReactNode; ok?: boolean }) {
   return (
     <div className="flex flex-col gap-1.5">
       <span className="text-xs font-bold uppercase tracking-wide text-slate-500">{label}</span>
@@ -120,7 +121,16 @@ export function SystemHealthCard() {
               value={health.db === "connected" ? "Connected" : "Disconnected"}
               ok={health.db === "connected"}
             />
-            <StatusRow label="Environment" value={health.environment} />
+            <StatusRow label="Environment" value={
+              <span className={cn(
+                "rounded-full px-2 py-0.5 text-xs font-semibold",
+                health.environment === "production"
+                  ? "bg-emerald-100 text-emerald-700"
+                  : "bg-amber-100 text-amber-700"
+              )}>
+                {health.environment}
+              </span>
+            } />
             <StatusRow label="Uptime" value={formatUptime(health.uptime)} />
           </div>
         )}

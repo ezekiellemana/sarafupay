@@ -122,6 +122,7 @@ export default function AdminActivityPage() {
   const [error, setError] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
   const [typeFilter, setTypeFilter] = useState<FilterType>("all");
+  const [lastLoaded, setLastLoaded] = useState<Date | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -129,6 +130,7 @@ export default function AdminActivityPage() {
       api<ActivityFeedData>("/api/admin/activity")
         .then((res) => {
           setData(res.data);
+          setLastLoaded(new Date());
           setError("");
           setLoading(false);
         })
@@ -153,7 +155,7 @@ export default function AdminActivityPage() {
     <DashboardShell admin>
       <div className="flex flex-col gap-6">
         <PageHeader
-          eyebrow="Derived from existing data"
+          eyebrow="Recent platform events"
           title="Activity Feed"
           description="Latest platform events — registrations, collections, and completed payments."
           action={
@@ -189,11 +191,12 @@ export default function AdminActivityPage() {
               {label}
             </button>
           ))}
-          {data && (
-            <span className="ml-auto text-xs text-muted-foreground">
-              {total} event{total !== 1 ? "s" : ""} (latest 50)
-            </span>
-          )}
+          <span className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
+            {data && <span>{total} event{total !== 1 ? "s" : ""} (latest 50)</span>}
+            {lastLoaded && (
+              <span>Last loaded: {lastLoaded.toLocaleTimeString()}</span>
+            )}
+          </span>
         </div>
 
         {/* Loading initial */}

@@ -481,6 +481,8 @@ export const platformSettings = asyncHandler(async (_req, res) => {
       resendConfigured: Boolean(env.RESEND_API_KEY),
       emailFromConfigured: Boolean(env.EMAIL_FROM),
       adminNotificationEmailConfigured: Boolean(env.ADMIN_NOTIFICATION_EMAIL),
+      feesEnabled: Boolean(env.FEES_ENABLED),
+      googleOAuthConfigured: Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET),
     },
   });
 });
@@ -491,38 +493,40 @@ export const systemAudit = asyncHandler(async (_req, res) => {
     key: string,
     label: string,
     status: CheckStatus,
-    note?: string | null
-  ) => ({ key, label, status, note: note ?? null });
+    note: string | null,
+    group: string
+  ) => ({ key, label, status, note, group });
 
   const dbConnected = mongoose.connection.readyState === 1;
   const isProd = env.NODE_ENV === "production";
 
   const checks = [
     // ── Core infrastructure ───────────────────────────────────────────────────
-    make("backend_health", "Backend health", "passed", `Uptime: ${Math.floor(process.uptime())}s`),
-    make("mongodb", "MongoDB connected", dbConnected ? "passed" : "failed"),
-    make("environment", "Environment is production", isProd ? "passed" : "warning", env.NODE_ENV),
-    make("client_url", "CLIENT_URL configured", env.CLIENT_URL ? "passed" : "warning"),
-    make("server_url", "SERVER_URL configured", env.SERVER_URL ? "passed" : "warning"),
+    make("backend_health", "Backend health",          "passed",                             `Uptime: ${Math.floor(process.uptime())}s`, "Core infrastructure"),
+    make("mongodb",        "MongoDB connected",       dbConnected ? "passed" : "failed",    null,                                       "Core infrastructure"),
+    make("environment",    "Environment is production", isProd ? "passed" : "warning",      env.NODE_ENV,                               "Core infrastructure"),
+    make("client_url",     "CLIENT_URL configured",   env.CLIENT_URL ? "passed" : "warning", null,                                     "Core infrastructure"),
+    make("server_url",     "SERVER_URL configured",   env.SERVER_URL ? "passed" : "warning", null,                                     "Core infrastructure"),
     // ── Snippe payment gateway ────────────────────────────────────────────────
-    make("snippe_api_key", "Snippe API key", env.SNIPPE_API_KEY ? "passed" : "missing"),
-    make("snippe_webhook_secret", "Snippe webhook secret", env.SNIPPE_WEBHOOK_SECRET ? "passed" : "missing"),
-    make("snippe_base_url", "Snippe base URL", env.SNIPPE_BASE_URL ? "passed" : "missing", env.SNIPPE_BASE_URL ?? null),
-    make("snippe_profile_id", "Snippe profile ID", env.SNIPPE_PROFILE_ID ? "passed" : "missing"),
+    make("snippe_api_key",        "Snippe API key",        env.SNIPPE_API_KEY        ? "passed" : "missing", null,                    "Snippe payment gateway"),
+    make("snippe_webhook_secret", "Snippe webhook secret", env.SNIPPE_WEBHOOK_SECRET ? "passed" : "missing", null,                    "Snippe payment gateway"),
+    make("snippe_base_url",       "Snippe base URL",       env.SNIPPE_BASE_URL       ? "passed" : "missing", env.SNIPPE_BASE_URL ?? null, "Snippe payment gateway"),
+    make("snippe_profile_id",     "Snippe profile ID",     env.SNIPPE_PROFILE_ID     ? "passed" : "missing", null,                    "Snippe payment gateway"),
     // ── Fee collection ────────────────────────────────────────────────────────
     make(
       "fees_enabled",
       "Service fees enabled (FEES_ENABLED)",
       env.FEES_ENABLED ? "passed" : "warning",
-      env.FEES_ENABLED ? "Fees are active — contributors are charged." : "FEES_ENABLED is not true — no service fees are being collected."
+      env.FEES_ENABLED ? "Fees are active — contributors are charged." : "FEES_ENABLED is not true — no service fees are being collected.",
+      "Fee collection"
     ),
     // ── Email notifications (Resend) ──────────────────────────────────────────
-    make("resend_api_key", "Resend API key", env.RESEND_API_KEY ? "passed" : "warning", env.RESEND_API_KEY ? null : "Email notifications disabled."),
-    make("email_from", "Email FROM address", env.EMAIL_FROM ? "passed" : "warning", env.EMAIL_FROM ? null : "EMAIL_FROM not set — emails will not send."),
-    make("admin_notification_email", "Admin notification email", env.ADMIN_NOTIFICATION_EMAIL ? "passed" : "warning", env.ADMIN_NOTIFICATION_EMAIL ? null : "ADMIN_NOTIFICATION_EMAIL not set — withdrawal alerts will not reach admin."),
+    make("resend_api_key",            "Resend API key",           env.RESEND_API_KEY            ? "passed" : "warning", env.RESEND_API_KEY            ? null : "Email notifications disabled.", "Email notifications"),
+    make("email_from",                "Email FROM address",       env.EMAIL_FROM                ? "passed" : "warning", env.EMAIL_FROM                ? null : "EMAIL_FROM not set — emails will not send.", "Email notifications"),
+    make("admin_notification_email",  "Admin notification email", env.ADMIN_NOTIFICATION_EMAIL  ? "passed" : "warning", env.ADMIN_NOTIFICATION_EMAIL  ? null : "ADMIN_NOTIFICATION_EMAIL not set — withdrawal alerts will not reach admin.", "Email notifications"),
     // ── Routing and security ──────────────────────────────────────────────────
-    make("cors", "CORS configured", "passed"),
-    make("webhook_endpoint", "Webhook endpoint path", "passed", "/api/webhooks/snippe"),
+    make("cors",             "CORS configured",      "passed", null,                    "Routing and security"),
+    make("webhook_endpoint", "Webhook endpoint path", "passed", "/api/webhooks/snippe", "Routing and security"),
   ];
 
   res.json({ success: true, message: "Audit complete.", data: { checks } });

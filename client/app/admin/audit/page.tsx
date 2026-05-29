@@ -189,14 +189,27 @@ export default function AdminAuditPage() {
               )}
             </div>
 
-            {/* Check list */}
-            <div className="overflow-hidden rounded-2xl border border-[#e5e0d6] bg-white shadow-sm shadow-[#0a1f12]/4">
-              <div className="divide-y divide-[#e5e0d6]">
-                {data.checks.map((check) => (
-                  <CheckRow key={check.key} check={check} />
-                ))}
-              </div>
-            </div>
+            {/* Grouped check list */}
+            {(() => {
+              const grouped = new Map<string, typeof data.checks>();
+              for (const check of data.checks) {
+                const g = check.group ?? "Other";
+                if (!grouped.has(g)) grouped.set(g, []);
+                grouped.get(g)!.push(check);
+              }
+              return Array.from(grouped.entries()).map(([groupLabel, checks]) => (
+                <div key={groupLabel} className="overflow-hidden rounded-2xl border border-[#e5e0d6] bg-white shadow-sm shadow-[#0a1f12]/4">
+                  <div className="border-b border-[#e5e0d6] bg-[#faf7f2] px-6 py-3">
+                    <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">{groupLabel}</p>
+                  </div>
+                  <div className="divide-y divide-[#e5e0d6]">
+                    {checks.map((check) => (
+                      <CheckRow key={check.key} check={check} />
+                    ))}
+                  </div>
+                </div>
+              ));
+            })()}
 
             {/* All-clear message */}
             {failures === 0 && warnings === 0 && (

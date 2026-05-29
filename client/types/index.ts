@@ -221,6 +221,8 @@ export type PlatformSettings = {
   resendConfigured: boolean;
   emailFromConfigured: boolean;
   adminNotificationEmailConfigured: boolean;
+  feesEnabled: boolean;
+  googleOAuthConfigured: boolean;
 };
 
 export type AuditCheckStatus = "passed" | "warning" | "missing" | "failed";
@@ -230,6 +232,7 @@ export type AuditCheck = {
   label: string;
   status: AuditCheckStatus;
   note: string | null;
+  group?: string;
 };
 
 export type SystemAuditData = {
