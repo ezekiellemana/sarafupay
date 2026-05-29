@@ -210,7 +210,7 @@ export default function AdminSettingsPage() {
                 <CardBody>
                   <UrlRow label="Frontend URL" value={settings.clientUrl} />
                   <UrlRow label="Backend URL" value={settings.serverUrl} />
-                  <UrlRow label="Snippe base" value={settings.snippeBaseUrl} />
+                  <UrlRow label="Snippe base" value={settings.snippeBaseUrl ?? "—"} />
                   <UrlRow label="Webhook URL" value={settings.webhookUrl} />
                   <UrlRow label="Return URL" value={settings.returnUrl} />
                 </CardBody>
@@ -265,6 +265,24 @@ export default function AdminSettingsPage() {
               </Card>
               <p className="mt-2 text-xs font-medium text-slate-500">
                 Secret values are never returned by the API. Only their presence is checked.
+              </p>
+            </section>
+
+            {/* ── Email / Resend Status ── */}
+            <section>
+              <SectionTitle>Email notifications — Resend</SectionTitle>
+              <Card>
+                <CardBody>
+                  <SecretRow label="Resend API key" configured={settings.resendConfigured} />
+                  <SecretRow label="EMAIL_FROM address" configured={settings.emailFromConfigured} />
+                  <SecretRow
+                    label="Admin notification email"
+                    configured={settings.adminNotificationEmailConfigured}
+                  />
+                </CardBody>
+              </Card>
+              <p className="mt-2 text-xs font-medium text-slate-500">
+                All three must be configured for withdrawal email notifications to work.
               </p>
             </section>
           </div>

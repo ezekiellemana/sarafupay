@@ -447,6 +447,9 @@ export const platformSettings = asyncHandler(async (_req, res) => {
       snippeApiKeyConfigured: Boolean(env.SNIPPE_API_KEY),
       snippeWebhookSecretConfigured: Boolean(env.SNIPPE_WEBHOOK_SECRET),
       mongoConfigured: true,
+      resendConfigured: Boolean(env.RESEND_API_KEY),
+      emailFromConfigured: Boolean(env.EMAIL_FROM),
+      adminNotificationEmailConfigured: Boolean(env.ADMIN_NOTIFICATION_EMAIL),
     },
   });
 });
@@ -464,17 +467,31 @@ export const systemAudit = asyncHandler(async (_req, res) => {
   const isProd = env.NODE_ENV === "production";
 
   const checks = [
+    // ── Core infrastructure ───────────────────────────────────────────────────
     make("backend_health", "Backend health", "passed", `Uptime: ${Math.floor(process.uptime())}s`),
     make("mongodb", "MongoDB connected", dbConnected ? "passed" : "failed"),
     make("environment", "Environment is production", isProd ? "passed" : "warning", env.NODE_ENV),
-    make("client_url", "CLIENT_URL configured", process.env.CLIENT_URL ? "passed" : "warning"),
-    make("server_url", "SERVER_URL configured", process.env.SERVER_URL ? "passed" : "warning"),
-    make("snippe_api_key", "SNIPPE_API_KEY", env.SNIPPE_API_KEY ? "passed" : "missing"),
-    make("snippe_webhook_secret", "SNIPPE_WEBHOOK_SECRET", env.SNIPPE_WEBHOOK_SECRET ? "passed" : "missing"),
-    make("snippe_profile_id", "SNIPPE_PROFILE_ID", env.SNIPPE_PROFILE_ID ? "passed" : "missing"),
-    make("support_email", "Support email (SUPPORT_EMAIL)", process.env.SUPPORT_EMAIL ? "passed" : "missing"),
+    make("client_url", "CLIENT_URL configured", env.CLIENT_URL ? "passed" : "warning"),
+    make("server_url", "SERVER_URL configured", env.SERVER_URL ? "passed" : "warning"),
+    // ── Snippe payment gateway ────────────────────────────────────────────────
+    make("snippe_api_key", "Snippe API key", env.SNIPPE_API_KEY ? "passed" : "missing"),
+    make("snippe_webhook_secret", "Snippe webhook secret", env.SNIPPE_WEBHOOK_SECRET ? "passed" : "missing"),
+    make("snippe_base_url", "Snippe base URL", env.SNIPPE_BASE_URL ? "passed" : "missing", env.SNIPPE_BASE_URL ?? null),
+    make("snippe_profile_id", "Snippe profile ID", env.SNIPPE_PROFILE_ID ? "passed" : "missing"),
+    // ── Fee collection ────────────────────────────────────────────────────────
+    make(
+      "fees_enabled",
+      "Service fees enabled (FEES_ENABLED)",
+      env.FEES_ENABLED ? "passed" : "warning",
+      env.FEES_ENABLED ? "Fees are active — contributors are charged." : "FEES_ENABLED is not true — no service fees are being collected."
+    ),
+    // ── Email notifications (Resend) ──────────────────────────────────────────
+    make("resend_api_key", "Resend API key", env.RESEND_API_KEY ? "passed" : "warning", env.RESEND_API_KEY ? null : "Email notifications disabled."),
+    make("email_from", "Email FROM address", env.EMAIL_FROM ? "passed" : "warning", env.EMAIL_FROM ? null : "EMAIL_FROM not set — emails will not send."),
+    make("admin_notification_email", "Admin notification email", env.ADMIN_NOTIFICATION_EMAIL ? "passed" : "warning", env.ADMIN_NOTIFICATION_EMAIL ? null : "ADMIN_NOTIFICATION_EMAIL not set — withdrawal alerts will not reach admin."),
+    // ── Routing and security ──────────────────────────────────────────────────
     make("cors", "CORS configured", "passed"),
-    make("webhook_endpoint", "Webhook endpoint path", "passed", "/api/webhooks"),
+    make("webhook_endpoint", "Webhook endpoint path", "passed", "/api/webhooks/snippe"),
   ];
 
   res.json({ success: true, message: "Audit complete.", data: { checks } });

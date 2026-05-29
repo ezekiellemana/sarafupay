@@ -205,7 +205,7 @@ export type ActivityFeedData = {
 export type PlatformSettings = {
   clientUrl: string;
   serverUrl: string;
-  snippeBaseUrl: string;
+  snippeBaseUrl: string | undefined;
   webhookUrl: string;
   returnUrl: string;
   webhookEndpoint: string;
@@ -218,6 +218,9 @@ export type PlatformSettings = {
   snippeApiKeyConfigured: boolean;
   snippeWebhookSecretConfigured: boolean;
   mongoConfigured: boolean;
+  resendConfigured: boolean;
+  emailFromConfigured: boolean;
+  adminNotificationEmailConfigured: boolean;
 };
 
 export type AuditCheckStatus = "passed" | "warning" | "missing" | "failed";

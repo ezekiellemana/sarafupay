@@ -121,7 +121,7 @@ export default function AdminAuditPage() {
     <DashboardShell admin>
       <div className="flex flex-col gap-6">
         <PageHeader
-          eyebrow="Pre-launch checklist"
+          eyebrow="System Status"
           title="System Audit"
           description="Boolean production-readiness checks. No secret values are shown."
           action={
@@ -202,7 +202,7 @@ export default function AdminAuditPage() {
             {failures === 0 && warnings === 0 && (
               <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 px-5 py-4 text-center">
                 <p className="text-sm font-semibold text-emerald-700">
-                  All checks passed — system is production-ready.
+                  All checks passing.
                 </p>
               </div>
             )}
