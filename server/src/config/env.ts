@@ -25,7 +25,12 @@ const envSchema = z.object({
   GOOGLE_CALLBACK_URL: z.string().url().optional(),
   // Reserved for future fee integration (Phase F3D). When absent or "false",
   // payment creation behaves exactly as it does today — no fees are applied.
-  FEES_ENABLED: z.string().optional().transform((v) => v === "true")
+  FEES_ENABLED: z.string().optional().transform((v) => v === "true"),
+  // Email notifications via Resend. All three are optional — server starts
+  // normally without them; notifications are silently skipped.
+  RESEND_API_KEY: z.string().optional(),
+  EMAIL_FROM: z.string().optional(),
+  ADMIN_NOTIFICATION_EMAIL: z.string().email().optional()
 });
 
 export const env = envSchema.parse({
@@ -48,7 +53,10 @@ export const env = envSchema.parse({
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
   GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL,
-  FEES_ENABLED: process.env.FEES_ENABLED
+  FEES_ENABLED: process.env.FEES_ENABLED,
+  RESEND_API_KEY: process.env.RESEND_API_KEY,
+  EMAIL_FROM: process.env.EMAIL_FROM,
+  ADMIN_NOTIFICATION_EMAIL: process.env.ADMIN_NOTIFICATION_EMAIL,
 });
 
 export const isProduction = env.NODE_ENV === "production";
@@ -64,5 +72,8 @@ if (isProduction) {
       `[env] Missing required production environment variable(s): ${missing.join(", ")}. ` +
       "Server cannot start without payment gateway credentials."
     );
+  }
+  if (!env.RESEND_API_KEY) {
+    console.warn("[env] RESEND_API_KEY not set — email notifications disabled in production.");
   }
 }

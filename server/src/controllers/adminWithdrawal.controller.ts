@@ -12,6 +12,10 @@ import {
   adminMarkPaid,
   adminMarkFailed,
 } from "../services/withdrawal.service";
+import { User } from "../models/User.model";
+import { Project } from "../models/Project.model";
+import { sendWithdrawalStatusOwnerEmail } from "../services/email.service";
+import type { WithdrawalDocument } from "../models/Withdrawal.model";
 
 function maskPhone(phone: string | undefined): string | undefined {
   if (!phone) return undefined;
@@ -31,6 +35,30 @@ function parseObjectId(raw: string, label: string): mongoose.Types.ObjectId {
     throw new AppError(`Invalid ${label}.`, 400, "INVALID_ID");
   }
   return new mongoose.Types.ObjectId(raw);
+}
+
+// ─── Email helper ─────────────────────────────────────────────────────────────
+
+function fireStatusEmail(w: WithdrawalDocument, status: string): void {
+  const wObj = w.toObject();
+  Promise.all([
+    User.findById(w.ownerId).select("email fullName").lean(),
+    Project.findById(w.projectId).select("title slug").lean(),
+  ])
+    .then(([owner, project]) => {
+      if (!owner?.email) return;
+      return sendWithdrawalStatusOwnerEmail({
+        withdrawal: wObj,
+        ownerEmail: owner.email,
+        ownerName: owner.fullName ?? "",
+        collectionTitle: project?.title ?? "your collection",
+        collectionSlug: project?.slug ?? "",
+        status,
+      });
+    })
+    .catch((err: Error) =>
+      console.error(`[email] Status notification failed for withdrawal ${w._id} (${status}):`, err.message)
+    );
 }
 
 // ─── List ────────────────────────────────────────────────────────────────────
@@ -168,6 +196,7 @@ export const approveWithdrawalHandler = [
     const id = parseObjectId(req.params["id"] as string, "withdrawal id");
     const w = await adminApproveWithdrawal(req.user!._id, id, req.body.adminNote);
     res.json({ success: true, message: "Withdrawal approved.", data: { status: w.status } });
+    fireStatusEmail(w, "approved");
   }),
 ];
 
@@ -183,6 +212,7 @@ export const rejectWithdrawalHandler = [
     const id = parseObjectId(req.params["id"] as string, "withdrawal id");
     const w = await adminRejectWithdrawal(req.user!._id, id, req.body.rejectionReason);
     res.json({ success: true, message: "Withdrawal rejected.", data: { status: w.status } });
+    fireStatusEmail(w, "rejected");
   }),
 ];
 
@@ -192,6 +222,7 @@ export const markProcessingHandler = asyncHandler(async (req, res) => {
   const id = parseObjectId(req.params["id"] as string, "withdrawal id");
   const w = await adminMarkProcessing(id);
   res.json({ success: true, message: "Withdrawal marked as processing.", data: { status: w.status } });
+  fireStatusEmail(w, "processing");
 });
 
 // ─── Mark Paid ───────────────────────────────────────────────────────────────
@@ -207,6 +238,7 @@ export const markPaidHandler = [
     const id = parseObjectId(req.params["id"] as string, "withdrawal id");
     const w = await adminMarkPaid(req.user!._id, id, req.body.payoutReference, req.body.adminNote);
     res.json({ success: true, message: "Withdrawal marked as paid.", data: { status: w.status } });
+    fireStatusEmail(w, "paid");
   }),
 ];
 
@@ -222,5 +254,6 @@ export const markFailedHandler = [
     const id = parseObjectId(req.params["id"] as string, "withdrawal id");
     const w = await adminMarkFailed(id, req.body.adminNote);
     res.json({ success: true, message: "Withdrawal marked as failed.", data: { status: w.status } });
+    fireStatusEmail(w, "failed");
   }),
 ];

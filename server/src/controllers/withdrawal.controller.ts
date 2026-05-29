@@ -10,6 +10,10 @@ import {
 } from "../services/withdrawal.service";
 import { Withdrawal, type IWithdrawal } from "../models/Withdrawal.model";
 import { Project } from "../models/Project.model";
+import {
+  sendWithdrawalSubmittedAdminEmail,
+  sendWithdrawalSubmittedOwnerEmail,
+} from "../services/email.service";
 
 function maskPhone(phone: string | undefined): string | undefined {
   if (!phone) return undefined;
@@ -117,11 +121,28 @@ export const createWithdrawalHandler = [
   asyncHandler(async (req, res) => {
     const projectId = parseObjectId(req.params["id"] as string, "collection id");
     const withdrawal = await createWithdrawalRequest(req.user!._id, projectId, req.body);
+
     res.status(201).json({
       success: true,
       message: "Withdrawal request submitted.",
       data: { withdrawal: safeWithdrawal(withdrawal.toObject()) },
     });
+
+    // Fire-and-forget: email notifications do not affect the response
+    const wObj  = withdrawal.toObject();
+    const owner = req.user!;
+    Project.findById(projectId).select("title slug").lean()
+      .then((project) => {
+        const collectionTitle = project?.title ?? "your collection";
+        const collectionSlug  = project?.slug  ?? "";
+        return Promise.all([
+          sendWithdrawalSubmittedAdminEmail({ withdrawal: wObj, ownerName: owner.fullName, ownerEmail: owner.email, collectionTitle }),
+          sendWithdrawalSubmittedOwnerEmail({ withdrawal: wObj, ownerEmail: owner.email, ownerName: owner.fullName, collectionTitle, collectionSlug }),
+        ]);
+      })
+      .catch((err: Error) =>
+        console.error(`[email] Submission notifications failed for withdrawal ${withdrawal._id}:`, err.message)
+      );
   }),
 ];
 
