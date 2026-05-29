@@ -2,13 +2,13 @@
 
 > **Status:** Pre-launch checklist for v1.15.x  
 > **Last updated:** 2026-05-29  
-> **Arch:** Next.js (Vercel) frontend + Express (Railway/Render) backend + MongoDB Atlas
+> **Arch:** Next.js (Vercel) frontend + Express (DigitalOcean App Platform) backend + MongoDB Atlas
 
 ---
 
 ## 1. Backend Environment Variables
 
-Set these on your backend hosting platform (Railway, Render, Fly, etc.).  
+Set these in DigitalOcean App Platform → your app → Settings → Environment Variables.  
 **Never commit `.env` or `.env.production` to git.**
 
 | Variable | Required | Production value | Notes |
@@ -99,7 +99,7 @@ NEXT_PUBLIC_POSTHOG_ENABLED=false
 | No localhost/ngrok URLs in production env | Verify | Search env vars for `localhost`, `127.0.0.1`, `ngrok` |
 | Cookies are `secure: true` in production | ✓ Automatic | `cookieHelpers.ts` sets `secure: isProduction`. Requires `NODE_ENV=production` |
 | Cookies use `sameSite: "none"` in production | ✓ Automatic | Required because frontend (sarafupay.app) and backend (api.sarafupay.app) are different origins. Already configured |
-| `trust proxy: 1` is set | ✓ Done | `app.ts` sets this. Required for Railway/Render to forward real IPs |
+| `trust proxy: 1` is set | ✓ Done | `app.ts` sets this. Required for DigitalOcean App Platform to forward real IPs correctly |
 | CORS only allows production frontend | ✓ Automatic | `app.ts` builds `allowedOrigins` from `CLIENT_URL`. In production, no localhost in list |
 | No secrets in `NEXT_PUBLIC_*` vars | Verify | All public vars are analytics keys or empty API URL. No JWT/Snippe/Resend secrets |
 | `FEES_ENABLED=true` is set deliberately | Verify | Without it, service fees are not charged. Must be conscious decision |
@@ -117,7 +117,7 @@ NEXT_PUBLIC_POSTHOG_ENABLED=false
 
 ### DNS
 - [ ] `sarafupay.app` → Vercel (CNAME or A record)
-- [ ] `api.sarafupay.app` → Railway/Render/Fly server (CNAME or A record)
+- [ ] `api.sarafupay.app` → DigitalOcean App Platform (CNAME provided in App → Settings → Domains)
 - [ ] Both domains have valid TLS certificates (Let's Encrypt or platform-provided)
 
 ### Google OAuth
@@ -155,7 +155,8 @@ NEXT_PUBLIC_POSTHOG_ENABLED=false
 - [ ] Confirm `sarafupay.app/robots.txt` returns correctly
 - [ ] Confirm `sarafupay.app/sitemap.xml` returns 9 URLs
 
-### Backend (Railway/Render/Fly)
+### Backend (DigitalOcean App Platform)
+
 - [ ] Set all backend env vars listed in Section 1
 - [ ] Confirm `NODE_ENV=production`
 - [ ] Confirm `FEES_ENABLED=true`
@@ -190,7 +191,7 @@ Run this end-to-end test in production before announcing launch.
 | Scenario | Action |
 |---|---|
 | Fees are broken or overcharging | Set `FEES_ENABLED=false` in backend env and redeploy. Fees immediately stop being applied to new payments |
-| Critical bug in a deployed feature | Revert to the last stable git tag using Vercel/Railway instant rollback, or `git revert` + redeploy |
+| Critical bug in a deployed feature | Revert to the last stable git tag using Vercel/DigitalOcean instant rollback, or `git revert` + redeploy |
 | Email notifications causing issues | Remove `RESEND_API_KEY` from backend env. All email sends silently skip. No restart needed on most platforms |
 | Snippe webhook errors | Fix the handler. Snippe retries webhooks — existing events will re-deliver once the endpoint is healthy |
 | Need to pause new collections | No built-in kill switch. Options: (a) set `CLIENT_URL` to a maintenance page URL to break CORS, or (b) deploy a maintenance page at the Vercel level |
