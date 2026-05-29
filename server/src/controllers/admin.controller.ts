@@ -48,6 +48,7 @@ export const getMember = asyncHandler(async (req, res) => {
     User.findById(id).select("-passwordHash").lean(),
     Project.find({ ownerId: id }).sort({ createdAt: -1 }).lean(),
     Payment.find({ userId: id })
+      .select("_id projectId amount currency status monthPaidFor paymentMethod externalReference snippeReference customerName createdAt paidAt")
       .sort({ createdAt: -1 })
       .limit(3)
       .populate("projectId", "title")
@@ -295,6 +296,7 @@ export const payments = asyncHandler(async (req, res) => {
 
   const [rows, total] = await Promise.all([
     Payment.find(query)
+      .select("_id userId projectId amount contributionAmount currency status monthPaidFor paymentMethod externalReference snippeReference customerName customerEmail customerPhone paymentChannel createdAt paidAt")
       .populate("userId", "fullName email phoneNumber")
       .populate("projectId", "title")
       .sort({ createdAt: -1 })
@@ -324,7 +326,11 @@ export const unpaidMembers = asyncHandler(async (_req, res) => {
 });
 
 export const exportPaymentsCsv = asyncHandler(async (_req, res) => {
-  const rows = await Payment.find().populate("userId", "fullName email phoneNumber").populate("projectId", "title").sort({ createdAt: -1 });
+  const rows = await Payment.find()
+    .select("_id createdAt userId customerName amount currency status monthPaidFor paymentMethod snippeReference externalReference projectId")
+    .populate("userId", "fullName")
+    .populate("projectId", "title")
+    .sort({ createdAt: -1 });
   const header = ["Date", "Member", "Amount", "Currency", "Status", "Month", "Method", "Reference"].join(",");
   const lines = rows.map((payment: any) =>
     [
