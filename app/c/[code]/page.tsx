@@ -2,7 +2,8 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
-import { Logo, Progress, SandboxBadge } from "@/components/brand";
+import { Progress } from "@/components/brand";
+import { SiteFooter, SiteHeader } from "@/components/site";
 import { collectionStats, findCollection, getUser, listPayouts, searchSupporters, type Supporter } from "@/lib/services/core";
 import { money } from "@/lib/format";
 import { waLink } from "@/lib/channels/whatsapp";
@@ -33,10 +34,7 @@ export default async function CollectionPage({ params, searchParams }: PageProps
   return (
     <div className="min-h-screen">
       <div className="kanga" />
-      <header className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-6 sm:py-5">
-        <Logo />
-        <SandboxBadge />
-      </header>
+      <SiteHeader cta={false} />
       <main className="mx-auto grid max-w-5xl grid-cols-1 gap-8 px-5 pb-20 sm:px-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
         <section className="rise min-w-0">
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-ink-soft">
@@ -128,6 +126,7 @@ export default async function CollectionPage({ params, searchParams }: PageProps
           </form>
         </aside>
       </main>
+      <SiteFooter />
     </div>
   );
 }

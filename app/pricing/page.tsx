@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { connection } from "next/server";
-import { Logo, SandboxBadge } from "@/components/brand";
+import { SiteFooter, SiteHeader } from "@/components/site";
 import { money } from "@/lib/format";
 import { quotePayment, quotePayout, rateSummary, type Rates } from "@/lib/pricing";
 import { getRates } from "@/lib/services/settings";
@@ -52,10 +52,7 @@ export default async function PricingPage() {
   return (
     <div className="min-h-screen">
       <div className="kanga" />
-      <header className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-6 sm:py-5">
-        <Logo />
-        <SandboxBadge />
-      </header>
+      <SiteHeader />
       <main className="mx-auto max-w-5xl px-5 pb-20 sm:px-6">
         <section className="rise max-w-2xl">
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-ink-soft">Pricing</p>
@@ -104,6 +101,7 @@ export default async function PricingPage() {
           <Link href="/" className="btn btn-ghost mt-6">Back to SarafuPay</Link>
         </section>
       </main>
+      <SiteFooter />
     </div>
   );
 }

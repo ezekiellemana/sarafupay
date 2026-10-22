@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Logo } from "@/components/brand";
+import { SiteFooter, SiteHeader } from "@/components/site";
 
 export const metadata = {
   title: "Privacy Policy — SarafuPay",
@@ -12,14 +12,7 @@ export default function PrivacyPage() {
   return (
     <div className="min-h-dvh bg-paper text-ink">
       <div className="kanga" />
-      <header className="mx-auto flex max-w-3xl items-center justify-between px-5 py-5">
-        <Link href="/">
-          <Logo />
-        </Link>
-        <Link href="/" className="text-sm underline">
-          Home
-        </Link>
-      </header>
+      <SiteHeader />
       <main className="mx-auto max-w-3xl px-5 pb-16 leading-relaxed">
         <h1 className="font-display text-4xl font-semibold">Privacy Policy</h1>
         <p className="mt-2 text-sm text-ink-soft">Last updated {UPDATED}</p>
@@ -82,6 +75,7 @@ export default function PrivacyPage() {
           If this policy changes, the date at the top of this page is updated.
         </Section>
       </main>
+      <SiteFooter />
     </div>
   );
 }

@@ -422,7 +422,7 @@ export function Simulator({ buyer, testMode = true }: { buyer: { email: string; 
                   className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-ink active:bg-paper-2"
                 >
                   <span className="grid h-8 w-8 place-items-center rounded-full bg-paper-2" aria-hidden>?</span>
-                  Help, sandbox login &amp; reset
+                  {testMode ? "Help, sandbox login & reset" : "Help & reset"}
                 </button>
               </div>
             </div>

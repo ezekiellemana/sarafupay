@@ -232,3 +232,100 @@ body {
   border: 1.5px solid var(--line);
   border-radius: 22px;
 }
+
+/* =====================================================================
+   Public site: 3D and interactive pieces
+   ===================================================================== */
+
+/* Hero word with a slow gold sheen. */
+.hero-ink {
+  background: linear-gradient(100deg, var(--forest-2) 0%, var(--forest-2) 38%, #c98a0e 50%, var(--forest-2) 62%, var(--forest-2) 100%);
+  background-size: 260% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: sheen 6s ease-in-out infinite;
+  padding-right: 0.08em;
+}
+@keyframes sheen { 0%, 20% { background-position: 100% 0; } 60%, 100% { background-position: 0 0; } }
+
+/* Phone held in 3D: --rx/--ry come from the pointer (phone-3d.tsx). */
+.phone-rig {
+  transform: rotateX(var(--rx, 4deg)) rotateY(var(--ry, -10deg));
+  transition: transform 0.05s linear;
+}
+.phone-body { box-shadow: 0 40px 60px -30px rgba(18, 38, 30, 0.55), 0 16px 0 -8px rgba(18, 38, 30, 0.18); }
+.float-card {
+  position: absolute; z-index: 2; width: 12rem;
+  padding: 0.85rem 1rem; border-radius: 18px;
+  background: rgba(255, 250, 240, 0.86);
+  border: 1px solid rgba(217, 201, 168, 0.9);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  box-shadow: 0 24px 40px -22px rgba(18, 38, 30, 0.6);
+  transform: translateZ(var(--z, 60px));
+  animation: bob 6s ease-in-out var(--d, 0s) infinite;
+}
+@keyframes bob {
+  0%, 100% { transform: translateZ(var(--z, 60px)) translateY(0); }
+  50% { transform: translateZ(var(--z, 60px)) translateY(-10px); }
+}
+
+/* Endless payment-method strip. */
+.marquee { overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+.marquee-track { display: flex; gap: 1.5rem; width: max-content; animation: marquee 32s linear infinite; }
+@keyframes marquee { to { transform: translate3d(-50%, 0, 0); } }
+
+/* How-it-works cards swing up from a tilted stack as you scroll (--p from steps-3d.tsx). */
+.step-card {
+  --p: 0;
+  position: relative; border-radius: 26px; padding: 1.75rem;
+  background: linear-gradient(160deg, rgba(247, 240, 227, 0.1), rgba(247, 240, 227, 0.03));
+  border: 1px solid rgba(247, 240, 227, 0.16);
+  box-shadow: 0 30px 50px -30px rgba(0, 0, 0, 0.55);
+  transform-origin: 50% 100%;
+  transform:
+    translate3d(0, calc((1 - var(--p)) * 70px), calc((1 - var(--p)) * -120px))
+    rotateX(calc((1 - var(--p)) * 38deg))
+    rotateZ(calc((1 - var(--p)) * (var(--i) - 1) * -4deg));
+  opacity: calc(0.25 + var(--p) * 0.75);
+  will-change: transform;
+}
+[style*="--settled"] .step-card { --p: 1; }
+
+/* Occasion cards: lean toward the pointer with a moving highlight (tilt-card.tsx). */
+.tilt-card {
+  position: relative;
+  transform: rotateX(var(--tx, 0deg)) rotateY(var(--ty, 0deg));
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease;
+  transform-style: preserve-3d;
+}
+.tilt-card::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: radial-gradient(240px circle at var(--gx, 50%) var(--gy, 50%), rgba(242, 165, 22, 0.16), transparent 60%);
+  opacity: 0; transition: opacity 0.25s ease;
+}
+@media (hover: hover) {
+  .tilt-card:hover { box-shadow: 0 26px 40px -26px rgba(18, 38, 30, 0.45); }
+  .tilt-card:hover::after { opacity: 1; }
+}
+
+/* Fee calculator panel. */
+.calc-panel {
+  background:
+    radial-gradient(60% 80% at 100% 0%, rgba(242, 165, 22, 0.18), transparent 60%),
+    radial-gradient(50% 70% at 0% 100%, rgba(21, 84, 63, 0.9), transparent 70%),
+    var(--forest);
+}
+.calc-range { -webkit-appearance: none; appearance: none; height: 10px; border-radius: 999px; background: linear-gradient(90deg, var(--marigold) var(--fill, 50%), rgba(247, 240, 227, 0.15) var(--fill, 50%)); outline: none; }
+.calc-range::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; border-radius: 999px; background: var(--paper); border: 6px solid var(--marigold); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35); cursor: grab; }
+.calc-range::-moz-range-thumb { width: 18px; height: 18px; border-radius: 999px; background: var(--paper); border: 6px solid var(--marigold); cursor: grab; }
+.calc-range:focus-visible { box-shadow: 0 0 0 3px rgba(242, 165, 22, 0.5); }
+
+/* FAQ plus turns into a cross. */
+.faq summary::-webkit-details-marker { display: none; }
+.faq-plus { transition: transform 0.2s ease, background-color 0.2s ease; }
+.faq[open] .faq-plus { transform: rotate(45deg); background: var(--paper-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  .phone-rig { transform: rotateX(3deg) rotateY(-8deg); }
+  .step-card { --p: 1; }
+  .marquee-track { animation: none; }
+}
