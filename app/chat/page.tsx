@@ -18,7 +18,7 @@ export default async function ChatPage() {
   };
   return (
     <Suspense>
-      <Simulator buyer={buyer} />
+      <Simulator buyer={buyer} testMode={env.paypalEnv() !== "live"} />
     </Suspense>
   );
 }

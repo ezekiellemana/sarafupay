@@ -115,7 +115,7 @@ function initialState(target: number, currency: string): AgReportState {
               valueKey: [{ id: "contributions.amount", aggregation: "sum" }],
             },
             format: {
-              ...chartTitle("Money in, by day", "Captured PayPal contributions per day"),
+              ...chartTitle("Money in, by day", "Confirmed contributions per day"),
               style: {
                 theme: { common: { legend: { enabled: false } } },
                 custom: {
@@ -145,7 +145,7 @@ function initialState(target: number, currency: string): AgReportState {
           ledger: grid(
             "Contributions",
             ["contributions.contributor", "contributions.amount", "contributions.paid_on", "contributions.channel", "contributions.message", "contributions.paypal_ref"],
-            "Every captured payment, with its PayPal reference",
+            "Every confirmed payment, with its provider reference",
           ),
           top: {
             type: "bar-chart-grouped",
@@ -271,7 +271,7 @@ function sourceFields(currency: string) {
       date("paid_on", "Paid on"),
       text("channel", "Channel"),
       text("message", "Message"),
-      text("paypal_ref", "PayPal ref"),
+      text("paypal_ref", "Provider ref"),
     ],
     pledges: [text("pledger", "Pledger"), amount, date("due", "Due"), text("status", "Status"), text("reminded", "Reminded")],
     payouts: [text("recipient", "Recipient"), amount, text("purpose", "Purpose"), text("status", "Status"), date("sent_on", "Sent on")],
@@ -349,7 +349,7 @@ export default function StudioInner({ code, ownerKey, currency, data, licenseKey
       });
       const remindTool = api.defineAiTool({
         name: "remind_pledgers",
-        description: "Send each person with an open pledge a personal WhatsApp reminder containing their own PayPal pay link. Only when the organiser asks.",
+        description: "Send each person with an open pledge a personal WhatsApp reminder containing their own pay link. Only when the organiser asks.",
         params: (s) => s.object({}),
         execute: async (_args, ctx) => {
           const r = await call("remind_pledgers");

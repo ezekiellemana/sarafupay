@@ -188,14 +188,15 @@ export function buildTools(ctx: AgentContext): Record<string, Tool> {
       inputSchema: z.object({
         code,
         amount: amount.describe("TZS for mobile_money (minimum 500), USD for card_or_paypal (minimum 1)"),
-        method: z.enum(["mobile_money", "card_or_paypal"]).default("mobile_money"),
+        method: z.enum(["mobile_money", "card_or_paypal"]).optional().describe("Defaults to the collection's currency: mobile money for TZS, card/PayPal for USD"),
         display_name: z.string().max(80).optional().describe("Name shown to the organiser; defaults to the user's name"),
         message: z.string().max(280).optional().describe("Optional note to the organiser"),
       }),
       execute: safe(async (i) => {
         await refreshUser();
         const col = await mustFind(i.code);
-        const provider = i.method === "card_or_paypal" ? "paypal" : "snippe";
+        const method = i.method ?? (col.currency === "TZS" ? "mobile_money" : "card_or_paypal");
+        const provider = method === "card_or_paypal" ? "paypal" : "snippe";
         const ctb = await core.createContribution({
           collection: col,
           contributorId: ctx.user.id,

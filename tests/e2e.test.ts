@@ -11,6 +11,8 @@ process.env.PAYPAL_SECRET = "test-secret";
 process.env.APP_URL = "https://sarafupay.test";
 process.env.WHATSAPP_ACCESS_TOKEN = "test-wa";
 process.env.WHATSAPP_PHONE_NUMBER_ID = "123";
+process.env.SNIPPE_API_KEY = "snp_test";
+process.env.SNIPPE_WEBHOOK_SECRET = "whsec_test";
 
 type Step = { tool?: [string, Record<string, unknown>]; text?: string };
 const script: Step[] = [];
@@ -38,6 +40,7 @@ const realFetch = globalThis.fetch;
 const payoutCalls: unknown[] = [];
 const reconcileOrders: Record<string, string> = {}; // PayPal order id -> contribution id
 const captureCalls: string[] = [];
+const snippeCalls: { url: string; body: Record<string, unknown> | undefined }[] = [];
 let templateApproved = false; // flips mid-test to simulate Meta approving the reminder template
 const templateCalls: { to: string; template: { name: string; language: { code: string }; components: { type: string; parameters: { text: string }[] }[] } }[] = [];
 globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -51,6 +54,16 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     if (url.includes("/v1/payments/payouts/BATCH1"))
       return Response.json({ batch_header: { payout_batch_id: "BATCH1", batch_status: "SUCCESS" }, items: [{ payout_item_id: "ITEM1", transaction_status: "SUCCESS" }] });
     throw new Error(`unexpected PayPal call ${url}`);
+  }
+  if (url.startsWith("https://api.snippe.sh")) {
+    const body = init?.body ? JSON.parse(String(init.body)) : undefined;
+    snippeCalls.push({ url, body });
+    if (url.endsWith("/api/v1/sessions") && init?.method === "POST")
+      return Response.json({ code: 201, data: { reference: "sess_T1", status: "pending", checkout_url: "https://snippe.me/checkout/T1", amount: body.amount } }, { status: 201 });
+    if (url.includes("/api/v1/sessions/sess_T1")) return Response.json({ code: 200, data: { reference: "sess_T1", status: "pending" } });
+    if (url.endsWith("/v1/payouts/send"))
+      return Response.json({ status: "success", code: 201, data: { reference: "po_T1", status: "pending", fees: { value: 1500, currency: "TZS" } } }, { status: 201 });
+    throw new Error(`unexpected Snippe call ${url}`);
   }
   if (url.includes("graph.facebook.com")) {
     const msg = init?.body ? JSON.parse(String(init.body)) : {};
@@ -123,12 +136,17 @@ async function main() {
   await say(AMINA, `Habari, nataka kuchangia ${col.code}`);
   const [ctb] = await db.select().from(schema.contributions);
   assert.equal(ctb.amountCents, 4000);
+  assert.equal(ctb.provider, "paypal", "USD collection defaults to card/PayPal");
   assert.equal(ctb.status, "pending");
   console.log("✓ payment link created", ctb.id);
 
   // 3. PayPal capture -> receipts
-  await core.applyCapture("ORDER1", "COMPLETED", "CAPTURE1", ctb.id, "amina@example.com");
-  await core.applyCapture("ORDER1", "COMPLETED", "CAPTURE1", ctb.id, "amina@example.com"); // idempotent
+  await core.applyCapture("ORDER1", "COMPLETED", "CAPTURE1", ctb.id, "amina@example.com", 226); // PayPal fee $2.26
+  await core.applyCapture("ORDER1", "COMPLETED", "CAPTURE1", ctb.id, "amina@example.com", 226); // idempotent
+  const [settled] = await db.select().from(schema.contributions).where(eq(schema.contributions.id, ctb.id));
+  assert.equal(settled.providerFeeCents, 226, "PayPal's real fee is recorded");
+  assert.equal(settled.sarafuFeeCents, 120, "SarafuPay 3% of $40");
+  assert.equal(settled.netCents, 3654, "$40 - $2.26 - $1.20");
   const aminaMsgs = await inbox(AMINA);
   assert.equal(aminaMsgs.filter((m) => /Payment received|Malipo yamepokelewa/.test(m)).length, 1, "exactly one receipt");
   const ownerMsgs = await inbox(OWNER);
@@ -198,19 +216,19 @@ async function main() {
   console.log("✓ a repeated pledge updates instead of duplicating; late names replace 'Anonymous'");
 
   // 5. Non-owner cannot pay out
-  script.push({ tool: ["prepare_payout", { code: col.code, recipient_email: "x@example.com", amount: 10, purpose: "test" }] }, { text: "Sorry" });
+  script.push({ tool: ["prepare_payout", { code: col.code, method: "paypal", paypal_email: "x@example.com", recipient_name: "John", amount: 10, purpose: "test" }] }, { text: "Sorry" });
   await say(JOHN, "pay me $10");
   assert.equal((await db.select().from(schema.payouts)).length, 0, "no payout for non-owner");
   console.log("✓ non-owner payout blocked");
 
   // 6. Owner over-balance payout blocked
-  script.push({ tool: ["prepare_payout", { code: col.code, recipient_email: "caterer@example.com", amount: 100, purpose: "catering" }] }, { text: "Insufficient" });
+  script.push({ tool: ["prepare_payout", { code: col.code, method: "paypal", paypal_email: "caterer@example.com", recipient_name: "Caterer", amount: 100, purpose: "catering" }] }, { text: "Insufficient" });
   await say(OWNER, "pay caterer $100");
   assert.equal((await db.select().from(schema.payouts)).length, 0, "no payout above balance");
   console.log("✓ over-balance payout blocked");
 
   // 7. Owner payout with CONFIRM code
-  script.push({ tool: ["prepare_payout", { code: col.code, recipient_email: "caterer@example.com", recipient_name: "Mama Lishe Catering", amount: 30, purpose: "catering deposit" }] }, { text: "Sent you the confirmation" });
+  script.push({ tool: ["prepare_payout", { code: col.code, method: "paypal", paypal_email: "caterer@example.com", recipient_name: "Mama Lishe Catering", amount: 30, purpose: "catering deposit" }] }, { text: "Sent you the confirmation" });
   await say(OWNER, "pay Mama Lishe $30 for the catering deposit, caterer@example.com");
   const [pending] = await db.select().from(schema.payouts);
   assert.equal(pending.status, "awaiting_confirmation");
@@ -219,13 +237,15 @@ async function main() {
   assert.equal(payoutCalls.length, 0);
   await say(OWNER, `CONFIRM ${pending.confirmCode}`);
   assert.equal(payoutCalls.length, 1, "PayPal payout called once");
+  const sentItem = (payoutCalls[0] as { items: { amount: { value: string } }[] }).items[0];
+  assert.equal(sentItem.amount.value, "28.80", "organiser receives $30 - PayPal $0.60 - SarafuPay $0.60");
   await say(OWNER, `CONFIRM ${pending.confirmCode}`); // replay
   assert.equal(payoutCalls.length, 1, "no double payout");
   const done = await core.refreshPayout(pending.id);
   assert.equal(done?.status, "success");
   assert.ok((await inbox(AMINA)).some((m) => /Transparency update|Taarifa ya uwazi/.test(m) && m.includes("Mama Lishe")), "contributors notified");
   const stats = await core.collectionStats(col);
-  assert.equal(stats.availableCents, 1000);
+  assert.equal(stats.availableCents, 3654 - 3000, "balance after fees minus the withdrawal");
   console.log("✓ payout confirmed by code, executed once, transparency broadcast; balance", stats.availableCents / 100);
 
   // 8. Non-owner report = totals only
@@ -300,6 +320,68 @@ async function main() {
   assert.equal(after2.find((c) => c.id === gone.id)?.status, "failed");
   assert.equal(after2.find((c) => c.id === flaky.id)?.status, "pending", "transient error: retried next run");
   console.log("✓ reconcile closes expired orders and treats PayPal hiccups as warnings");
+
+  // 9c. Mobile money via Snippe: TZS collection, hosted checkout, signed webhook, payout to M-Pesa.
+  const { createHmac } = await import("node:crypto");
+  const owner = (await db.select().from(schema.users).where(eq(schema.users.phone, OWNER)))[0];
+  const tzCol = await core.createCollection({ ownerId: owner.id, title: "Msiba wa Bibi", category: "funeral", targetCents: 2_000_000_00 });
+  assert.equal(tzCol.currency, "TZS");
+  await assert.rejects(core.createContribution({ collection: tzCol, displayName: "Too small", amountCents: 400_00, source: "web" }), /Minimum/);
+  const mm = await core.createContribution({ collection: tzCol, displayName: "Halima", amountCents: 100_000_00, source: "web", payerPhone: "0712 345 678" });
+  assert.equal(mm.provider, "snippe");
+  assert.equal(mm.payerPhone, "255712345678");
+  const checkout = await core.startCheckout(mm.id);
+  assert.equal(checkout, "https://snippe.me/checkout/T1");
+  const sess = snippeCalls.find((c) => c.url.endsWith("/api/v1/sessions"))!;
+  assert.equal(sess.body?.amount, 100_000, "Snippe gets whole shillings");
+  assert.deepEqual(sess.body?.metadata, { contribution_id: mm.id });
+  // Webhook: unsigned is refused, signed settles once with Snippe's real fee.
+  const { POST: snippeHook } = await import("../app/api/snippe/webhook/route");
+  const evt = JSON.stringify({ id: "evt_1", type: "payment.completed", data: { reference: "pi_1", session_reference: "sess_T1", status: "completed", amount: { value: 100000, currency: "TZS" }, settlement: { fees: { value: 2500, currency: "TZS" } }, customer: { phone: "+255712345678" }, metadata: { contribution_id: mm.id } } });
+  const bad = await snippeHook(new Request("https://x/api/snippe/webhook", { method: "POST", body: evt, headers: { "x-webhook-signature": "00", "x-webhook-timestamp": String(Math.floor(Date.now() / 1000)) } }));
+  assert.equal(bad.status, 401, "bad signature refused");
+  // Route handlers schedule work with after(); call the same settle path directly, as the handler does.
+  const ts = String(Math.floor(Date.now() / 1000));
+  const { verifyWebhook } = await import("../lib/snippe/client");
+  assert.ok(verifyWebhook(evt, createHmac("sha256", "whsec_test").update(`${ts}.${evt}`).digest("hex"), ts), "valid signature accepted");
+  assert.ok(!verifyWebhook(evt, createHmac("sha256", "whsec_test").update(`${ts}.${evt}`).digest("hex"), String(Number(ts) - 600)), "old timestamp refused");
+  await core.applySnippePayment({ contributionId: mm.id, sessionReference: "sess_T1", status: "completed", amountTzs: 100_000, feeTzs: 2_500, payerPhone: "+255712345678" });
+  await core.applySnippePayment({ contributionId: mm.id, sessionReference: "sess_T1", status: "completed", amountTzs: 100_000, feeTzs: 2_500 }); // replay
+  const [mmPaid] = await db.select().from(schema.contributions).where(eq(schema.contributions.id, mm.id));
+  assert.equal(mmPaid.status, "paid");
+  assert.equal(mmPaid.netCents, 95_000_00, "TZS 100,000 - Snippe 2,500 - SarafuPay 2,500");
+  // A wrong amount from Snippe is never accepted.
+  const mm2 = await core.createContribution({ collection: tzCol, displayName: "Odd", amountCents: 20_000_00, source: "web" });
+  await core.applySnippePayment({ contributionId: mm2.id, status: "completed", amountTzs: 2_000 });
+  assert.equal((await core.getContribution(mm2.id))?.status, "pending", "amount mismatch is refused");
+  const tzStats = await core.collectionStats(tzCol);
+  assert.equal(tzStats.availableCents, 95_000_00);
+  // Payout to mobile money: TZS 1,500 + 2.5%, CONFIRM, Snippe gets the net amount.
+  const prop = await core.proposePayout({ collection: tzCol, requester: owner, destination: { method: "mobile_money", phone: "0754 000 111", name: "Bibi's family" }, amountCents: 40_000_00, note: "funeral costs" });
+  assert.equal(prop.quote.providerFeeCents, 1_500_00);
+  assert.equal(prop.quote.sarafuFeeCents, 1_000_00);
+  assert.equal(prop.quote.netCents, 37_500_00);
+  await core.confirmPayoutByCode(owner, prop.confirmCode);
+  const send = snippeCalls.find((c) => c.url.endsWith("/v1/payouts/send"))!;
+  assert.equal(send.body?.amount, 37_500, "Snippe sends what the organiser receives");
+  assert.equal(send.body?.recipient_phone, "255754000111");
+  assert.equal(send.body?.channel, "mobile");
+  const [poRow] = await db.select().from(schema.payouts).where(eq(schema.payouts.id, prop.id));
+  await core.applySnippePayout(poRow, "completed", 1500);
+  assert.equal((await core.collectionStats(tzCol)).availableCents, 55_000_00, "TZS 95,000 - 40,000 withdrawn");
+  // Bank payout validation.
+  await assert.rejects(
+    core.proposePayout({ collection: tzCol, requester: owner, destination: { method: "bank", bank: "Imaginary", account: "0150000000", name: "X" }, amountCents: 10_000_00 }),
+    /Unknown bank/,
+  );
+  const bankProp = await core.proposePayout({ collection: tzCol, requester: owner, destination: { method: "bank", bank: "crdb", account: "0150 1234 5678", name: "Bibi's family" }, amountCents: 10_000_00 });
+  assert.equal(bankProp.recipientBank, "CRDB");
+  // USD money can't leave through Snippe.
+  await assert.rejects(
+    core.proposePayout({ collection: tzCol, requester: owner, destination: { method: "paypal", email: "a@b.co" }, amountCents: 1_00 }),
+    /Insufficient balance/,
+  );
+  console.log("✓ Snippe mobile money: checkout, signed webhook, fees, payout to M-Pesa, bank validation");
 
   // 10. Cost guard without Key Value falls back to memory and still limits.
   const limits = await import("../lib/limits");

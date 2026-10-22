@@ -52,7 +52,7 @@ export function SupporterSearch({ initial }: { initial: string }) {
           if (v.includes("@") && !/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(v.trim())) return;
           timer.current = setTimeout(() => push(v), 300);
         }}
-        placeholder="Find by name, or your full PayPal email"
+        placeholder="Find by name, or the full email you paid with"
         aria-label="Find a supporter by name or email"
         autoComplete="off"
         maxLength={120}

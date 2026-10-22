@@ -60,7 +60,7 @@ function initials(label: string) {
   return label.trim().slice(0, 1).toUpperCase();
 }
 
-export function Simulator({ buyer }: { buyer: { email: string; password: string; payee: string } }) {
+export function Simulator({ buyer, testMode = true }: { buyer: { email: string; password: string; payee: string }; testMode?: boolean }) {
   const search = useSearchParams();
   const [custom, setCustom] = useState<Persona[]>([]);
   const [active, setActive] = useState("organiser");
@@ -305,7 +305,7 @@ export function Simulator({ buyer }: { buyer: { email: string; password: string;
         <ol className="mt-2 list-decimal space-y-1 pl-4">
           <li>As <b>Organiser</b>, start a collection.</li>
           <li>Switch to <b>Amina</b> and send “Contribute CODE”.</li>
-          <li>Open the PayPal link and pay with the sandbox buyer below.</li>
+          <li>{testMode ? "Open the pay link and pay with the sandbox buyer below." : "Open the pay link and pay a small amount with mobile money or card. This is real money."}</li>
           <li>
             Back as Organiser: see the alert, then try a payout
             {buyer.payee ? (
@@ -314,11 +314,11 @@ export function Simulator({ buyer }: { buyer: { email: string; password: string;
                 with the CONFIRM code.
               </>
             ) : (
-              " to a PayPal sandbox account email, and reply with the CONFIRM code."
+              " to your own mobile money number, and reply with the CONFIRM code."
             )}
           </li>
         </ol>
-        <button onClick={() => setShowLogin((s) => !s)} className="mt-3 font-medium text-forest-2 underline">
+        {testMode ? (<><button onClick={() => setShowLogin((s) => !s)} className="mt-3 font-medium text-forest-2 underline">
           {showLogin ? "Hide" : "Show"} sandbox buyer login
         </button>
         {showLogin ? (
@@ -333,13 +333,13 @@ export function Simulator({ buyer }: { buyer: { email: string; password: string;
               "Use any PayPal sandbox personal account."
             )}
           </p>
-        ) : null}
+        ) : null}</>) : null}
       </div>
 
       <div className="border-t border-line pt-4 text-xs text-ink-soft">
         <p>
-          🔒 This is your <b>private test session</b>. Other visitors can&apos;t see your chats. All payments use the PayPal
-          sandbox (test money).
+          🔒 This is your <b>private session</b>. Other visitors can&apos;t see your chats.
+          {testMode ? " Payments run in test mode (no real money)." : " Payments are real: use small amounts while trying it."}
         </p>
         <button
           onClick={() => void startFresh()}
@@ -431,7 +431,7 @@ export function Simulator({ buyer }: { buyer: { email: string; password: string;
           <div ref={scroller} className="chat-scroll flex-1 space-y-2 overflow-y-auto overscroll-contain px-3 py-4 sm:px-6">
             <p className="mx-auto w-fit max-w-full rounded-lg bg-paper/80 px-3 py-1 text-center text-[11px] text-ink-soft">
               Chatting as <b>{me.label}</b>
-              {phones[active] ? <> (+{phones[active]})</> : null} · private session · PayPal sandbox
+              {phones[active] ? <> (+{phones[active]})</> : null} · private session{testMode ? " · test mode" : ""}
             </p>
             {msgs.map((m) => (
               <div key={m.id} className={`flex ${m.direction === "in" ? "justify-end" : "justify-start"}`}>

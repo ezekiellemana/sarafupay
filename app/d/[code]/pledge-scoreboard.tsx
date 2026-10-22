@@ -273,7 +273,7 @@ export function PledgeScoreboard(params: AgWidgetParams) {
           )}
           {nudge === "confirm" && (
             <>
-              <span style={{ fontSize: 12 }} title="Each person gets a WhatsApp reminder with their own PayPal pay link">
+              <span style={{ fontSize: 12 }} title="Each person gets a WhatsApp reminder with their own pay link">
                 Nudge {open.length} {open.length === 1 ? "person" : "people"} on WhatsApp?
               </span>
               <button type="button" onClick={sendNudges} style={btn(FOREST)}>

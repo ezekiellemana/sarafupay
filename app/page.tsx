@@ -6,11 +6,11 @@ import { waLink } from "@/lib/channels/whatsapp";
 const demo: { from: "me" | "bot"; text: string }[] = [
   { from: "me", text: "Habari! I want to collect money for my sister Neema's wedding 💍" },
   { from: "bot", text: "Hongera! 🎉 What's your name, and how much are you hoping to raise?" },
-  { from: "me", text: "Enzo. $1,500 by 20 December" },
+  { from: "me", text: "Enzo. TZS 3,000,000 by 20 December" },
   { from: "bot", text: "Done ✅ Your collection *NEEMA24* is live.\nForward this to your groups 👇" },
-  { from: "bot", text: "💰 *Amina* contributed $40 to NEEMA24\n▓▓▓░░░░░░░ 31% · $460 of $1,500" },
-  { from: "me", text: "Pay the caterer $300 — mama.lishe@example.com" },
-  { from: "bot", text: "🔐 Reply *CONFIRM 482913* to send $300 with PayPal." },
+  { from: "bot", text: "💰 *Amina* contributed TZS 50,000 by M-Pesa\n▓▓▓░░░░░░░ 31% · TZS 930,000 of TZS 3,000,000" },
+  { from: "me", text: "Pay the caterer TZS 600,000 to 0712 345 678" },
+  { from: "bot", text: "🔐 Caterer receives *TZS 583,500* after fees.\nReply *CONFIRM 482913* to send it." },
 ];
 
 const steps = [
@@ -22,12 +22,12 @@ const steps = [
   {
     n: "02",
     title: "Share one message",
-    body: "Forward the invitation to your WhatsApp groups. Friends tap it, tell the bot how much, and pay securely with PayPal. Receipts are automatic.",
+    body: "Forward the invitation to your WhatsApp groups. Friends pay with M-Pesa, Airtel Money, Mixx or HaloPesa, or by card from abroad. Receipts are automatic.",
   },
   {
     n: "03",
     title: "Spend in the open",
-    body: "Ask “who hasn't paid?”, nudge pledgers, and pay vendors from the pot. Every payout needs your one-time code and is reported to every contributor.",
+    body: "Ask “who hasn't paid?”, nudge pledgers, and pay vendors to mobile money or a bank. Every payout needs your one-time code and is reported to every contributor.",
   },
 ];
 
@@ -42,7 +42,12 @@ export default async function Home() {
         <nav className="flex items-center gap-5 text-sm font-medium text-ink-soft">
           <a href="#how" className="hidden sm:inline hover:text-ink">How it works</a>
           <a href="#trust" className="hidden sm:inline hover:text-ink">Transparency</a>
-          <Link href="/chat" className="btn btn-primary !py-2 !px-4 text-sm">Try it</Link>
+          <Link href="/pricing" className="hover:text-ink">Pricing</Link>
+          {wa ? (
+            <a href={wa} className="btn btn-primary !py-2 !px-4 text-sm" target="_blank" rel="noreferrer">Start on WhatsApp</a>
+          ) : (
+            <Link href="/chat" className="btn btn-primary !py-2 !px-4 text-sm">Try it</Link>
+          )}
         </nav>
       </header>
 
@@ -56,19 +61,19 @@ export default async function Home() {
           </h1>
           <p className="rise d2 mt-6 max-w-xl text-base leading-relaxed text-ink-soft sm:text-lg">
             SarafuPay is an AI agent that lives in WhatsApp. It runs group collections for weddings, funerals, medical bills,
-            school fees and NGOs. It collects with <strong className="text-ink">PayPal</strong> and pays out in the open, so
-            everyone who gave can see where the money went.
+            school fees and NGOs. Friends pay with <strong className="text-ink">mobile money</strong> or card, and every
+            payout is reported, so everyone who gave can see where the money went.
           </p>
           <div className="rise d3 mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <Link href="/chat" className="btn btn-primary justify-center">Open the chat simulator →</Link>
             {wa ? (
-              <a href={wa} className="btn btn-ghost justify-center" target="_blank" rel="noreferrer">Message SarafuPay on WhatsApp</a>
+              <a href={wa} className="btn btn-primary justify-center" target="_blank" rel="noreferrer">Start a collection on WhatsApp →</a>
             ) : null}
+            <Link href="/chat" className={`btn ${wa ? "btn-ghost" : "btn-primary"} justify-center`}>Try it in your browser</Link>
           </div>
           <dl className="rise d4 mt-10 grid max-w-lg grid-cols-3 gap-4 border-t border-line pt-6 sm:gap-6">
             {[
               ["0", "apps to install"],
-              ["1", "message to share"],
+              ["5%", "on mobile money, all in"],
               ["100%", "payouts reported"],
             ].map(([k, v]) => (
               <div key={v}>
@@ -137,7 +142,8 @@ export default async function Home() {
         <ul className="space-y-5">
           {[
             ["The AI can't move money on its own", "Payouts run only after the owner types a one-time CONFIRM code. That step never goes through the language model."],
-            ["Every payout is broadcast", "Contributors get a transparency update with the recipient, the purpose and the PayPal reference."],
+            ["Every payout is broadcast", "Contributors get a transparency update with the recipient, the purpose, the fees and the provider reference."],
+            ["Money stays with the payment providers", "Mobile money is collected and paid out by Snippe, card and PayPal payments by PayPal. SarafuPay is the technology and record-keeping layer."],
             ["Privacy by role", "Only the organiser sees who gave what. Everyone else sees totals and the payout ledger."],
             ["Voice notes & Swahili", "Speak or type in your language. The agent replies in it."],
           ].map(([t, b]) => (
@@ -153,8 +159,11 @@ export default async function Home() {
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-8 text-sm text-ink-soft sm:px-6">
           <Logo />
           <p>
-            PayPal Orders · Payouts · Invoicing via Agent Toolkit · Gemini · AG Studio · Render. Built for the PayPal AI
-            Hackathon 2026. ·{" "}
+            © {new Date().getFullYear()} EPRIZE DIGITAL · Dodoma, Tanzania ·{" "}
+            <Link href="/pricing" className="underline">
+              Pricing
+            </Link>{" "}
+            ·{" "}
             <Link href="/privacy" className="underline">
               Privacy
             </Link>
