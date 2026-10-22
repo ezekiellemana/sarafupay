@@ -26,7 +26,7 @@ services:
   - name: web
     github:
       repo: ezekiellemana/sarafupay
-      branch: v2 # switch to main after the old app is retired
+      branch: main
       deploy_on_push: true
     environment_slug: node-js
     build_command: npm ci && npm run build
@@ -80,7 +80,7 @@ jobs:
       time_zone: Africa/Dar_es_Salaam
     github:
       repo: ezekiellemana/sarafupay
-      branch: v2
+      branch: main
       deploy_on_push: true
     environment_slug: node-js
     build_command: "true" # the script has no dependencies

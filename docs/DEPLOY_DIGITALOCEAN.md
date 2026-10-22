@@ -1,6 +1,6 @@
 # Deploying sarafupay.app on DigitalOcean
 
-This puts the new SarafuPay (branch `v2`) live on DigitalOcean App Platform, first on its own
+This puts SarafuPay (branch `main`) live on DigitalOcean App Platform, first on its own
 `*.ondigitalocean.app` address, then on `sarafupay.app`. Do every step yourself in the
 dashboards; never paste keys into chat or commit them.
 
@@ -9,7 +9,7 @@ Takes about 30 minutes, plus DNS time.
 ## 1. Create the app (5 min)
 
 1. DigitalOcean → **Create** → **Apps**.
-2. Choose **GitHub**, authorise if asked, pick `ezekiellemana/sarafupay`, branch **v2**.
+2. Choose **GitHub**, authorise if asked, pick `ezekiellemana/sarafupay`, branch **main**.
 3. On the next screen choose **Edit app spec** (or "Import from app spec") and replace the
    content with `.do/app.yaml` from the repo.
 4. Region: **Frankfurt**. Click **Next** until the review page.
@@ -94,11 +94,8 @@ new template version with `https://sarafupay.app/pay/{{1}}` for the new app.
 3. Wait for the certificate (status **Active**). Then `APP_URL` automatically becomes
    `https://sarafupay.app`; update the PayPal webhook URL (step 4).
 
-## 8. Retire the old app
+## 8. Old app (done Oct 23, 2026)
 
-Only after step 7 works:
-
-1. Delete the old DigitalOcean app(s) for the Express backend and remove its MongoDB.
-2. Replace `main` in GitHub with `v2` (Claude does this on request), then in the app spec change
-   both `branch: v2` lines to `branch: main`.
-3. Delete the old local folder `D:\PROJECTS\sarafupay` and clone fresh.
+The old Express + MongoDB app was replaced in place: the `sarafupay-web` app now runs this code,
+`main` holds it, and the old MongoDB database is the only leftover (delete it in DigitalOcean →
+Databases once you're sure nothing in it is needed).
