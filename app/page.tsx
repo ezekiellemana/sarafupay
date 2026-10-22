@@ -76,7 +76,7 @@ const safety: { title: string; body: React.ReactNode; shot: Shot }[] = [
   {
     title: "The AI can't move money",
     body: "Payouts run only after the organiser replies with a one-time CONFIRM code. That step never goes through the AI.",
-    shot: { id: "1688989667243-221eee13cbdb", page: "P4yr0fvEfsc", by: "Divaris Shirichena", alt: "A man checks a code on his phone", focus: "60% 50%" },
+    shot: { id: "1688989667243-221eee13cbdb", page: "P4yr0fvEfsc", by: "Divaris Shirichena", alt: "A man checks a code on his phone", focus: "55% 8%" },
   },
   {
     title: "Every payout is broadcast",
@@ -260,7 +260,7 @@ export default async function Home() {
 
       {/* ---------- Safety ---------- */}
       <section id="trust" className="scroll-mt-4 mx-auto grid w-full max-w-6xl gap-12 px-5 py-20 sm:px-6 sm:py-24 md:grid-cols-[0.9fr_1.1fr]">
-        <div>
+        <div className="md:sticky md:top-8 md:self-start">
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-ink-soft">Safety</p>
           <h2 className="font-display mt-3 text-4xl font-semibold leading-tight sm:text-5xl">
             In a group collection, trust is the whole product.
