@@ -41,9 +41,6 @@ services:
       - key: DATABASE_URL
         value: ${db.DATABASE_URL}
         scope: RUN_TIME
-      - key: NODE_ENV
-        value: production
-        scope: RUN_AND_BUILD_TIME
       - key: ENABLE_SIMULATOR
         value: "true"
         scope: RUN_TIME
