@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Logo, SandboxBadge } from "@/components/brand";
 import { waLink } from "@/lib/channels/whatsapp";
+import { Provider } from "@/components/provider";
 
 /** Shared public header: logo, a few links, and the one action that matters. */
 export function SiteHeader({ cta = true }: { cta?: boolean }) {
@@ -59,8 +60,8 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-line">
         <p className="mx-auto max-w-6xl px-5 py-4 text-xs text-ink-soft sm:px-6">
-          © {new Date().getFullYear()} EPRIZE DIGITAL. Payments are processed by Snippe (mobile money) and PayPal (card and
-          PayPal). SarafuPay is the technology and record-keeping platform.
+          © {new Date().getFullYear()} EPRIZE DIGITAL. Payments are processed by <Provider name="Snippe" /> (mobile money) and{" "}
+          <Provider name="PayPal" /> (card and PayPal). SarafuPay is the technology and record-keeping platform.
         </p>
       </div>
     </footer>

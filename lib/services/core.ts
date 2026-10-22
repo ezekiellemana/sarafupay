@@ -535,7 +535,7 @@ export async function checkSnippeContribution(contributionId: string): Promise<C
   return applySnippePayment({ contributionId: ctb.id, status: s.status, amountTzs: s.amountTzs });
 }
 
-/** "M-Pesa via Snippe", "PayPal" — how a contribution was paid, for receipts. */
+/** "mobile money via Snippe", "PayPal" — how a contribution was paid, for receipts. */
 export function paidVia(ctb: Contribution): string {
   return ctb.provider === "snippe" ? "mobile money via Snippe" : "PayPal";
 }
@@ -729,7 +729,7 @@ export type PayoutDestination =
   | { method: "bank"; bank: string; account: string; name: string }
   | { method: "paypal"; email: string; name?: string };
 
-/** "M-Pesa 0712 *** 678" style label for messages; never the full account number. */
+/** "Name · mobile money 0712***678" style label for messages; never the full account number. */
 export function destinationLabel(p: Payout): string {
   const mask = (v: string) => (v.length > 6 ? `${v.slice(0, 4)}***${v.slice(-3)}` : v);
   if (p.method === "mobile_money") return `${p.recipientName ?? ""} · mobile money ${mask(p.recipientPhone ?? "")}`.trim();

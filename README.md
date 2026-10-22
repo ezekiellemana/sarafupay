@@ -1,8 +1,7 @@
 # SarafuPay
 
 Group collections (michango) for weddings, funerals, medical bills, school fees and community
-groups, run from WhatsApp. Friends pay with mobile money (M-Pesa, Airtel Money, Mixx by Yas,
-HaloPesa) or by card/PayPal from abroad; every payout needs the organiser's one-time code and is
+groups, run from WhatsApp. Friends pay with mobile money or by card/PayPal from abroad; every payout needs the organiser's one-time code and is
 reported to everyone who gave.
 
 Live at **https://sarafupay.app** · by EPRIZE DIGITAL, Dodoma, Tanzania.
@@ -13,7 +12,7 @@ SarafuPay is the technology and record-keeping layer. Licensed providers hold an
 
 | Rail | Contributors pay with | Payouts go to | Provider |
 |---|---|---|---|
-| TZS | M-Pesa, Airtel Money, Mixx by Yas, HaloPesa | Mobile money or 40+ Tanzanian banks | [Snippe](https://snippe.sh) |
+| TZS | Mobile money (all Tanzanian networks) | Mobile money or 40+ Tanzanian banks | [Snippe](https://snippe.sh) |
 | USD | Card or PayPal | The organiser's PayPal account | [PayPal](https://www.paypal.com) |
 
 The two balances are kept separately and never converted automatically.

@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { Logo, Progress } from "@/components/brand";
 import { collectionStats, findCollection, getContribution } from "@/lib/services/core";
 import { money } from "@/lib/format";
+import { Provider } from "@/components/provider";
 
 export default async function Thanks({ params, searchParams }: PageProps<"/c/[code]/thanks">) {
   await connection();
@@ -15,7 +16,7 @@ export default async function Thanks({ params, searchParams }: PageProps<"/c/[co
   const stats = await collectionStats(col);
   const paid = ctb?.status === "paid";
   const failed = ctb?.status === "failed";
-  const via = ctb?.provider === "snippe" ? "Snippe" : "PayPal";
+  const via = ctb?.provider === "snippe" ? ("Snippe" as const) : ("PayPal" as const);
   const ref = ctb?.provider === "snippe" ? ctb.providerRef : ctb?.paypalCaptureId;
   return (
     <div className="min-h-screen">
@@ -33,10 +34,10 @@ export default async function Thanks({ params, searchParams }: PageProps<"/c/[co
               : failed
                 ? "No money moved. You can try again from the collection page."
                 : ctb?.provider === "snippe"
-                  ? "Approve the payment on your phone (check for the M-Pesa, Airtel Money, Mixx or HaloPesa prompt). This page updates by itself."
-                  : `Waiting for ${via} to confirm your payment. This page updates by itself.`}
+                  ? "Approve the payment in the prompt on your phone. This page updates by itself."
+                  : <>Waiting for <Provider name={via} /> to confirm your payment. This page updates by itself.</>}
           </p>
-          {paid && ref ? <p className="mt-2 font-mono text-xs text-ink-soft">{via} ref {ref}</p> : null}
+          {paid && ref ? <p className="mt-2 font-mono text-xs text-ink-soft"><Provider name={via} /> ref {ref}</p> : null}
           <div className="mt-6 text-left">
             <Progress percent={stats.percent} />
             <p className="mt-2 text-sm text-ink-soft">

@@ -2,7 +2,7 @@ import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { env } from "../env";
 
-// Snippe (snippe.sh), Tanzanian mobile money: M-Pesa, Airtel Money, Mixx by Yas, HaloPesa.
+// Snippe (snippe.sh), Tanzanian mobile money (all networks) and bank payouts.
 // Docs: https://docs.snippe.sh (API version 2026-01-25). Amounts are whole TZS integers here;
 // the rest of the app stores cents (× 100), so callers convert at the boundary.
 

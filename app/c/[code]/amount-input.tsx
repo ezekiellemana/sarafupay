@@ -2,12 +2,13 @@
 
 import { useRef, useState } from "react";
 import { currencyMeta, formatAmountInput } from "@/lib/format";
+import { Provider, type ProviderName } from "@/components/provider";
 
 /**
  * One amount field: currency symbol in front, thousands grouped as you type, quick picks that fill it,
  * and a live "You'll pay …" line. Submits a plain number as `amount`.
  */
-export function AmountInput({ currency, initial, via = "PayPal" }: { currency: string; initial?: number; via?: string }) {
+export function AmountInput({ currency, initial, via = "PayPal" }: { currency: string; initial?: number; via?: ProviderName }) {
   const meta = currencyMeta(currency);
   const start = initial ?? meta.presets[1];
   const [text, setText] = useState(formatAmountInput(String(start), meta.decimals));
@@ -90,7 +91,7 @@ export function AmountInput({ currency, initial, via = "PayPal" }: { currency: s
       <p id="amount-hint" className="mt-2 text-xs text-ink-soft" aria-live="polite">
         {value > 0 ? (
           <>
-            You pay exactly <strong className="text-ink">{fmt(value)}</strong> via {via}. The organiser covers the fees.
+            You pay exactly <strong className="text-ink">{fmt(value)}</strong> via <Provider name={via} />. The organiser covers the fees.
           </>
         ) : (
           "Enter how much you'd like to give"

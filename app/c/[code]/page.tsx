@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { Provider } from "@/components/provider";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
@@ -64,7 +65,7 @@ export default async function CollectionPage({ params, searchParams }: PageProps
             </div>
             {stats.balances.slice(1).map((b) => (
               <p key={b.currency} className="mt-3 border-t border-line pt-3 text-sm text-ink-soft">
-                Plus <strong className="text-ink">{money(b.raisedCents, b.currency)}</strong> by card or PayPal · balance {money(b.availableCents, b.currency)}
+                Plus <strong className="text-ink">{money(b.raisedCents, b.currency)}</strong> by card or <Provider name="PayPal" /> · balance {money(b.availableCents, b.currency)}
               </p>
             ))}
           </div>
@@ -83,7 +84,7 @@ export default async function CollectionPage({ params, searchParams }: PageProps
                 <li key={p.id} className="ledger-row flex items-baseline justify-between gap-4 py-3">
                   <span>
                     <strong>{p.recipientName ?? "Recipient"}</strong>
-                    <span className="text-ink-soft"> · {p.method === "bank" ? "bank" : p.method === "paypal" ? "PayPal" : "mobile money"}</span>
+                    <span className="text-ink-soft"> · {p.method === "bank" ? "bank" : p.method === "paypal" ? <Provider name="PayPal" /> : "mobile money"}</span>
                     {p.note ? <span className="text-ink-soft"> · {p.note}</span> : null}
                     {p.status === "processing" ? <span className="ml-2 text-xs text-marigold">processing</span> : null}
                   </span>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Provider } from "@/components/provider";
 
 type Msg = { from: "me" | "bot"; text: string };
 
@@ -9,7 +10,7 @@ const SCRIPT: Msg[] = [
   { from: "bot", text: "Hongera! 🎉 Lengo ni kiasi gani, na mwisho lini?" },
   { from: "me", text: "TZS 3,000,000 kabla ya 20 Desemba" },
   { from: "bot", text: "Tayari ✅ Msimbo wako ni *NEEMA24*.\nTuma ujumbe huu kwenye magroup yako 👇" },
-  { from: "bot", text: "💰 *Amina* amechangia TZS 50,000 kwa M-Pesa\n▓▓▓░░░░░░░ 31%" },
+  { from: "bot", text: "💰 *Amina* amechangia TZS 50,000 kwa simu\n▓▓▓░░░░░░░ 31%" },
   { from: "me", text: "Mlipe mpishi TZS 600,000 kwenye 0712 345 678" },
   { from: "bot", text: "🔐 Atapokea *TZS 583,500* baada ya ada.\nJibu *CONFIRM 482913* kutuma." },
 ];
@@ -135,7 +136,7 @@ export function Phone3D() {
         <div className="float-card -left-24 top-[4.5rem] hidden lg:block" style={{ "--z": "40px", "--d": "0s" } as React.CSSProperties}>
           <p className="text-[11px] uppercase tracking-wider text-ink-soft">Payment received</p>
           <p className="font-display text-xl font-semibold">TZS 50,000</p>
-          <p className="text-xs text-ink-soft">Amina · M-Pesa via Snippe</p>
+          <p className="flex items-center gap-1 text-xs text-ink-soft">Amina · mobile money · <Provider name="Snippe" /></p>
         </div>
         <div className="float-card -right-16 -top-8 hidden lg:block" style={{ "--z": "70px", "--d": "-2s" } as React.CSSProperties}>
           <div className="flex items-center gap-3">

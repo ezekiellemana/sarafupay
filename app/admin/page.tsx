@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { Provider, providerFor } from "@/components/provider";
 import { connection } from "next/server";
 import { Logo, SandboxBadge } from "@/components/brand";
 import { money } from "@/lib/format";
@@ -58,10 +59,10 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
         <div className="flex items-center gap-2 text-xs">
           <SandboxBadge />
           <span className={`rounded-full px-3 py-1 ${snippeConfigured() ? "bg-forest/10 text-forest" : "bg-terracotta/10 text-terracotta"}`}>
-            Snippe {snippeConfigured() ? "connected" : "not configured"}
+            <Provider name="Snippe" /> {snippeConfigured() ? "connected" : "not configured"}
           </span>
           <span className={`rounded-full px-3 py-1 ${paypalConfigured() ? "bg-forest/10 text-forest" : "bg-terracotta/10 text-terracotta"}`}>
-            PayPal {paypalConfigured() ? env.paypalEnv() : "not configured"}
+            <Provider name="PayPal" /> {paypalConfigured() ? env.paypalEnv() : "not configured"}
           </span>
         </div>
       </header>
@@ -158,7 +159,7 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
               {act.contribs.map((c) => (
                 <li key={c.id} className="flex items-baseline justify-between gap-3 px-4 py-2.5">
                   <span className="min-w-0 truncate">
-                    {c.displayName} · <span className="text-ink-soft">{c.provider === "snippe" ? "Snippe" : "PayPal"} · {c.status}</span>
+                    {c.displayName} · <span className="text-ink-soft"><Provider name={providerFor(c.provider)} /> · {c.status}</span>
                   </span>
                   <span className="shrink-0 font-mono">
                     {money(c.amountCents, c.currency)}

@@ -4,25 +4,31 @@ import { SiteFooter, SiteHeader } from "@/components/site";
 import { money } from "@/lib/format";
 import { quotePayment, quotePayout, rateSummary, type Rates } from "@/lib/pricing";
 import { getRates } from "@/lib/services/settings";
+import { Provider, type ProviderName } from "@/components/provider";
 
 export const metadata = {
   title: "Pricing · SarafuPay",
   description: "Contributors pay exactly what they give. No monthly fees, no minimum withdrawal.",
 };
 
-type Row = { what: string; detail: string; price: string; split: string };
+type Row = { what: string; detail: string; price: string; split: React.ReactNode };
 
 function rows(r: Rates): { receive: Row[]; withdraw: Row[] } {
-  const split = (prov: string, rate: { providerPct: number; providerFixedCents: number; providerCapCents: number; sarafuPct: number }, cur: "TZS" | "USD") => {
+  const split = (prov: ProviderName, rate: { providerPct: number; providerFixedCents: number; providerCapCents: number; sarafuPct: number }, cur: "TZS" | "USD") => {
     const fixed = (c: number) => (cur === "TZS" ? `TZS ${(c / 100).toLocaleString("en-US")}` : `$${(c / 100).toFixed(2)}`);
     const p = [rate.providerPct ? `${rate.providerPct}%` : "", rate.providerFixedCents ? fixed(rate.providerFixedCents) : ""].filter(Boolean).join(" + ");
     const cap = rate.providerCapCents ? ` (max ${fixed(rate.providerCapCents)})` : "";
-    return `${prov} ${p}${cap} · SarafuPay ${rate.sarafuPct}%`;
+    return (
+      <>
+        <Provider name={prov} /> {p}
+        {cap} · SarafuPay {rate.sarafuPct}%
+      </>
+    );
   };
   return {
     receive: [
-      { what: "Mobile money", detail: "M-Pesa, Airtel Money, Mixx by Yas, HaloPesa · TZS", price: rateSummary(r.snippePayment, "TZS"), split: split("Snippe", r.snippePayment, "TZS") },
-      { what: "Card or PayPal", detail: "Visa, Mastercard, PayPal · USD, for friends abroad", price: rateSummary(r.paypalPayment, "USD"), split: split("PayPal", r.paypalPayment, "USD") },
+      { what: "Mobile money", detail: "Any Tanzanian mobile money number · TZS", price: rateSummary(r.snippePayment, "TZS"), split: split("Snippe", r.snippePayment, "TZS") },
+      { what: "Card or PayPal", detail: "Any bank card or PayPal account · USD, for friends abroad", price: rateSummary(r.paypalPayment, "USD"), split: split("PayPal", r.paypalPayment, "USD") },
     ],
     withdraw: [
       { what: "To mobile money", detail: "Any Tanzanian mobile money number · instant", price: rateSummary(r.snippePayoutMobile, "TZS"), split: split("Snippe", r.snippePayoutMobile, "TZS") },
@@ -75,13 +81,13 @@ export default async function PricingPage() {
 
         <section className="card mt-12 p-6 sm:p-8">
           <h2 className="font-display text-2xl font-semibold">A worked example</h2>
-          <p className="mt-1 text-sm text-ink-soft">A wedding collection raises TZS 100,000 by M-Pesa and the organiser withdraws it all to mobile money.</p>
+          <p className="mt-1 text-sm text-ink-soft">A wedding collection raises TZS 100,000 by mobile money and the organiser withdraws it all to mobile money.</p>
           <dl className="mt-5 grid gap-x-8 gap-y-2 font-mono text-sm sm:grid-cols-[1fr_auto]">
             <dt>Contributors pay</dt><dd className="sm:text-right">{tz(pay.grossCents)}</dd>
-            <dt className="text-ink-soft">Snippe fee</dt><dd className="text-ink-soft sm:text-right">− {tz(pay.providerFeeCents)}</dd>
+            <dt className="text-ink-soft"><Provider name="Snippe" /> fee</dt><dd className="text-ink-soft sm:text-right">− {tz(pay.providerFeeCents)}</dd>
             <dt className="text-ink-soft">SarafuPay fee</dt><dd className="text-ink-soft sm:text-right">− {tz(pay.sarafuFeeCents)}</dd>
             <dt className="font-semibold">Collection balance</dt><dd className="font-semibold sm:text-right">{tz(pay.netCents)}</dd>
-            <dt className="text-ink-soft">Snippe transfer fee</dt><dd className="text-ink-soft sm:text-right">− {tz(out.providerFeeCents)}</dd>
+            <dt className="text-ink-soft"><Provider name="Snippe" /> transfer fee</dt><dd className="text-ink-soft sm:text-right">− {tz(out.providerFeeCents)}</dd>
             <dt className="text-ink-soft">SarafuPay payout fee</dt><dd className="text-ink-soft sm:text-right">− {tz(out.sarafuFeeCents)}</dd>
             <dt className="border-t border-line pt-2 font-semibold text-forest">Organiser receives</dt>
             <dd className="border-t border-line pt-2 font-semibold text-forest sm:text-right">{tz(out.netCents)}</dd>
@@ -95,8 +101,8 @@ export default async function PricingPage() {
         <section className="mt-12 max-w-2xl text-sm leading-relaxed text-ink-soft">
           <h2 className="font-display text-xl font-semibold text-ink">Who handles the money</h2>
           <p className="mt-2">
-            SarafuPay is a technology and record-keeping platform by EPRIZE DIGITAL. Mobile money is collected and paid out by Snippe;
-            card and PayPal payments by PayPal. SarafuPay never sees your PIN or card details.
+            SarafuPay is a technology and record-keeping platform by EPRIZE DIGITAL. Mobile money is collected and paid out by <Provider name="Snippe" />;
+            card and PayPal payments by <Provider name="PayPal" />. SarafuPay never sees your PIN or card details.
           </p>
           <Link href="/" className="btn btn-ghost mt-6">Back to SarafuPay</Link>
         </section>

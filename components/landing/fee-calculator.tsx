@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { quotePayment, quotePayout, type Rates } from "@/lib/pricing";
+import { Provider } from "@/components/provider";
 
 const STEPS = [10_000, 20_000, 50_000, 100_000, 200_000, 500_000, 1_000_000, 2_000_000, 3_000_000, 5_000_000, 10_000_000, 20_000_000];
 const tzs = (cents: number) => `TZS ${Math.round(cents / 100).toLocaleString("en-US")}`;
@@ -38,11 +39,11 @@ export function FeeCalculator({ rates }: { rates: Rates }) {
   const out = quotePayout(rates, "mobile_money", pay.netCents);
   const kept = (out.netCents / gross) * 100;
 
-  const rows: [string, number, string][] = [
-    ["Snippe collection fee", pay.providerFeeCents, "bg-terracotta"],
-    ["SarafuPay fee", pay.sarafuFeeCents, "bg-marigold"],
-    ["Snippe transfer fee", out.providerFeeCents, "bg-terracotta/70"],
-    ["SarafuPay payout fee", out.sarafuFeeCents, "bg-marigold/70"],
+  const rows: [string, React.ReactNode, number, string][] = [
+    ["in", <><Provider name="Snippe" /> collection fee</>, pay.providerFeeCents, "bg-terracotta"],
+    ["sp", "SarafuPay fee", pay.sarafuFeeCents, "bg-marigold"],
+    ["out", <><Provider name="Snippe" /> transfer fee</>, out.providerFeeCents, "bg-terracotta/70"],
+    ["spo", "SarafuPay payout fee", out.sarafuFeeCents, "bg-marigold/70"],
   ];
 
   return (
@@ -78,8 +79,8 @@ export function FeeCalculator({ rates }: { rates: Rates }) {
 
       <div className="rounded-[1.6rem] border border-paper/15 bg-paper/[0.06] p-5 sm:p-6">
         <ul className="space-y-3">
-          {rows.map(([label, cents, dot]) => (
-            <li key={label} className="flex items-center justify-between gap-3 text-sm text-paper/80">
+          {rows.map(([k, label, cents, dot]) => (
+            <li key={k} className="flex items-center justify-between gap-3 text-sm text-paper/80">
               <span className="flex items-center gap-2">
                 <span className={`h-2.5 w-2.5 rounded-full ${dot}`} aria-hidden />
                 {label}

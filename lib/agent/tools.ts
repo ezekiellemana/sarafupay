@@ -184,7 +184,7 @@ export function buildTools(ctx: AgentContext): Record<string, Tool> {
 
     create_payment_link: tool({
       description:
-        "Create a secure payment link for the current user to contribute to a collection. Mobile money (M-Pesa, Airtel Money, Mixx by Yas, HaloPesa) is in TZS via Snippe; card or PayPal is in USD via PayPal. Default to mobile money for Tanzanian numbers. Always use this; never invent links.",
+        "Create a secure payment link for the current user to contribute to a collection. Mobile money is in TZS via Snippe; card or PayPal is in USD via PayPal. Default to mobile money for Tanzanian numbers. Always use this; never invent links.",
       inputSchema: z.object({
         code,
         amount: amount.describe("TZS for mobile_money (minimum 500), USD for card_or_paypal (minimum 1)"),

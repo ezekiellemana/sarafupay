@@ -307,6 +307,19 @@ body {
   .tilt-card:hover::after { opacity: 1; }
 }
 
+/* Photo cards (occasions, safety): the picture sits deeper than the words, so a tilt shows depth. */
+.photo-card {
+  overflow: hidden; border-radius: 24px;
+  background: #fffaf0; border: 1.5px solid var(--line);
+}
+.photo-frame { position: relative; aspect-ratio: 4 / 3; overflow: hidden; background: var(--paper-2); }
+.photo-img { transform: scale(1.04); transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1); }
+.photo-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(14, 59, 44, 0) 45%, rgba(14, 59, 44, 0.78) 100%); }
+.photo-title { position: absolute; left: 1.25rem; bottom: 1rem; transform: translateZ(40px); text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35); }
+@media (hover: hover) {
+  .photo-card:hover .photo-img { transform: scale(1.1); }
+}
+
 /* Fee calculator panel. */
 .calc-panel {
   background:
@@ -328,4 +341,5 @@ body {
   .phone-rig { transform: rotateX(3deg) rotateY(-8deg); }
   .step-card { --p: 1; }
   .marquee-track { animation: none; }
+  .photo-img, .photo-card:hover .photo-img { transform: none; transition: none; }
 }

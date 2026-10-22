@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { AmountInput } from "./amount-input";
+import { Provider, type ProviderName } from "@/components/provider";
 
 type Method = "mobile_money" | "card_or_paypal";
 
-const METHODS: { id: Method; title: string; sub: string; currency: string; via: string }[] = [
-  { id: "mobile_money", title: "Mobile money", sub: "M-Pesa · Airtel Money · Mixx by Yas · HaloPesa", currency: "TZS", via: "Snippe" },
-  { id: "card_or_paypal", title: "Card or PayPal", sub: "Visa · Mastercard · PayPal, in US dollars", currency: "USD", via: "PayPal" },
+const METHODS: { id: Method; title: string; sub: string; currency: string; via: ProviderName }[] = [
+  { id: "mobile_money", title: "Mobile money", sub: "Any Tanzanian mobile money number", currency: "TZS", via: "Snippe" },
+  { id: "card_or_paypal", title: "Card or PayPal", sub: "Any bank card or PayPal account, in US dollars", currency: "USD", via: "PayPal" },
 ];
 
 /** Payment method choice + amount + payer details. Submits `method`, `amount`, `phone`, `name`, `message`. */
@@ -45,6 +46,9 @@ export function ChipIn({ disabled, defaultMethod = "mobile_money" }: { disabled:
                     <span className="rounded-full bg-paper-2 px-2 py-0.5 font-mono text-[11px] text-ink-soft">{x.currency}</span>
                   </span>
                   <span className="block text-xs text-ink-soft">{x.sub}</span>
+                  <span className="mt-1 block text-[11px] text-ink-soft">
+                    Processed by <Provider name={x.via} />
+                  </span>
                 </span>
               </button>
             );
@@ -85,9 +89,9 @@ export function ChipIn({ disabled, defaultMethod = "mobile_money" }: { disabled:
         <input name="message" maxLength={280} placeholder="Hongera! 🎉" className="mt-1 w-full rounded-xl border border-line bg-white px-3 py-2 text-base" />
       </label>
       <button disabled={disabled} className="btn btn-primary w-full justify-center disabled:opacity-50">
-        {method === "mobile_money" ? "Continue to mobile money →" : "Continue to PayPal →"}
+        {method === "mobile_money" ? "Continue to mobile money →" : <>Continue to <Provider name="PayPal" className="mx-1" /> →</>}
       </button>
-      <p className="text-center text-xs text-ink-soft">Payment is processed by {m.via}. SarafuPay never sees your PIN or card.</p>
+      <p className="text-center text-xs text-ink-soft">Payment is processed by <Provider name={m.via} />. SarafuPay never sees your PIN or card.</p>
     </div>
   );
 }

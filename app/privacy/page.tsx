@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Provider } from "@/components/provider";
 import { SiteFooter, SiteHeader } from "@/components/site";
 
 export const metadata = {
@@ -20,8 +21,8 @@ export default function PrivacyPage() {
         <Section title="Who runs SarafuPay">
           SarafuPay is a collection-management platform by EPRIZE DIGITAL (Dodoma, Tanzania), founded by Ezekiel Lemana. It
           helps groups run collections (michango) through a WhatsApp agent and a web page. SarafuPay is a technology and
-          record-keeping service: payments are collected and paid out by licensed payment providers (Snippe for mobile money,
-          PayPal for card and PayPal payments). Contact:{" "}
+          record-keeping service: payments are collected and paid out by licensed payment providers (<Provider name="Snippe" /> for mobile money,{" "}
+          <Provider name="PayPal" /> for card and PayPal payments). Contact:{" "}
           <a className="underline" href="mailto:ezekielaugustino@gmail.com">
             ezekielaugustino@gmail.com
           </a>
@@ -53,8 +54,8 @@ export default function PrivacyPage() {
           <ul className="list-disc space-y-1 pl-5">
             <li>Meta (WhatsApp Cloud API), to deliver messages.</li>
             <li>Google (Gemini API), to understand messages and write replies.</li>
-            <li>Snippe, to collect mobile money payments and send payouts to mobile money and banks.</li>
-            <li>PayPal, to process card and PayPal payments and PayPal payouts.</li>
+            <li><Provider name="Snippe" />, to collect mobile money payments and send payouts to mobile money and banks.</li>
+            <li><Provider name="PayPal" />, to process card and PayPal payments and PayPal payouts.</li>
             <li>DigitalOcean, which hosts the app and its database.</li>
           </ul>
           SarafuPay does not sell your data or use it for advertising.

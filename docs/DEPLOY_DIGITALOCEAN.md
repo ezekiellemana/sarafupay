@@ -79,7 +79,7 @@ new template version with `https://sarafupay.app/pay/{{1}}` for the new app.
 
 1. `/pricing` shows the right prices.
 2. `/admin?key=<ADMIN_KEY>` opens; rates match the agreed table.
-3. `/chat`: create a collection as Organiser, pay **TZS 10,000** with your own M-Pesa through the
+3. `/chat`: create a collection as Organiser, pay **TZS 10,000** with your own mobile money through the
    link. The thank-you page should turn to "Asante sana!" and the organiser gets the alert. The
    collection balance should show TZS 9,500 (5% fees).
 4. Withdraw TZS 5,000 to your own number and reply with the CONFIRM code. You should receive

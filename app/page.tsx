@@ -6,6 +6,8 @@ import { Phone3D } from "@/components/landing/phone-3d";
 import { FeeCalculator } from "@/components/landing/fee-calculator";
 import { Steps3D, type Step } from "@/components/landing/steps-3d";
 import { TiltCard } from "@/components/landing/tilt-card";
+import { Credit, Photo, type Shot } from "@/components/landing/photo";
+import { Provider } from "@/components/provider";
 import { waLink } from "@/lib/channels/whatsapp";
 import { getRates } from "@/lib/services/settings";
 import { rateSummary } from "@/lib/pricing";
@@ -21,7 +23,7 @@ const steps: Step[] = [
     n: "02",
     chip: "1 message",
     title: "Share one message",
-    body: "Forward the invitation to your WhatsApp groups. Friends pay with M-Pesa, Airtel Money, Mixx by Yas or HaloPesa, or by card from abroad. Receipts arrive by themselves.",
+    body: "Forward the invitation to your groups. Friends pay with mobile money, or by card or PayPal from abroad. Receipts arrive by themselves.",
   },
   {
     n: "03",
@@ -31,23 +33,101 @@ const steps: Step[] = [
   },
 ];
 
-const occasions = [
-  { emoji: "💍", sw: "Harusi", en: "Weddings and send-offs", note: "The wedding committee, without the notebook." },
-  { emoji: "🕊️", sw: "Msiba", en: "Funerals", note: "Collect fast, show every shilling spent." },
-  { emoji: "🩺", sw: "Matibabu", en: "Medical bills", note: "Pay the hospital directly from the pot." },
-  { emoji: "🎓", sw: "Ada ya shule", en: "School fees", note: "Family and friends, one link." },
-  { emoji: "🏘️", sw: "Vikundi", en: "Groups and VICOBA", note: "Regular contributions with reminders." },
-  { emoji: "🤝", sw: "Jamii", en: "Churches, mosques and NGOs", note: "A public ledger for every project." },
+const occasions: { sw: string; en: string; note: string; shot: Shot }[] = [
+  {
+    sw: "Harusi",
+    en: "Weddings and send-offs",
+    note: "The wedding committee, without the notebook.",
+    shot: { id: "1608009232260-9b527a5bb9bd", page: "BC6s0iEa_CQ", by: "Steward Masweneng", alt: "A bride and groom walk out of church between rows of cheering guests", focus: "50% 60%" },
+  },
+  {
+    sw: "Msiba",
+    en: "Funerals",
+    note: "Collect fast, show every shilling spent.",
+    shot: { id: "1509099896299-af46ad97ff57", page: "SPS796v4KmM", by: "Annie Spratt", alt: "Women in headscarves gathered quietly together", focus: "50% 40%" },
+  },
+  {
+    sw: "Matibabu",
+    en: "Medical bills",
+    note: "Pay the hospital directly from the pot.",
+    shot: { id: "1631217871099-88310a909a32", page: "nR2C9AVzfHY", by: "National Cancer Institute", alt: "A doctor in a white coat talks with a patient", focus: "70% 40%" },
+  },
+  {
+    sw: "Ada ya shule",
+    en: "School fees",
+    note: "Family and friends, one link.",
+    shot: { id: "1536337005238-94b997371b40", page: "83tkHLPgg2Q", by: "Ben White", alt: "A smiling schoolboy writing at his desk in class", focus: "60% 45%" },
+  },
+  {
+    sw: "Vikundi",
+    en: "Groups and VICOBA",
+    note: "Regular contributions with reminders.",
+    shot: { id: "1655720357872-ce227e4164ba", page: "M7ALc3UuX_g", by: "Iwaria Inc.", alt: "Three women in a group meeting going through their records", focus: "55% 50%" },
+  },
+  {
+    sw: "Jamii",
+    en: "Churches, mosques and NGOs",
+    note: "A public ledger for every project.",
+    shot: { id: "1444664361762-afba083a4d77", page: "9cx4-QowgLc", by: "Avel Chuklanov", alt: "A crowd with hands raised in celebration", focus: "50% 35%" },
+  },
 ];
 
-const methods = ["M-Pesa", "Airtel Money", "Mixx by Yas", "HaloPesa", "Visa", "Mastercard", "PayPal", "40+ Tanzanian banks"];
+const safety: { title: string; body: React.ReactNode; shot: Shot }[] = [
+  {
+    title: "The AI can't move money",
+    body: "Payouts run only after the organiser replies with a one-time CONFIRM code. That step never goes through the AI.",
+    shot: { id: "1688989667243-221eee13cbdb", page: "P4yr0fvEfsc", by: "Divaris Shirichena", alt: "A man checks a code on his phone", focus: "60% 50%" },
+  },
+  {
+    title: "Every payout is broadcast",
+    body: "Contributors get a transparency update with the recipient, the purpose, the fees and the provider reference.",
+    shot: { id: "1644043350898-2f4ff1e17912", page: "O8SpYxOFnK8", by: "Francis Odeyemi", alt: "Two friends read the same update on their phones", focus: "50% 40%" },
+  },
+  {
+    title: "Payment providers hold the money",
+    body: (
+      <>
+        <Provider name="Snippe" /> collects and pays out mobile money; <Provider name="PayPal" /> handles card and PayPal. SarafuPay keeps the
+        records.
+      </>
+    ),
+    shot: { id: "1734255026082-82fdc81991f0", page: "cnVn4Gg4b00", by: "Tunde Buremo", alt: "Traders and buyers around a market stall", focus: "50% 50%" },
+  },
+  {
+    title: "Privacy by role",
+    body: "Only the organiser sees who gave what. Everyone else sees totals and the payout ledger.",
+    shot: { id: "1714327676544-48dafc3ffa41", page: "PF6JfGfmqOI", by: "Lisa Marie Theck", alt: "A woman looks privately at her phone", focus: "50% 35%" },
+  },
+];
 
-const faqs: [string, string][] = [
-  ["Who pays the fees?", "The organiser. Contributors pay exactly what they give. Snippe or PayPal take their fee, SarafuPay takes its percentage, and both are shown on every receipt and on the pricing page."],
-  ["Who holds the money?", "Licensed payment providers do: Snippe for mobile money and PayPal for card and PayPal payments. SarafuPay is the technology and record-keeping layer."],
+/** The payment strip: plain words for the ways to pay, official marks for the providers. */
+const methods: React.ReactNode[] = [
+  "Mobile money",
+  <Provider key="s" name="Snippe" />,
+  "Bank cards",
+  <Provider key="p" name="PayPal" />,
+  "40+ Tanzanian banks",
+  "Payouts in minutes",
+];
+
+const faqs: [string, React.ReactNode][] = [
+  [
+    "Who pays the fees?",
+    <>
+      The organiser. Contributors pay exactly what they give. <Provider name="Snippe" /> or <Provider name="PayPal" /> take their fee,
+      SarafuPay takes its percentage, and both are shown on every receipt and on the pricing page.
+    </>,
+  ],
+  [
+    "Who holds the money?",
+    <>
+      Licensed payment providers do: <Provider name="Snippe" /> for mobile money and <Provider name="PayPal" /> for card and PayPal payments.
+      SarafuPay is the technology and record-keeping layer.
+    </>,
+  ],
   ["Can the AI send money by itself?", "No. A payout only moves after the organiser replies with a one-time CONFIRM code from their own phone, and that step never goes through the AI."],
   ["Is there a minimum withdrawal?", "No. Withdraw any amount to mobile money or a bank. Fewer, larger withdrawals cost less, because each transfer has its own provider fee."],
-  ["Do my friends need an app?", "No. They pay from the link or the WhatsApp chat with the mobile money they already use, or a card if they're abroad."],
+  ["Do my friends need an app?", "No. They pay from the link or the chat with the mobile money they already use, or a card if they're abroad."],
 ];
 
 export default async function Home() {
@@ -66,7 +146,7 @@ export default async function Home() {
         <div className="relative mx-auto grid w-full max-w-6xl items-center gap-12 px-5 pb-16 pt-6 sm:px-6 lg:grid-cols-[1.08fr_0.92fr] lg:pb-24 lg:pt-10">
           <div>
             <p className="rise inline-flex items-center gap-2 rounded-full border border-line bg-paper/80 px-3 py-1 text-xs font-medium text-ink-soft backdrop-blur-sm">
-              <span className="h-1.5 w-1.5 rounded-full bg-forest-2" /> WhatsApp · M-Pesa · Airtel Money · Card
+              <span className="h-1.5 w-1.5 rounded-full bg-forest-2" /> Payments by <Provider name="Snippe" /> and <Provider name="PayPal" />
             </p>
             <h1 className="rise d1 font-display mt-6 text-[2.9rem] font-semibold leading-[0.98] tracking-tight sm:text-7xl lg:text-[5.4rem]">
               Michango,
@@ -120,7 +200,7 @@ export default async function Home() {
             ))}
           </div>
         </div>
-        <p className="sr-only">Pay with {methods.join(", ")}.</p>
+        <p className="sr-only">Pay with mobile money, a bank card or PayPal. Payments are processed by Snippe and PayPal.</p>
       </section>
 
       {/* ---------- How it works ---------- */}
@@ -142,13 +222,19 @@ export default async function Home() {
         <h2 className="font-display mt-3 max-w-2xl text-4xl font-semibold leading-tight sm:text-5xl">
           Built for the way Tanzania collects together.
         </h2>
-        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {occasions.map((o) => (
-            <TiltCard key={o.sw} className="card p-6">
-              <p className="text-4xl" aria-hidden>{o.emoji}</p>
-              <p className="font-display mt-5 text-2xl font-semibold">{o.sw}</p>
-              <p className="text-sm font-medium text-ink">{o.en}</p>
-              <p className="mt-2 text-sm text-ink-soft">{o.note}</p>
+            <TiltCard key={o.sw} className="photo-card">
+              <div className="photo-frame">
+                <Photo shot={o.shot} className="photo-img" />
+                <div className="photo-shade" aria-hidden />
+                <p className="photo-title font-display text-3xl font-semibold text-paper">{o.sw}</p>
+                <Credit shot={o.shot} className="absolute right-3 top-3 rounded-full bg-ink/40 px-2 py-1 backdrop-blur-sm" />
+              </div>
+              <div className="p-5">
+                <p className="text-sm font-semibold text-ink">{o.en}</p>
+                <p className="mt-1 text-sm text-ink-soft">{o.note}</p>
+              </div>
             </TiltCard>
           ))}
         </div>
@@ -183,17 +269,20 @@ export default async function Home() {
             The AI makes SarafuPay easy to talk to. Moving money stays deterministic, double-checked and in your hands.
           </p>
         </div>
-        <ul className="grid gap-4 sm:grid-cols-2">
-          {[
-            ["🔐", "The AI can't move money", "Payouts run only after the organiser replies with a one-time CONFIRM code. That step never goes through the AI."],
-            ["🧾", "Every payout is broadcast", "Contributors get a transparency update with the recipient, the purpose, the fees and the provider reference."],
-            ["🏦", "Payment providers hold the money", "Snippe collects and pays out mobile money; PayPal handles card and PayPal. SarafuPay keeps the records."],
-            ["👀", "Privacy by role", "Only the organiser sees who gave what. Everyone else sees totals and the payout ledger."],
-          ].map(([icon, t, b]) => (
-            <li key={t} className="card p-5">
-              <p className="text-2xl" aria-hidden>{icon}</p>
-              <p className="mt-3 font-semibold">{t}</p>
-              <p className="mt-1 text-sm leading-relaxed text-ink-soft">{b}</p>
+        <ul className="grid gap-5 sm:grid-cols-2">
+          {safety.map((c) => (
+            <li key={c.title}>
+              <TiltCard className="photo-card">
+                <div className="photo-frame !aspect-[16/10]">
+                  <Photo shot={c.shot} className="photo-img" sizes="(min-width: 768px) 320px, 100vw" />
+                  <div className="photo-shade" aria-hidden />
+                  <Credit shot={c.shot} className="absolute bottom-3 right-3" />
+                </div>
+                <div className="p-5">
+                  <p className="font-semibold">{c.title}</p>
+                  <p className="mt-1 text-sm leading-relaxed text-ink-soft">{c.body}</p>
+                </div>
+              </TiltCard>
             </li>
           ))}
         </ul>

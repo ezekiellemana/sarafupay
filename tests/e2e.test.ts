@@ -326,7 +326,7 @@ async function main() {
   assert.equal(after2.find((c) => c.id === flaky.id)?.status, "pending", "transient error: retried next run");
   console.log("✓ reconcile closes expired orders and treats PayPal hiccups as warnings");
 
-  // 9c. Mobile money via Snippe: TZS collection, hosted checkout, signed webhook, payout to M-Pesa.
+  // 9c. Mobile money via Snippe: TZS collection, hosted checkout, signed webhook, payout to mobile money.
   const { createHmac } = await import("node:crypto");
   const owner = (await db.select().from(schema.users).where(eq(schema.users.phone, OWNER)))[0];
   const tzCol = await core.createCollection({ ownerId: owner.id, title: "Msiba wa Bibi", category: "funeral", targetCents: 2_000_000_00 });
@@ -386,7 +386,7 @@ async function main() {
     core.proposePayout({ collection: tzCol, requester: owner, destination: { method: "paypal", email: "a@b.co" }, amountCents: 1_00 }),
     /Insufficient balance/,
   );
-  console.log("✓ Snippe mobile money: checkout, signed webhook, fees, payout to M-Pesa, bank validation");
+  console.log("✓ Snippe mobile money: checkout, signed webhook, fees, payout to mobile money, bank validation");
 
   // 9d. Provider timeout on a payout: balance stays held, nothing is marked failed, the retry
   // (same idempotency key) picks up the original result.

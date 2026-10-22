@@ -9,7 +9,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "SarafuPay — michango on WhatsApp, with mobile money",
   description:
-    "An AI agent in WhatsApp that runs michango — weddings, funerals, medical bills, NGOs. Friends pay with M-Pesa, Airtel Money or card; every payout is reported.",
+    "An AI agent in WhatsApp that runs michango — weddings, funerals, medical bills, NGOs. Friends pay with mobile money or card; every payout is reported.",
 };
 
 export const viewport: Viewport = { themeColor: "#0e3b2c" };
