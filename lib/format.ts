@@ -10,10 +10,15 @@ export function centsToValue(cents: number): string {
 
 const symbols: Record<string, string> = { USD: "$", EUR: "€", GBP: "£" };
 
-export function money(cents: number, currency = "USD"): string {
-  const sym = symbols[currency];
+/** Currencies shown without decimals (TZS has no coins in use). */
+const WHOLE = new Set(["TZS", "UGX", "KES", "JPY", "RWF"]);
+
+export function money(cents: number, currency = "TZS"): string {
+  const cur = currency.toUpperCase();
+  if (WHOLE.has(cur)) return `${cur} ${Math.round(cents / 100).toLocaleString("en-US")}`;
+  const sym = symbols[cur];
   const v = (cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  return sym ? `${sym}${v}` : `${v} ${currency}`;
+  return sym ? `${sym}${v}` : `${v} ${cur}`;
 }
 
 export type CurrencyMeta = { code: string; symbol: string; decimals: number; presets: number[] };
@@ -31,7 +36,10 @@ export function currencyMeta(currency: string): CurrencyMeta {
     /* unknown code: fall back to the code itself */
   }
   // Scale quick picks to the currency: roughly $10–$100 worth for strong currencies, bigger round numbers otherwise.
-  const big: Record<string, number> = { JPY: 100, HUF: 100, INR: 50, PHP: 50, THB: 30, TWD: 30, MXN: 20, CZK: 20, KES: 100, TZS: 2500, UGX: 3500 };
+  if (WHOLE.has(code)) decimals = 0;
+  // Everyday michango amounts in Tanzania.
+  if (code === "TZS") return { code, symbol: "TSh", decimals: 0, presets: [5_000, 10_000, 20_000, 50_000] };
+  const big: Record<string, number> = { JPY: 100, HUF: 100, INR: 50, PHP: 50, THB: 30, TWD: 30, MXN: 20, CZK: 20, KES: 100, UGX: 3500 };
   const m = big[code] ?? 1;
   const presets = [10, 20, 50, 100].map((v) => v * m);
   return { code, symbol, decimals, presets };

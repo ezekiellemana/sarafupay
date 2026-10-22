@@ -61,13 +61,23 @@ export type CaptureResult = {
   customId?: string;
   payerEmail?: string;
   payerName?: string;
+  /** What PayPal really charged on this capture, in cents (seller_receivable_breakdown.paypal_fee). */
+  paypalFeeCents?: number;
+  /** Amount and currency actually captured, in cents. */
+  amountCents?: number;
+  currency?: string;
 };
 
 function summarize(order: Order): CaptureResult {
   const unit = order.purchaseUnits?.[0];
   const capture = unit?.payments?.captures?.[0];
   const name = order.payer?.name;
+  const fee = capture?.sellerReceivableBreakdown?.paypalFee?.value;
+  const amt = capture?.amount?.value;
   return {
+    paypalFeeCents: fee !== undefined ? Math.round(Number(fee) * 100) : undefined,
+    amountCents: amt !== undefined ? Math.round(Number(amt) * 100) : undefined,
+    currency: capture?.amount?.currencyCode,
     status: order.status ?? "UNKNOWN",
     captureId: capture?.id,
     customId: unit?.customId ?? capture?.customId,

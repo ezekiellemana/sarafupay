@@ -13,7 +13,17 @@ export const env = {
   paypalClientId: () => get("PAYPAL_CLIENT_ID"),
   paypalSecret: () => get("PAYPAL_SECRET", get("PAYPAL_CLIENT_SECRET")),
   paypalWebhookId: () => get("PAYPAL_WEBHOOK_ID"),
-  paypalApiBase: () => "https://api-m.sandbox.paypal.com", // sandbox only, per hackathon rules
+  /** "live" for real money, anything else = sandbox. */
+  paypalEnv: () => (get("PAYPAL_ENV", "sandbox").toLowerCase() === "live" ? "live" : "sandbox"),
+  paypalApiBase: () => (env.paypalEnv() === "live" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com"),
+
+  snippeApiKey: () => get("SNIPPE_API_KEY"),
+  snippeWebhookSecret: () => get("SNIPPE_WEBHOOK_SECRET"),
+  snippeBaseUrl: () => get("SNIPPE_BASE_URL", "https://api.snippe.sh").replace(/\/$/, ""),
+  snippeProfileId: () => get("SNIPPE_PROFILE_ID"),
+
+  /** Owner-only admin pages (/admin?key=...). Empty disables the admin. */
+  adminKey: () => get("ADMIN_KEY"),
 
   geminiApiKey: () => get("GOOGLE_GENERATIVE_AI_API_KEY", get("GEMINI_API_KEY")),
   geminiModel: () => get("GEMINI_MODEL", "gemini-3.8-flash"),
@@ -38,6 +48,9 @@ export const env = {
 
 export function paypalConfigured() {
   return Boolean(env.paypalClientId() && env.paypalSecret());
+}
+export function snippeConfigured() {
+  return Boolean(env.snippeApiKey());
 }
 export function whatsappConfigured() {
   return Boolean(env.waToken() && env.waPhoneNumberId());

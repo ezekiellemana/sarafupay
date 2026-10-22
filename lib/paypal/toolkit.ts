@@ -16,7 +16,7 @@ function getToolkit(): PayPalAgentToolkit {
         invoices: { create: true, send: true, sendReminder: true, generateQRC: true, get: true },
         orders: { get: true },
       },
-      context: { sandbox: true },
+      context: { sandbox: env.paypalEnv() !== "live" },
     },
   });
   return toolkit;

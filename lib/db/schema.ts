@@ -19,7 +19,9 @@ export const collections = pgTable("collections", {
   purpose: text("purpose"),
   category: text("category").notNull().default("other"),
   targetCents: integer("target_cents").notNull(),
-  currency: text("currency").notNull().default("USD"),
+  // Main currency of the target and of mobile money contributions. Card/PayPal money is kept in USD
+  // alongside it (two rails, never converted automatically).
+  currency: text("currency").notNull().default("TZS"),
   deadline: text("deadline"), // YYYY-MM-DD
   payoutEmail: text("payout_email"),
   status: text("status").notNull().default("active"), // active | closed
@@ -39,9 +41,18 @@ export const contributions = pgTable(
     status: text("status").notNull().default("pending"), // pending | paid | failed | refunded
     source: text("source").notNull(), // whatsapp | sim | web
     message: text("message"),
+    // Which rail took the money: "snippe" (mobile money, TZS) or "paypal" (card/PayPal, USD).
+    provider: text("provider").notNull().default("paypal"),
+    providerRef: text("provider_ref"), // Snippe session/payment reference
     paypalOrderId: text("paypal_order_id"),
     paypalCaptureId: text("paypal_capture_id"),
     payerEmail: text("payer_email"),
+    payerPhone: text("payer_phone"),
+    // Fees, fixed at settlement (see lib/pricing.ts). net = amount − provider fee − SarafuPay fee.
+    providerFeeCents: integer("provider_fee_cents"),
+    sarafuFeeCents: integer("sarafu_fee_cents"),
+    netCents: integer("net_cents"),
+    rateJson: text("rate_json"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     paidAt: timestamp("paid_at", { withTimezone: true }),
   },
@@ -65,9 +76,21 @@ export const payouts = pgTable("payouts", {
   id: text("id").primaryKey(),
   collectionId: text("collection_id").notNull(),
   requestedBy: text("requested_by").notNull(),
-  recipientEmail: text("recipient_email").notNull(),
+  // "mobile_money" | "bank" (Snippe, TZS) | "paypal" (PayPal Payouts, USD)
+  method: text("method").notNull().default("paypal"),
+  provider: text("provider").notNull().default("paypal"),
+  recipientEmail: text("recipient_email"),
+  recipientPhone: text("recipient_phone"),
+  recipientBank: text("recipient_bank"),
+  recipientAccount: text("recipient_account"),
   recipientName: text("recipient_name"),
+  // Withdrawn from the collection balance. The organiser receives net_cents.
   amountCents: integer("amount_cents").notNull(),
+  providerFeeCents: integer("provider_fee_cents"),
+  sarafuFeeCents: integer("sarafu_fee_cents"),
+  netCents: integer("net_cents"),
+  rateJson: text("rate_json"),
+  providerRef: text("provider_ref"), // Snippe payout reference
   currency: text("currency").notNull(),
   note: text("note"),
   // awaiting_confirmation | processing | success | failed | cancelled
@@ -96,6 +119,19 @@ export const chatLog = pgTable(
 // WhatsApp message ids we already handled. Meta retries webhooks (e.g. while the
 // server cold-starts), so every inbound id is claimed exactly once.
 export const processedMessages = pgTable("processed_messages", {
+  id: text("id").primaryKey(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Admin-editable configuration (pricing rates, ...). value is JSON.
+export const settings = pgTable("settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Provider webhook events already handled (Snippe retries and may deliver twice).
+export const processedEvents = pgTable("processed_events", {
   id: text("id").primaryKey(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

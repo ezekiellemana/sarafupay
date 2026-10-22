@@ -8,7 +8,7 @@ import { money } from "@/lib/format";
 import { waLink } from "@/lib/channels/whatsapp";
 import { categoryEmoji, simulatorUrl } from "@/lib/services/links";
 import { contributeAction } from "./actions";
-import { AmountInput } from "./amount-input";
+import { ChipIn } from "./chip-in";
 import { SupporterSearch } from "./supporter-search";
 
 
@@ -61,13 +61,18 @@ export default async function CollectionPage({ params, searchParams }: PageProps
             <div className="mt-4"><Progress percent={stats.percent} /></div>
             <div className="mt-4 grid grid-cols-3 gap-3 text-sm">
               <div><p className="font-semibold">{stats.paidCount}</p><p className="text-ink-soft">{stats.paidCount === 1 ? "contribution" : "contributions"}</p></div>
-              <div><p className="font-semibold">{money(stats.paidOutCents, col.currency)}</p><p className="text-ink-soft">paid out</p></div>
-              <div><p className="font-semibold">{money(stats.availableCents, col.currency)}</p><p className="text-ink-soft">balance</p></div>
+              <div><p className="font-semibold">{money(stats.paidOutCents, col.currency)}</p><p className="text-ink-soft">withdrawn</p></div>
+              <div><p className="font-semibold">{money(stats.availableCents, col.currency)}</p><p className="text-ink-soft">balance after fees</p></div>
             </div>
+            {stats.balances.slice(1).map((b) => (
+              <p key={b.currency} className="mt-3 border-t border-line pt-3 text-sm text-ink-soft">
+                Plus <strong className="text-ink">{money(b.raisedCents, b.currency)}</strong> by card or PayPal · balance {money(b.availableCents, b.currency)}
+              </p>
+            ))}
           </div>
           {col.status === "active" ? (
             <a href="#chip-in" className="btn btn-primary mt-4 w-full justify-center lg:hidden">
-              Chip in with PayPal ↓
+              Chip in ↓
             </a>
           ) : null}
 
@@ -80,6 +85,7 @@ export default async function CollectionPage({ params, searchParams }: PageProps
                 <li key={p.id} className="ledger-row flex items-baseline justify-between gap-4 py-3">
                   <span>
                     <strong>{p.recipientName ?? "Recipient"}</strong>
+                    <span className="text-ink-soft"> · {p.method === "bank" ? "bank" : p.method === "paypal" ? "PayPal" : "mobile money"}</span>
                     {p.note ? <span className="text-ink-soft"> · {p.note}</span> : null}
                     {p.status === "processing" ? <span className="ml-2 text-xs text-marigold">processing</span> : null}
                   </span>
@@ -109,23 +115,12 @@ export default async function CollectionPage({ params, searchParams }: PageProps
           <form action={contributeAction.bind(null, col.code)} className="card overflow-hidden">
             <div className="bg-forest px-6 py-4 text-paper">
               <p className="font-display text-2xl font-semibold">Chip in</p>
-              <p className="text-sm opacity-80">Secure checkout with PayPal</p>
+              <p className="text-sm opacity-80">Mobile money or card. You pay exactly what you give.</p>
             </div>
             <div className="space-y-4 p-5 sm:p-6">
               {sp.cancelled ? <p className="rounded-lg bg-paper-2 p-3 text-sm">Payment cancelled. No money moved.</p> : null}
               {err ? <p className="rounded-lg bg-terracotta/10 p-3 text-sm text-terracotta">{err === "amount" ? "Please enter a valid amount." : err}</p> : null}
-              <AmountInput currency={col.currency} />
-              <label className="block text-sm font-medium">
-                Your name
-                <input name="name" required maxLength={80} placeholder="Only your first name is shown publicly" className="mt-1 w-full rounded-xl border border-line bg-white px-3 py-2 text-base" />
-              </label>
-              <label className="block text-sm font-medium">
-                Message <span className="text-ink-soft font-normal">(optional)</span>
-                <input name="message" maxLength={280} placeholder="Hongera! 🎉" className="mt-1 w-full rounded-xl border border-line bg-white px-3 py-2 text-base" />
-              </label>
-              <button disabled={col.status !== "active"} className="btn btn-primary w-full justify-center disabled:opacity-50">
-                Continue to PayPal →
-              </button>
+              <ChipIn disabled={col.status !== "active"} />
               <p className="text-center text-xs text-ink-soft">
                 Prefer chatting? <a href={chat} className="underline">Contribute with the AI agent</a>
               </p>

@@ -1,5 +1,5 @@
 // Idempotent DDL, run once per process. Kept in sync with schema.ts by hand
-// (small schema, avoids a migration step on Render and for judges running locally).
+// (small schema, avoids a migration step on deploy and for anyone running locally).
 export const BOOTSTRAP_SQL = `
 CREATE TABLE IF NOT EXISTS users (
   id text PRIMARY KEY,
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS collections (
   purpose text,
   category text NOT NULL DEFAULT 'other',
   target_cents integer NOT NULL,
-  currency text NOT NULL DEFAULT 'USD',
+  currency text NOT NULL DEFAULT 'TZS',
   deadline text,
   payout_email text,
   status text NOT NULL DEFAULT 'active',
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS payouts (
   id text PRIMARY KEY,
   collection_id text NOT NULL,
   requested_by text NOT NULL,
-  recipient_email text NOT NULL,
+  recipient_email text,
   recipient_name text,
   amount_cents integer NOT NULL,
   currency text NOT NULL,
@@ -71,6 +71,15 @@ CREATE TABLE IF NOT EXISTS payouts (
   failure_reason text,
   created_at timestamptz NOT NULL DEFAULT now(),
   executed_at timestamptz
+);
+CREATE TABLE IF NOT EXISTS settings (
+  key text PRIMARY KEY,
+  value text NOT NULL,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS processed_events (
+  id text PRIMARY KEY,
+  created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE TABLE IF NOT EXISTS chat_log (
   id serial PRIMARY KEY,
@@ -84,4 +93,24 @@ CREATE TABLE IF NOT EXISTS processed_messages (
   id text PRIMARY KEY,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+-- v2 columns (idempotent, so existing databases upgrade in place)
+ALTER TABLE contributions ADD COLUMN IF NOT EXISTS provider text NOT NULL DEFAULT 'paypal';
+ALTER TABLE contributions ADD COLUMN IF NOT EXISTS provider_ref text;
+ALTER TABLE contributions ADD COLUMN IF NOT EXISTS payer_phone text;
+ALTER TABLE contributions ADD COLUMN IF NOT EXISTS provider_fee_cents integer;
+ALTER TABLE contributions ADD COLUMN IF NOT EXISTS sarafu_fee_cents integer;
+ALTER TABLE contributions ADD COLUMN IF NOT EXISTS net_cents integer;
+ALTER TABLE contributions ADD COLUMN IF NOT EXISTS rate_json text;
+CREATE INDEX IF NOT EXISTS contrib_provider_ref_idx ON contributions (provider_ref);
+ALTER TABLE payouts ADD COLUMN IF NOT EXISTS method text NOT NULL DEFAULT 'paypal';
+ALTER TABLE payouts ADD COLUMN IF NOT EXISTS provider text NOT NULL DEFAULT 'paypal';
+ALTER TABLE payouts ALTER COLUMN recipient_email DROP NOT NULL;
+ALTER TABLE payouts ADD COLUMN IF NOT EXISTS recipient_phone text;
+ALTER TABLE payouts ADD COLUMN IF NOT EXISTS recipient_bank text;
+ALTER TABLE payouts ADD COLUMN IF NOT EXISTS recipient_account text;
+ALTER TABLE payouts ADD COLUMN IF NOT EXISTS provider_fee_cents integer;
+ALTER TABLE payouts ADD COLUMN IF NOT EXISTS sarafu_fee_cents integer;
+ALTER TABLE payouts ADD COLUMN IF NOT EXISTS net_cents integer;
+ALTER TABLE payouts ADD COLUMN IF NOT EXISTS rate_json text;
+ALTER TABLE payouts ADD COLUMN IF NOT EXISTS provider_ref text;
 `;

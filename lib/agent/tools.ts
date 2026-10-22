@@ -11,11 +11,13 @@ import { createAndSendPledgeInvoice, toolkitToolsForAgent } from "../paypal/tool
 import { getDb, schema } from "../db";
 import { and, eq, ilike } from "drizzle-orm";
 import { langOf, t } from "../i18n";
+import { RATE_LABELS, RATE_KEYS, rateSummary } from "../pricing";
+import { getRates } from "../services/settings";
 
 export type AgentContext = { user: User; channel: "whatsapp" | "sim" };
 
 const code = z.string().describe("Collection code, e.g. NEEMA24");
-const amount = z.number().positive().describe("Amount in the collection currency, e.g. 20 or 12.5");
+const amount = z.number().positive().describe("Amount, e.g. 20000 (TZS) or 25 (USD)");
 const date = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/)
@@ -49,7 +51,7 @@ export function buildTools(ctx: AgentContext): Record<string, Tool> {
 
   const tools: Record<string, Tool> = {
     update_my_profile: tool({
-      description: "Save the user's display name and/or PayPal email (used for payouts to them).",
+      description: "Save the user's display name and/or PayPal email (used for USD payouts to them).",
       inputSchema: z.object({ name: z.string().min(1).max(60).optional(), paypal_email: z.string().email().optional() }),
       execute: safe(async ({ name, paypal_email }) => {
         await core.updateUser(ctx.user.id, {
@@ -69,7 +71,7 @@ export function buildTools(ctx: AgentContext): Record<string, Tool> {
         purpose: z.string().max(500).optional(),
         category: z.enum(["wedding", "funeral", "medical", "education", "community", "nonprofit", "celebration", "other"]),
         target_amount: amount,
-        currency: z.enum(["USD", "EUR", "GBP"]).default("USD"),
+        currency: z.enum(["TZS", "USD"]).default("TZS").describe("TZS unless the organiser clearly wants a USD target"),
         deadline: date.optional(),
         payout_paypal_email: z.string().email().optional(),
       }),
@@ -148,6 +150,14 @@ export function buildTools(ctx: AgentContext): Record<string, Tool> {
           raised: money(s.raisedCents, col.currency),
           paid_out: money(s.paidOutCents, col.currency),
           available_balance: money(s.availableCents, col.currency),
+          balances: s.balances.map((b) => ({
+            currency: b.currency,
+            paid_by_contributors: money(b.raisedCents, b.currency),
+            after_fees: money(b.netCents, b.currency),
+            withdrawn: money(b.paidOutCents, b.currency),
+            available: money(b.availableCents, b.currency),
+            rail: b.currency === "TZS" ? "mobile money via Snippe" : "card/PayPal via PayPal",
+          })),
           open_pledges_total: money(s.openPledgeCents, col.currency),
         };
         if (col.ownerId !== ctx.user.id) return base;
@@ -158,25 +168,34 @@ export function buildTools(ctx: AgentContext): Record<string, Tool> {
         ]);
         return {
           ...base,
-          contributions: paid.slice(0, 50).map((p) => ({ name: p.displayName, amount: money(p.amountCents, p.currency), at: p.paidAt, message: p.message })),
+          contributions: paid.slice(0, 50).map((p) => ({
+            name: p.displayName,
+            amount: money(p.amountCents, p.currency),
+            after_fees: money(p.netCents ?? p.amountCents, p.currency),
+            via: core.paidVia(p),
+            at: p.paidAt,
+            message: p.message,
+          })),
           open_pledges: plg.filter((p) => p.status === "open").map((p) => ({ name: p.displayName, amount: money(p.amountCents, col.currency), due: p.dueDate, reminded: Boolean(p.remindedAt), invoice: p.invoiceId })),
-          payouts: pays.map((p) => ({ to: p.recipientName ?? p.recipientEmail, amount: money(p.amountCents, p.currency), status: p.status, note: p.note })),
+          payouts: pays.map((p) => ({ to: core.destinationLabel(p), withdrawn: money(p.amountCents, p.currency), received: money(p.netCents ?? p.amountCents, p.currency), status: p.status, note: p.note })),
         };
       }),
     }),
 
     create_payment_link: tool({
       description:
-        "Create a secure PayPal payment link for the current user to contribute an amount to a collection. Always use this; never invent links.",
+        "Create a secure payment link for the current user to contribute to a collection. Mobile money (M-Pesa, Airtel Money, Mixx by Yas, HaloPesa) is in TZS via Snippe; card or PayPal is in USD via PayPal. Default to mobile money for Tanzanian numbers. Always use this; never invent links.",
       inputSchema: z.object({
         code,
-        amount,
+        amount: amount.describe("TZS for mobile_money (minimum 500), USD for card_or_paypal (minimum 1)"),
+        method: z.enum(["mobile_money", "card_or_paypal"]).default("mobile_money"),
         display_name: z.string().max(80).optional().describe("Name shown to the organiser; defaults to the user's name"),
         message: z.string().max(280).optional().describe("Optional note to the organiser"),
       }),
       execute: safe(async (i) => {
         await refreshUser();
         const col = await mustFind(i.code);
+        const provider = i.method === "card_or_paypal" ? "paypal" : "snippe";
         const ctb = await core.createContribution({
           collection: col,
           contributorId: ctx.user.id,
@@ -184,11 +203,14 @@ export function buildTools(ctx: AgentContext): Record<string, Tool> {
           amountCents: toCents(i.amount),
           source: ctx.channel,
           message: i.message,
+          provider,
+          payerPhone: provider === "snippe" && ctx.channel === "whatsapp" && ctx.user.phone.startsWith("255") ? ctx.user.phone : undefined,
         });
         return {
           pay_url: payUrl(ctb.id),
           amount: money(ctb.amountCents, ctb.currency),
-          note: "Share pay_url exactly. Tell them they'll get a receipt here once PayPal confirms.",
+          via: provider === "snippe" ? "mobile money (Snippe)" : "card or PayPal (PayPal)",
+          note: "Share pay_url exactly. They pay exactly this amount; the organiser carries the fees. They'll get a receipt here once the payment is confirmed.",
         };
       }),
     }),
@@ -230,7 +252,7 @@ export function buildTools(ctx: AgentContext): Record<string, Tool> {
     }),
 
     remind_pledgers: tool({
-      description: "Owner only: send each person with an open pledge a personal chat reminder with their own PayPal pay link.",
+      description: "Owner only: send each person with an open pledge a personal chat reminder with their own pay link.",
       inputSchema: z.object({ code }),
       execute: safe(async ({ code: c }) => {
         const col = await mustFind(c);
@@ -252,6 +274,7 @@ export function buildTools(ctx: AgentContext): Record<string, Tool> {
           .from(schema.pledges)
           .where(and(eq(schema.pledges.collectionId, col.id), eq(schema.pledges.status, "open"), ilike(schema.pledges.displayName, `%${i.pledger_name}%`)));
         if (!p) throw new ToolError(`No open pledge found for ${i.pledger_name}.`);
+        if (col.currency === "TZS") throw new ToolError("PayPal invoices can't be issued in TZS. Use remind_pledgers instead (it sends a mobile money pay link).");
         const res = await createAndSendPledgeInvoice({
           invoiceNumber: `SP-${p.id.slice(-10).toUpperCase()}`,
           recipientEmail: i.email,
@@ -269,40 +292,67 @@ export function buildTools(ctx: AgentContext): Record<string, Tool> {
 
     prepare_payout: tool({
       description:
-        "Owner only: prepare a payout from the collection balance to a recipient's PayPal email (e.g. a caterer, hospital, the beneficiary). This does NOT move money. It sends the owner a one-time CONFIRM code; money moves only when the owner replies with it.",
+        "Owner only: prepare a withdrawal from the collection balance. TZS money goes to mobile money (any Tanzanian number) or a Tanzanian bank via Snippe; USD money (from card/PayPal contributions) goes to a PayPal email. This does NOT move money: it sends the owner the amount, fees and a one-time CONFIRM code; money moves only when the owner replies with it.",
       inputSchema: z.object({
         code,
-        recipient_email: z.string().email(),
-        recipient_name: z.string().max(80).optional(),
-        amount,
+        method: z.enum(["mobile_money", "bank", "paypal"]),
+        amount: amount.describe("Amount to withdraw from the balance: TZS for mobile_money/bank, USD for paypal"),
+        recipient_name: z.string().min(2).max(80).describe("Name on the mobile money or bank account (required for mobile_money and bank)"),
+        phone: z.string().optional().describe("mobile_money only: number like 0712345678"),
+        bank: z.string().optional().describe("bank only: bank name or code, e.g. CRDB, NMB, NBC"),
+        account_number: z.string().optional().describe("bank only"),
+        paypal_email: z.string().email().optional().describe("paypal only"),
         purpose: z.string().max(300).describe("What the money is for; shown to contributors in the transparency update"),
       }),
       execute: safe(async (i) => {
         const col = await mustFind(i.code);
         mustOwn(col, ctx);
-        const p = await core.proposePayout({
-          collection: col,
-          requester: ctx.user,
-          recipientEmail: i.recipient_email,
-          recipientName: i.recipient_name,
-          amountCents: toCents(i.amount),
-          note: i.purpose,
-        });
+        let destination: core.PayoutDestination;
+        if (i.method === "mobile_money") {
+          if (!i.phone) throw new ToolError("Ask for the mobile money number to send to.");
+          destination = { method: "mobile_money", phone: i.phone, name: i.recipient_name };
+        } else if (i.method === "bank") {
+          if (!i.bank || !i.account_number) throw new ToolError("Ask for the bank name and account number.");
+          destination = { method: "bank", bank: i.bank, account: i.account_number, name: i.recipient_name };
+        } else {
+          if (!i.paypal_email) throw new ToolError("Ask for the PayPal email to send to.");
+          destination = { method: "paypal", email: i.paypal_email, name: i.recipient_name };
+        }
+        const p = await core.proposePayout({ collection: col, requester: ctx.user, destination, amountCents: toCents(i.amount), note: i.purpose });
         const L = await langOf(ctx.user.phone);
-        const amt = money(p.amountCents, p.currency);
-        const to = `${p.recipientName ?? p.recipientEmail} (${p.recipientEmail})`;
+        const cur = p.currency;
+        const via = p.provider === "snippe" ? "Snippe" : "PayPal";
+        const amt = money(p.amountCents, cur);
+        const fees = `${money(p.quote.providerFeeCents, cur)} ${via} + ${money(p.quote.sarafuFeeCents, cur)} SarafuPay`;
+        const net = money(p.quote.netCents, cur);
+        const to = core.destinationLabel(p);
         await sendTo(
           ctx.user.phone,
           t(
             L,
-            `🔐 *Thibitisha malipo*\n${amt} kutoka *${col.code}* → ${to}\nKwa ajili ya: ${p.note}\n\nJibu *CONFIRM ${p.confirmCode}* kutuma kupitia PayPal, au *CANCEL ${p.confirmCode}*. Muda unaisha baada ya dakika 15.`,
-            `🔐 *Confirm payout*\n${amt} from *${col.code}* → ${to}\nFor: ${p.note}\n\nReply *CONFIRM ${p.confirmCode}* to send it with PayPal, or *CANCEL ${p.confirmCode}*. Expires in 15 min.`,
+            `🔐 *Thibitisha malipo*\nKutoa ${amt} kutoka *${col.code}* → ${to}\nAda: ${fees}\n*Atapokea: ${net}*\nKwa ajili ya: ${p.note}\n\nJibu *CONFIRM ${p.confirmCode}* kutuma kupitia ${via}, au *CANCEL ${p.confirmCode}*. Muda unaisha baada ya dakika 15.`,
+            `🔐 *Confirm payout*\nWithdraw ${amt} from *${col.code}* → ${to}\nFees: ${fees}\n*They receive: ${net}*\nFor: ${p.note}\n\nReply *CONFIRM ${p.confirmCode}* to send it with ${via}, or *CANCEL ${p.confirmCode}*. Expires in 15 min.`,
           ),
         );
         return {
           ok: true,
           confirmation_message_already_sent: true,
           instruction: "Do NOT repeat the code. Briefly say you've sent the confirmation details above. Never say the money has moved.",
+        };
+      }),
+    }),
+
+    pricing: tool({
+      description:
+        "SarafuPay's current fees. Contributors pay exactly what they give; the organiser carries all fees. Use this whenever someone asks about charges.",
+      inputSchema: z.object({}),
+      execute: safe(async () => {
+        const rates = await getRates();
+        return {
+          rule: "Contributors pay exactly what they give. Fees come out of the collection. The licensed provider (Snippe or PayPal) takes its fee and SarafuPay takes its percentage.",
+          fees: RATE_KEYS.map((k) => ({ what: RATE_LABELS[k].title, via: RATE_LABELS[k].provider, total: rateSummary(rates[k], RATE_LABELS[k].currency) })),
+          no_monthly_fee: true,
+          no_minimum_withdrawal: true,
         };
       }),
     }),
@@ -315,7 +365,7 @@ export function buildTools(ctx: AgentContext): Record<string, Tool> {
         const rows = await core.listPayouts(col.id);
         return rows
           .filter((r) => r.status !== "cancelled" && r.status !== "awaiting_confirmation")
-          .map((r) => ({ to: r.recipientName ?? "recipient", amount: money(r.amountCents, r.currency), purpose: r.note, status: r.status, at: r.executedAt }));
+          .map((r) => ({ to: r.recipientName ?? "recipient", amount: money(r.amountCents, r.currency), via: r.provider === "snippe" ? "Snippe" : "PayPal", purpose: r.note, status: r.status, at: r.executedAt }));
       }),
     }),
 

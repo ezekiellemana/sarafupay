@@ -29,7 +29,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps<
       channel: c.source === "sim" ? "chat" : c.source,
       paid_on: (c.paidAt ?? c.createdAt).toISOString().slice(0, 10),
       message: c.message ?? "",
-      paypal_ref: c.paypalCaptureId ?? "",
+      paypal_ref: c.provider === "snippe" ? (c.providerRef ?? "") : (c.paypalCaptureId ?? ""),
     })),
     pledges: pledges.map((p) => ({
       pledger: p.displayName,
@@ -41,7 +41,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps<
     payouts: payouts
       .filter((p) => p.status !== "cancelled" && p.status !== "awaiting_confirmation")
       .map((p) => ({
-        recipient: p.recipientName ?? p.recipientEmail,
+        recipient: p.recipientName ?? p.recipientEmail ?? p.recipientPhone ?? "recipient",
         amount: p.amountCents / 100,
         purpose: p.note ?? "",
         status: p.status,

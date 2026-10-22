@@ -1,14 +1,14 @@
 import "server-only";
 import { ApiError } from "@paypal/paypal-server-sdk";
-import { and, eq, gt, isNotNull, lt } from "drizzle-orm";
+import { and, eq, gt, isNotNull, lt, or } from "drizzle-orm";
 import { getDb, schema } from "../db";
 import { getOrderSummary } from "../paypal/orders";
-import { applyCapture, refreshPayout, settleOrder } from "./core";
+import { applyCapture, checkSnippeContribution, refreshPayout, settleOrder } from "./core";
 
-const { contributions, payouts, processedMessages } = schema;
+const { contributions, payouts, processedMessages, processedEvents } = schema;
 
 /**
- * Safety net run by the Render Cron Job (`sarafupay-reconcile`, every 15 minutes).
+ * Safety net run by the scheduled reconcile job (every 15 minutes).
  *
  * Webhooks are the primary path, but they can be missed (deploy at the wrong moment,
  * PayPal retry exhaustion, a contributor closing the tab right after approving).
@@ -17,7 +17,8 @@ const { contributions, payouts, processedMessages } = schema;
  * 1. Pending contributions with a PayPal order (10 min – 3 days old):
  *    - COMPLETED at PayPal  -> record it (receipt + organiser alert go out once).
  *    - APPROVED but never captured -> capture it, exactly what the return URL would do.
- * 2. Payouts stuck in "processing" -> pull the batch status and finalise.
+ * 1b. Pending Snippe mobile money payments (5 min – 3 days old) -> ask Snippe for the session.
+ * 2. Payouts stuck in "processing" (PayPal or Snippe) -> pull the provider status and finalise.
  * 3. Prune WhatsApp de-duplication rows older than 7 days.
  *
  * Every step reuses the same idempotent functions as the webhooks, so a job that
@@ -108,7 +109,7 @@ export async function reconcile(deps: ReconcileDeps = realDeps): Promise<Reconci
         continue;
       }
       if (order.status === "COMPLETED") {
-        settled = await applyCapture(p.orderId, order.status, order.captureId, order.customId ?? p.id, order.payerEmail);
+        settled = await applyCapture(p.orderId, order.status, order.captureId, order.customId ?? p.id, order.payerEmail, order.paypalFeeCents);
       } else if (order.status === "APPROVED") {
         settled = await deps.settle(p.orderId);
       }
@@ -126,11 +127,38 @@ export async function reconcile(deps: ReconcileDeps = realDeps): Promise<Reconci
     }
   }
 
+  // 1b. Missed Snippe mobile money webhooks.
+  const pendingSnippe = await db
+    .select({ id: contributions.id, ref: contributions.providerRef })
+    .from(contributions)
+    .where(
+      and(
+        eq(contributions.status, "pending"),
+        eq(contributions.provider, "snippe"),
+        isNotNull(contributions.providerRef),
+        lt(contributions.createdAt, new Date(now - 5 * 60_000)),
+        gt(contributions.createdAt, new Date(now - MAX_AGE_MS)),
+      ),
+    )
+    .limit(BATCH);
+  for (const p of pendingSnippe) {
+    report.checkedOrders++;
+    try {
+      const after = await checkSnippeContribution(p.id);
+      if (after?.status === "paid") report.recoveredPayments++;
+      if (after?.status === "failed") report.closedOrders++;
+    } catch (e) {
+      const line = `snippe ${p.ref}: ${describeError(e)}`.slice(0, 240);
+      const status = (e as { status?: number }).status;
+      (status === undefined || TRANSIENT.has(status) ? report.warnings : report.errors).push(line);
+    }
+  }
+
   // 2. Payouts stuck in processing.
   const processing = await db
     .select({ id: payouts.id })
     .from(payouts)
-    .where(and(eq(payouts.status, "processing"), isNotNull(payouts.paypalBatchId)))
+    .where(and(eq(payouts.status, "processing"), or(isNotNull(payouts.paypalBatchId), isNotNull(payouts.providerRef))))
     .limit(BATCH);
 
   for (const p of processing) {
@@ -149,7 +177,11 @@ export async function reconcile(deps: ReconcileDeps = realDeps): Promise<Reconci
     .delete(processedMessages)
     .where(lt(processedMessages.createdAt, new Date(now - 7 * 24 * 60 * 60_000)))
     .returning({ id: processedMessages.id });
-  report.prunedDedupRows = pruned.length;
+  const prunedEvents = await db
+    .delete(processedEvents)
+    .where(lt(processedEvents.createdAt, new Date(now - 7 * 24 * 60 * 60_000)))
+    .returning({ id: processedEvents.id });
+  report.prunedDedupRows = pruned.length + prunedEvents.length;
 
   return report;
 

@@ -4,7 +4,7 @@ import { env, paypalConfigured } from "../env";
 
 let sdk: Client | undefined;
 
-/** Official PayPal TypeScript Server SDK client (sandbox). */
+/** Official PayPal TypeScript Server SDK client (sandbox or live, from PAYPAL_ENV). */
 export function paypalSdk(): Client {
   if (!paypalConfigured()) throw new Error("PayPal is not configured: set PAYPAL_CLIENT_ID and PAYPAL_SECRET");
   sdk ??= new Client({
@@ -28,7 +28,7 @@ export function paypalSdk(): Client {
         httpMethodsToRetry: ["GET"],
       },
     },
-    environment: Environment.Sandbox,
+    environment: env.paypalEnv() === "live" ? Environment.Production : Environment.Sandbox,
     logging: { logLevel: LogLevel.Warn },
   });
   return sdk;

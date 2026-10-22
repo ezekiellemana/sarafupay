@@ -22,7 +22,10 @@ export async function POST(req: Request) {
           await settleOrder(r.id);
           break;
         case "PAYMENT.CAPTURE.COMPLETED":
-          await applyCapture(r.supplementary_data?.related_ids?.order_id, "COMPLETED", r.id, r.custom_id, undefined);
+          {
+            const fee = r.seller_receivable_breakdown?.paypal_fee?.value;
+            await applyCapture(r.supplementary_data?.related_ids?.order_id, "COMPLETED", r.id, r.custom_id, undefined, fee !== undefined ? Math.round(Number(fee) * 100) : undefined);
+          }
           break;
         case "PAYMENT.PAYOUTS-ITEM.SUCCEEDED":
         case "PAYMENT.PAYOUTS-ITEM.FAILED":

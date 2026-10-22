@@ -1,3 +1,4 @@
+import { env } from "@/lib/env";
 import Link from "next/link";
 
 export function Logo({ light = false }: { light?: boolean }) {
@@ -12,10 +13,12 @@ export function Logo({ light = false }: { light?: boolean }) {
   );
 }
 
+/** Shown only while payments run in test mode (PAYPAL_ENV is not "live"). */
 export function SandboxBadge() {
+  if (env.paypalEnv() === "live") return null;
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-paper-2 px-3 py-1 text-xs font-medium text-ink-soft">
-      <span className="h-1.5 w-1.5 rounded-full bg-marigold" /> PayPal sandbox · test money
+      <span className="h-1.5 w-1.5 rounded-full bg-marigold" /> Test mode · no real money
     </span>
   );
 }

@@ -48,7 +48,7 @@ async function main() {
     const pl = await core.createPledge({ collection: col, user: u, displayName: name, amountCents: cents, dueDate: due });
     if (status !== "open") await db.update(schema.pledges).set({ status }).where(eq(schema.pledges.id, pl.id));
   }
-  const p = await core.proposePayout({ collection: col, requester: owner, recipientEmail: "mama.lishe@example.com", recipientName: "Mama Lishe Catering", amountCents: 30000, note: "catering deposit" });
+  const p = await core.proposePayout({ collection: col, requester: owner, destination: { method: "paypal", email: "mama.lishe@example.com", name: "Mama Lishe Catering" }, amountCents: 30000, note: "catering deposit" });
   await db.update(schema.payouts).set({ status: "success", executedAt: new Date(), paypalBatchId: "DEMOBATCH", paypalItemId: "DEMOITEM" }).where(eq(schema.payouts.id, p.id));
   const fresh = (await core.findCollection(col.code))!;
   console.log("Seeded", col.code);

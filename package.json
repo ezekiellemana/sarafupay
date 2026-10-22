@@ -1,5 +1,5 @@
 {
-  "name": "sarafupay-ai",
+  "name": "sarafupay",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -10,7 +10,8 @@
     "test": "node --conditions=react-server --import tsx tests/e2e.test.ts",
     "typecheck": "tsc --noEmit",
     "reconcile": "node scripts/cron-reconcile.mjs",
-    "seed": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/seed-demo.ts"
+    "seed": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/seed-demo.ts",
+    "test:pricing": "node --import tsx --test tests/pricing.test.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.87",
