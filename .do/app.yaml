@@ -1,0 +1,103 @@
+# DigitalOcean App Platform spec for sarafupay.app
+# Create the app: DigitalOcean > Apps > Create App > "Import from app spec" > upload this file.
+# Full click-by-click guide: docs/DEPLOY_DIGITALOCEAN.md
+#
+#   Snippe / PayPal / WhatsApp webhooks ──► web (Next.js) ──► db (Postgres)
+#                                             ▲
+#                       every 15 min ──── reconcile (scheduled job)
+#
+# Secrets are left empty here on purpose: paste them in the dashboard (Settings > App-Level
+# Environment Variables), marked Encrypt. Never commit real keys.
+
+name: sarafupay
+region: fra
+
+envs:
+  # Shared by the web service and the reconcile job.
+  - key: APP_URL
+    value: ${APP_URL} # becomes https://sarafupay.app once the domain is attached
+    scope: RUN_AND_BUILD_TIME
+  - key: CRON_SECRET
+    type: SECRET
+    scope: RUN_TIME
+    value: "" # any long random string
+
+services:
+  - name: web
+    github:
+      repo: ezekiellemana/sarafupay
+      branch: v2 # switch to main after the old app is retired
+      deploy_on_push: true
+    environment_slug: node-js
+    build_command: npm ci && npm run build
+    run_command: npm run start -- -p 8080
+    http_port: 8080
+    instance_size_slug: apps-s-1vcpu-1gb
+    instance_count: 1
+    health_check:
+      http_path: /api/health
+      initial_delay_seconds: 20
+    envs:
+      - key: DATABASE_URL
+        value: ${db.DATABASE_URL}
+        scope: RUN_TIME
+      - key: NODE_ENV
+        value: production
+        scope: RUN_AND_BUILD_TIME
+      - key: ENABLE_SIMULATOR
+        value: "true"
+        scope: RUN_TIME
+      - key: DAILY_AI_LIMIT
+        value: "300"
+        scope: RUN_TIME
+      - key: GEMINI_MODEL
+        value: gemini-3.8-flash
+        scope: RUN_TIME
+      # PayPal: "live" for real money, "sandbox" to test.
+      - key: PAYPAL_ENV
+        value: sandbox
+        scope: RUN_TIME
+      - { key: PAYPAL_CLIENT_ID, type: SECRET, scope: RUN_TIME, value: "" }
+      - { key: PAYPAL_SECRET, type: SECRET, scope: RUN_TIME, value: "" }
+      - { key: PAYPAL_WEBHOOK_ID, type: SECRET, scope: RUN_TIME, value: "" }
+      # Snippe (mobile money)
+      - { key: SNIPPE_API_KEY, type: SECRET, scope: RUN_TIME, value: "" }
+      - { key: SNIPPE_WEBHOOK_SECRET, type: SECRET, scope: RUN_TIME, value: "" }
+      - { key: SNIPPE_PROFILE_ID, scope: RUN_TIME, value: "" }
+      # AI + WhatsApp
+      - { key: GEMINI_API_KEY, type: SECRET, scope: RUN_TIME, value: "" }
+      - { key: WHATSAPP_ACCESS_TOKEN, type: SECRET, scope: RUN_TIME, value: "" }
+      - { key: WHATSAPP_PHONE_NUMBER_ID, scope: RUN_TIME, value: "" }
+      - { key: WHATSAPP_VERIFY_TOKEN, type: SECRET, scope: RUN_TIME, value: "" }
+      - { key: WHATSAPP_APP_SECRET, type: SECRET, scope: RUN_TIME, value: "" }
+      - { key: WHATSAPP_DISPLAY_NUMBER, scope: RUN_TIME, value: "" }
+      # Owner-only admin page: https://sarafupay.app/admin?key=<ADMIN_KEY>
+      - { key: ADMIN_KEY, type: SECRET, scope: RUN_TIME, value: "" }
+      - { key: NEXT_PUBLIC_AG_STUDIO_LICENSE_KEY, scope: RUN_AND_BUILD_TIME, value: "" }
+
+jobs:
+  - name: reconcile
+    kind: SCHEDULED
+    schedule:
+      cron: "*/15 * * * *"
+      time_zone: Africa/Dar_es_Salaam
+    github:
+      repo: ezekiellemana/sarafupay
+      branch: v2
+      deploy_on_push: true
+    environment_slug: node-js
+    build_command: "true" # the script has no dependencies
+    run_command: node scripts/cron-reconcile.mjs
+    instance_size_slug: apps-s-1vcpu-0.5gb
+
+databases:
+  - name: db
+    engine: PG
+    version: "16"
+    production: false # dev database; switch to a managed cluster when volume grows
+
+# Attach sarafupay.app in the dashboard (Settings > Domains) once the app is healthy on its
+# ondigitalocean.app URL. If the domain's DNS is on DigitalOcean, add here instead:
+# domains:
+#   - { domain: sarafupay.app, type: PRIMARY, zone: sarafupay.app }
+#   - { domain: www.sarafupay.app, type: ALIAS, zone: sarafupay.app }

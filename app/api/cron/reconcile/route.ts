@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import { reconcile } from "@/lib/services/reconcile";
 
-// Called every 15 minutes by the Render Cron Job `sarafupay-reconcile` (see render.yaml).
-// Protected by CRON_SECRET, which Render generates once on this web service and
-// shares with the cron job via `fromService`, so it never lives in the repo.
+// Called every 15 minutes by the scheduled reconcile job (see .do/app.yaml).
+// Protected by CRON_SECRET, an app-level secret shared by the web service and the job,
+// so it never lives in the repo.
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 

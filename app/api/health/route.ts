@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { env, paypalConfigured, whatsappConfigured } from "@/lib/env";
+import { env, paypalConfigured, snippeConfigured, whatsappConfigured } from "@/lib/env";
 import { getDb } from "@/lib/db";
 import { sql } from "drizzle-orm";
 import { aiUsageToday } from "@/lib/limits";
@@ -17,7 +17,8 @@ export async function GET() {
     {
       ok: db,
       db,
-      paypal: paypalConfigured(),
+      snippe: snippeConfigured(),
+      paypal: paypalConfigured() ? env.paypalEnv() : false,
       gemini: Boolean(env.geminiApiKey()),
       whatsapp: whatsappConfigured(),
       simulator: env.simulatorEnabled(),

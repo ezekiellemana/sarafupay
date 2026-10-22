@@ -1,4 +1,4 @@
-// Entry point for the Render Cron Job `sarafupay-reconcile` (render.yaml).
+// Entry point for the scheduled reconcile job (DigitalOcean App Platform job, see .do/app.yaml).
 // Dependency-free on purpose: the cron container needs no build, it just asks the
 // web service (which holds the PayPal/WhatsApp credentials) to run reconcile().
 const base = (process.env.APP_URL || "").replace(/\/$/, "");
@@ -15,7 +15,7 @@ const res = await fetch(`${base}/api/cron/reconcile`, {
 });
 const text = await res.text();
 console.log(`[cron] ${res.status} ${text}`);
-// Non-zero exit marks the run as failed in the Render dashboard (and alerts, if enabled).
+// Non-zero exit marks the run as failed in the DigitalOcean dashboard.
 if (!res.ok) process.exit(1);
 try {
   if (JSON.parse(text).ok === false) process.exit(1);
