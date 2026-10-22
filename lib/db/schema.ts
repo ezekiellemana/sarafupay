@@ -1,4 +1,8 @@
-import { pgTable, text, integer, timestamp, serial, index } from "drizzle-orm/pg-core";
+import { pgTable, text, bigint, timestamp, serial, index } from "drizzle-orm/pg-core";
+
+// Money is stored as amount × 100 for every currency. bigint, because TZS totals pass the
+// 32-bit limit quickly (TZS 21.5M = 2.15 billion "cents").
+const cents = (name: string) => bigint(name, { mode: "number" });
 
 export const users = pgTable("users", {
   id: text("id").primaryKey(),
@@ -18,7 +22,7 @@ export const collections = pgTable("collections", {
   title: text("title").notNull(),
   purpose: text("purpose"),
   category: text("category").notNull().default("other"),
-  targetCents: integer("target_cents").notNull(),
+  targetCents: cents("target_cents").notNull(),
   // Main currency of the target and of mobile money contributions. Card/PayPal money is kept in USD
   // alongside it (two rails, never converted automatically).
   currency: text("currency").notNull().default("TZS"),
@@ -36,7 +40,7 @@ export const contributions = pgTable(
     collectionId: text("collection_id").notNull(),
     contributorId: text("contributor_id"),
     displayName: text("display_name").notNull(),
-    amountCents: integer("amount_cents").notNull(),
+    amountCents: cents("amount_cents").notNull(),
     currency: text("currency").notNull(),
     status: text("status").notNull().default("pending"), // pending | paid | failed | refunded
     source: text("source").notNull(), // whatsapp | sim | web
@@ -49,9 +53,9 @@ export const contributions = pgTable(
     payerEmail: text("payer_email"),
     payerPhone: text("payer_phone"),
     // Fees, fixed at settlement (see lib/pricing.ts). net = amount − provider fee − SarafuPay fee.
-    providerFeeCents: integer("provider_fee_cents"),
-    sarafuFeeCents: integer("sarafu_fee_cents"),
-    netCents: integer("net_cents"),
+    providerFeeCents: cents("provider_fee_cents"),
+    sarafuFeeCents: cents("sarafu_fee_cents"),
+    netCents: cents("net_cents"),
     rateJson: text("rate_json"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     paidAt: timestamp("paid_at", { withTimezone: true }),
@@ -64,7 +68,7 @@ export const pledges = pgTable("pledges", {
   collectionId: text("collection_id").notNull(),
   userId: text("user_id"),
   displayName: text("display_name").notNull(),
-  amountCents: integer("amount_cents").notNull(),
+  amountCents: cents("amount_cents").notNull(),
   dueDate: text("due_date"),
   status: text("status").notNull().default("open"), // open | fulfilled | cancelled
   invoiceId: text("invoice_id"),
@@ -85,10 +89,10 @@ export const payouts = pgTable("payouts", {
   recipientAccount: text("recipient_account"),
   recipientName: text("recipient_name"),
   // Withdrawn from the collection balance. The organiser receives net_cents.
-  amountCents: integer("amount_cents").notNull(),
-  providerFeeCents: integer("provider_fee_cents"),
-  sarafuFeeCents: integer("sarafu_fee_cents"),
-  netCents: integer("net_cents"),
+  amountCents: cents("amount_cents").notNull(),
+  providerFeeCents: cents("provider_fee_cents"),
+  sarafuFeeCents: cents("sarafu_fee_cents"),
+  netCents: cents("net_cents"),
   rateJson: text("rate_json"),
   providerRef: text("provider_ref"), // Snippe payout reference
   currency: text("currency").notNull(),

@@ -41,6 +41,7 @@ const payoutCalls: unknown[] = [];
 const reconcileOrders: Record<string, string> = {}; // PayPal order id -> contribution id
 const captureCalls: string[] = [];
 const snippeCalls: { url: string; body: Record<string, unknown> | undefined }[] = [];
+let snippeSendFailsOnce = false;
 let templateApproved = false; // flips mid-test to simulate Meta approving the reminder template
 const templateCalls: { to: string; template: { name: string; language: { code: string }; components: { type: string; parameters: { text: string }[] }[] } }[] = [];
 globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -61,6 +62,10 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     if (url.endsWith("/api/v1/sessions") && init?.method === "POST")
       return Response.json({ code: 201, data: { reference: "sess_T1", status: "pending", checkout_url: "https://snippe.me/checkout/T1", amount: body.amount } }, { status: 201 });
     if (url.includes("/api/v1/sessions/sess_T1")) return Response.json({ code: 200, data: { reference: "sess_T1", status: "pending" } });
+    if (url.endsWith("/v1/payouts/send") && snippeSendFailsOnce) {
+      snippeSendFailsOnce = false;
+      return Response.json({ message: "upstream timeout" }, { status: 504 });
+    }
     if (url.endsWith("/v1/payouts/send"))
       return Response.json({ status: "success", code: 201, data: { reference: "po_T1", status: "pending", fees: { value: 1500, currency: "TZS" } } }, { status: 201 });
     throw new Error(`unexpected Snippe call ${url}`);
@@ -382,6 +387,48 @@ async function main() {
     /Insufficient balance/,
   );
   console.log("✓ Snippe mobile money: checkout, signed webhook, fees, payout to M-Pesa, bank validation");
+
+  // 9d. Provider timeout on a payout: balance stays held, nothing is marked failed, the retry
+  // (same idempotency key) picks up the original result.
+  const held = await core.proposePayout({ collection: tzCol, requester: owner, destination: { method: "mobile_money", phone: "0754000111", name: "Bibi's family" }, amountCents: 5_000_00 });
+  snippeSendFailsOnce = true;
+  const msg = await core.confirmPayoutByCode(owner, held.confirmCode);
+  assert.match(msg, /hasn't answered|haijajibu/);
+  const [heldRow] = await db.select().from(schema.payouts).where(eq(schema.payouts.id, held.id));
+  assert.equal(heldRow.status, "processing", "uncertain payout is not marked failed");
+  assert.equal(heldRow.providerRef, null);
+  const balHeld = (await core.collectionStats(tzCol)).availableCents;
+  await assert.rejects(
+    core.proposePayout({ collection: tzCol, requester: owner, destination: { method: "mobile_money", phone: "0754000111", name: "X" }, amountCents: balHeld + 1_00 }),
+    /Insufficient/,
+    "held amount can't be withdrawn twice",
+  );
+  const sendsBefore = snippeCalls.filter((c) => c.url.endsWith("/v1/payouts/send")).length;
+  await core.refreshPayout(held.id);
+  const [recovered] = await db.select().from(schema.payouts).where(eq(schema.payouts.id, held.id));
+  assert.equal(recovered.providerRef, "po_T1", "re-submission recovers the provider reference");
+  const resent = snippeCalls.filter((c) => c.url.endsWith("/v1/payouts/send")).slice(sendsBefore);
+  assert.equal(resent.length, 1);
+  console.log("✓ payout timeout: balance held, idempotent re-submit recovers the reference");
+
+  // 9e. Late "completed" after an "expired" webhook still records the money.
+  const late = await core.createContribution({ collection: tzCol, displayName: "Late", amountCents: 3_000_00, source: "web" });
+  await core.applySnippePayment({ contributionId: late.id, status: "expired" });
+  assert.equal((await core.getContribution(late.id))?.status, "failed");
+  await core.applySnippePayment({ contributionId: late.id, status: "completed", amountTzs: 3_000 });
+  assert.equal((await core.getContribution(late.id))?.status, "paid", "completed wins over an earlier expired");
+  console.log("✓ out-of-order Snippe webhooks: completed after expired is recorded");
+
+  // 9f. Big TZS totals don't overflow (stored as bigint).
+  const big = await core.createCollection({ ownerId: owner.id, title: "Harusi Kubwa", category: "wedding", targetCents: 80_000_000_00 });
+  for (let i = 0; i < 6; i++) {
+    const c = await core.createContribution({ collection: big, displayName: `Guest ${i}`, amountCents: 5_000_000_00, source: "web" });
+    await core.applySnippePayment({ contributionId: c.id, status: "completed", amountTzs: 5_000_000 });
+  }
+  const bigStats = await core.collectionStats(big);
+  assert.equal(bigStats.raisedCents, 30_000_000_00, "TZS 30M raised");
+  assert.equal(bigStats.availableCents, 28_500_000_00, "TZS 28.5M after 5%");
+  console.log("✓ TZS 30,000,000 collection: totals correct (no 32-bit overflow)");
 
   // 10. Cost guard without Key Value falls back to memory and still limits.
   const limits = await import("../lib/limits");

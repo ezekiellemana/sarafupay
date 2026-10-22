@@ -8,6 +8,7 @@ import { sendWhatsAppTemplate } from "../channels/whatsapp";
 import { env } from "../env";
 import { captureOrder, createContributionOrder } from "../paypal/orders";
 import { getPayoutBatch, sendPayout } from "../paypal/payouts";
+import { PayPalApiError } from "../paypal/client";
 import * as snippe from "../snippe/client";
 import { dashboardUrl, payUrl } from "./links";
 import { langOf, t, type Lang } from "../i18n";
@@ -154,8 +155,8 @@ export async function collectionStats(c: Collection): Promise<CollectionStats> {
   const contrib = await db
     .select({
       currency: contributions.currency,
-      raised: sql<number>`coalesce(sum(case when ${contributions.status} = 'paid' then ${contributions.amountCents} else 0 end), 0)::int`,
-      net: sql<number>`coalesce(sum(case when ${contributions.status} = 'paid' then coalesce(${contributions.netCents}, ${contributions.amountCents}) else 0 end), 0)::int`,
+      raised: sql<number>`coalesce(sum(case when ${contributions.status} = 'paid' then ${contributions.amountCents} else 0 end), 0)::bigint`,
+      net: sql<number>`coalesce(sum(case when ${contributions.status} = 'paid' then coalesce(${contributions.netCents}, ${contributions.amountCents}) else 0 end), 0)::bigint`,
       paid: sql<number>`count(*) filter (where ${contributions.status} = 'paid')::int`,
       pending: sql<number>`count(*) filter (where ${contributions.status} = 'pending')::int`,
     })
@@ -165,15 +166,15 @@ export async function collectionStats(c: Collection): Promise<CollectionStats> {
   const po = await db
     .select({
       currency: payouts.currency,
-      done: sql<number>`coalesce(sum(case when ${payouts.status} = 'success' then ${payouts.amountCents} else 0 end), 0)::int`,
-      flight: sql<number>`coalesce(sum(case when ${payouts.status} = 'processing' then ${payouts.amountCents} else 0 end), 0)::int`,
+      done: sql<number>`coalesce(sum(case when ${payouts.status} = 'success' then ${payouts.amountCents} else 0 end), 0)::bigint`,
+      flight: sql<number>`coalesce(sum(case when ${payouts.status} = 'processing' then ${payouts.amountCents} else 0 end), 0)::bigint`,
     })
     .from(payouts)
     .where(eq(payouts.collectionId, c.id))
     .groupBy(payouts.currency);
   const [pl] = await db
     .select({
-      cents: sql<number>`coalesce(sum(${pledges.amountCents}), 0)::int`,
+      cents: sql<number>`coalesce(sum(${pledges.amountCents}), 0)::bigint`,
       n: sql<number>`count(*)::int`,
     })
     .from(pledges)
@@ -502,6 +503,12 @@ export async function applySnippePayment(input: {
     return c;
   }
   if (st !== "completed") return cur;
+  // A "completed" can arrive after an "expired"/"failed" we recorded (out-of-order delivery).
+  // Snippe's word that money was collected wins: reopen and settle it.
+  if (cur.status === "failed") {
+    await db.update(contributions).set({ status: "pending" }).where(and(eq(contributions.id, cur.id), eq(contributions.status, "failed")));
+    cur.status = "pending";
+  }
   // Snippe collects exactly the session amount; a different amount means something is off. Refuse it.
   if (input.amountTzs !== undefined && Math.round(cur.amountCents / 100) !== Math.round(input.amountTzs)) {
     console.error(`[snippe] amount mismatch on ${cur.id}: expected ${cur.amountCents / 100}, got ${input.amountTzs}`);
@@ -834,49 +841,77 @@ export async function confirmPayoutByCode(user: User, code: string): Promise<str
   const net = p.netCents ?? p.amountCents;
   const who = destinationLabel(p);
   const sent = money(net, p.currency);
+  const via = p.provider === "snippe" ? "Snippe" : "PayPal";
   try {
-    if (p.provider === "snippe") {
-      const res = await snippe.sendPayout({
-        payoutId: p.id,
-        amountTzs: Math.round(net / 100),
-        recipientName: p.recipientName ?? col.title,
-        narration: p.note ?? `SarafuPay payout: ${col.title} (${col.code})`,
-        webhookUrl: `${env.appUrl()}/api/snippe/webhook`,
-        to:
-          p.method === "bank"
-            ? { channel: "bank", bank: p.recipientBank!, account: p.recipientAccount! }
-            : { channel: "mobile", phone: p.recipientPhone! },
-      });
-      await db.update(payouts).set({ providerRef: res.reference }).where(eq(payouts.id, p.id));
-      if (res.status === "completed") await finalizePayout({ ...p, providerRef: res.reference, status: "processing" }, "success");
-      else schedulePayoutRefresh(p.id);
-      return t(
-        L,
-        `🚀 Malipo yametumwa kupitia Snippe: ${sent} → ${who}.\nKumbukumbu ${res.reference}. Nitathibitisha yakikamilika na kutuma taarifa ya uwazi kwa wachangiaji.`,
-        `🚀 Payout sent via Snippe: ${sent} → ${who}.\nRef ${res.reference}. I'll confirm when it completes and post a transparency update to contributors.`,
-      );
-    }
-    const res = await sendPayout({
-      payoutId: p.id,
-      amountCents: net,
-      currency: p.currency,
-      recipientEmail: p.recipientEmail!,
-      subject: `Payment from "${col.title}" via SarafuPay`,
-      note: p.note ?? `Payout from ${col.title} (${col.code})`,
-    });
-    await db.update(payouts).set({ paypalBatchId: res.batchId }).where(eq(payouts.id, p.id));
-    schedulePayoutRefresh(p.id);
+    const ref = await submitPayout({ ...p, status: "processing" }, col);
     return t(
       L,
-      `🚀 Malipo yametumwa PayPal: ${sent} → ${who}.\nBatch ${res.batchId} (${res.batchStatus}). Nitathibitisha yakikamilika na kutuma taarifa ya uwazi kwa wachangiaji.`,
-      `🚀 Payout sent to PayPal: ${sent} → ${who}.\nBatch ${res.batchId} (${res.batchStatus}). I'll confirm when it completes and post a transparency update to contributors.`,
+      `🚀 Malipo yametumwa kupitia ${via}: ${sent} → ${who}.\nKumbukumbu ${ref}. Nitathibitisha yakikamilika na kutuma taarifa ya uwazi kwa wachangiaji.`,
+      `🚀 Payout sent via ${via}: ${sent} → ${who}.\nRef ${ref}. I'll confirm when it completes and post a transparency update to contributors.`,
     );
   } catch (e) {
     const reason = e instanceof Error ? e.message : String(e);
+    if (!definitelyRejected(e)) {
+      // The provider may have sent the money even though we got no clear answer. Never mark this
+      // failed (that would free the balance for a second payout). Keep it processing; the
+      // reconcile job re-submits with the same idempotency key, which returns the original result.
+      await db.update(payouts).set({ failureReason: `unconfirmed: ${reason}`.slice(0, 500) }).where(eq(payouts.id, p.id));
+      schedulePayoutRefresh(p.id);
+      return t(
+        L,
+        `⏳ ${via} haijajibu bado kuhusu malipo ya ${sent} → ${who}. Salio limeshikiliwa na nitathibitisha ndani ya dakika chache. Usiyatume tena.`,
+        `⏳ ${via} hasn't answered yet about the ${sent} payout → ${who}. The balance is held and I'll confirm within a few minutes. Please don't send it again.`,
+      );
+    }
     await db.update(payouts).set({ status: "failed", failureReason: reason.slice(0, 500) }).where(eq(payouts.id, p.id));
-    const via = p.provider === "snippe" ? "Snippe" : "PayPal";
     return t(L, `❌ ${via} imekataa malipo: ${reason.slice(0, 200)}. Hakuna pesa iliyohamishwa.`, `❌ ${via} rejected the payout: ${reason.slice(0, 200)}. No money moved.`);
   }
+}
+
+/** True only when the provider clearly refused the request (4xx other than timeout/rate limit). */
+function definitelyRejected(e: unknown): boolean {
+  // "Duplicate" means an earlier attempt with this id went through: never treat that as a refusal.
+  if (e instanceof Error && /duplicate/i.test(e.message)) return false;
+  const status = e instanceof snippe.SnippeError ? e.status : e instanceof PayPalApiError ? e.status : undefined;
+  return status !== undefined && status >= 400 && status < 500 && status !== 408 && status !== 429;
+}
+
+/**
+ * Sends a processing payout to its provider and stores the provider reference. Idempotent:
+ * the payout id is the idempotency key on both Snippe and PayPal, so re-submitting the same
+ * payout returns the original result instead of paying twice.
+ */
+async function submitPayout(p: Payout, col: Collection): Promise<string> {
+  const db = await getDb();
+  const net = p.netCents ?? p.amountCents;
+  if (p.provider === "snippe") {
+    const res = await snippe.sendPayout({
+      payoutId: p.id,
+      amountTzs: Math.round(net / 100),
+      recipientName: p.recipientName ?? col.title,
+      narration: p.note ?? `SarafuPay payout: ${col.title} (${col.code})`,
+      webhookUrl: `${env.appUrl()}/api/snippe/webhook`,
+      to:
+        p.method === "bank"
+          ? { channel: "bank", bank: p.recipientBank!, account: p.recipientAccount! }
+          : { channel: "mobile", phone: p.recipientPhone! },
+    });
+    await db.update(payouts).set({ providerRef: res.reference, failureReason: null }).where(eq(payouts.id, p.id));
+    if (res.status === "completed") await finalizePayout({ ...p, providerRef: res.reference }, "success");
+    else schedulePayoutRefresh(p.id);
+    return res.reference;
+  }
+  const res = await sendPayout({
+    payoutId: p.id,
+    amountCents: net,
+    currency: p.currency,
+    recipientEmail: p.recipientEmail!,
+    subject: `Payment from "${col.title}" via SarafuPay`,
+    note: p.note ?? `Payout from ${col.title} (${col.code})`,
+  });
+  await db.update(payouts).set({ paypalBatchId: res.batchId, failureReason: null }).where(eq(payouts.id, p.id));
+  schedulePayoutRefresh(p.id);
+  return res.batchId;
 }
 
 export async function cancelPayoutByCode(user: User, code: string): Promise<string> {
@@ -914,13 +949,24 @@ export async function refreshPayout(payoutId: string): Promise<Payout | undefine
   const db = await getDb();
   const [p] = await db.select().from(payouts).where(eq(payouts.id, payoutId));
   if (!p || p.status !== "processing") return p;
+  if ((p.provider === "snippe" && !p.providerRef) || (p.provider !== "snippe" && !p.paypalBatchId)) {
+    // Sent but unanswered: re-submit with the same idempotency key to learn what happened.
+    const col = await getCollectionById(p.collectionId);
+    if (!col) return p;
+    try {
+      await submitPayout(p, col);
+    } catch (e) {
+      if (definitelyRejected(e)) return finalizePayout(p, "failed", undefined, e instanceof Error ? e.message : String(e));
+      throw e;
+    }
+    const [again] = await db.select().from(payouts).where(eq(payouts.id, p.id));
+    return again;
+  }
   if (p.provider === "snippe") {
-    if (!p.providerRef) return p;
-    const st = await snippe.getPayout(p.providerRef);
+    const st = await snippe.getPayout(p.providerRef!);
     return applySnippePayout(p, st.status, st.feeTzs, st.failureReason);
   }
-  if (!p.paypalBatchId) return p;
-  const state = await getPayoutBatch(p.paypalBatchId);
+  const state = await getPayoutBatch(p.paypalBatchId!);
   const s = (state.itemStatus ?? "").toUpperCase();
   if (FINAL_OK.has(s)) return finalizePayout(p, "success", state.itemId);
   if (FINAL_BAD.has(s)) return finalizePayout(p, "failed", state.itemId, state.error ?? s);

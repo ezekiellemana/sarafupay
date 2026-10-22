@@ -27,7 +27,7 @@ function rows(r: Rates): { receive: Row[]; withdraw: Row[] } {
     withdraw: [
       { what: "To mobile money", detail: "Any Tanzanian mobile money number · instant", price: rateSummary(r.snippePayoutMobile, "TZS"), split: split("Snippe", r.snippePayoutMobile, "TZS") },
       { what: "To a bank account", detail: "40+ Tanzanian banks · minutes to 2 business days", price: rateSummary(r.snippePayoutBank, "TZS"), split: split("Snippe", r.snippePayoutBank, "TZS") },
-      { what: "To PayPal", detail: "From the USD balance", price: `${r.paypalPayout.providerPct + r.paypalPayout.sarafuPct}%`, split: split("PayPal", r.paypalPayout, "USD") },
+      { what: "To PayPal", detail: "From the USD balance", price: `up to ${r.paypalPayout.providerPct + r.paypalPayout.sarafuPct}%`, split: split("PayPal", r.paypalPayout, "USD") },
     ],
   };
 }

@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS collections (
   title text NOT NULL,
   purpose text,
   category text NOT NULL DEFAULT 'other',
-  target_cents integer NOT NULL,
+  target_cents bigint NOT NULL,
   currency text NOT NULL DEFAULT 'TZS',
   deadline text,
   payout_email text,
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS contributions (
   collection_id text NOT NULL,
   contributor_id text,
   display_name text NOT NULL,
-  amount_cents integer NOT NULL,
+  amount_cents bigint NOT NULL,
   currency text NOT NULL,
   status text NOT NULL DEFAULT 'pending',
   source text NOT NULL,
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS pledges (
   collection_id text NOT NULL,
   user_id text,
   display_name text NOT NULL,
-  amount_cents integer NOT NULL,
+  amount_cents bigint NOT NULL,
   due_date text,
   status text NOT NULL DEFAULT 'open',
   invoice_id text,
@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS payouts (
   requested_by text NOT NULL,
   recipient_email text,
   recipient_name text,
-  amount_cents integer NOT NULL,
+  amount_cents bigint NOT NULL,
   currency text NOT NULL,
   note text,
   status text NOT NULL DEFAULT 'awaiting_confirmation',
@@ -93,13 +93,23 @@ CREATE TABLE IF NOT EXISTS processed_messages (
   id text PRIMARY KEY,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+-- v2: money columns are bigint (TZS totals overflow 32-bit integers)
+DO $$
+DECLARE r record;
+BEGIN
+  FOR r IN SELECT table_name, column_name FROM information_schema.columns
+           WHERE table_schema = current_schema() AND column_name LIKE '%\_cents' AND data_type = 'integer'
+  LOOP
+    EXECUTE format('ALTER TABLE %I ALTER COLUMN %I TYPE bigint', r.table_name, r.column_name);
+  END LOOP;
+END $$;
 -- v2 columns (idempotent, so existing databases upgrade in place)
 ALTER TABLE contributions ADD COLUMN IF NOT EXISTS provider text NOT NULL DEFAULT 'paypal';
 ALTER TABLE contributions ADD COLUMN IF NOT EXISTS provider_ref text;
 ALTER TABLE contributions ADD COLUMN IF NOT EXISTS payer_phone text;
-ALTER TABLE contributions ADD COLUMN IF NOT EXISTS provider_fee_cents integer;
-ALTER TABLE contributions ADD COLUMN IF NOT EXISTS sarafu_fee_cents integer;
-ALTER TABLE contributions ADD COLUMN IF NOT EXISTS net_cents integer;
+ALTER TABLE contributions ADD COLUMN IF NOT EXISTS provider_fee_cents bigint;
+ALTER TABLE contributions ADD COLUMN IF NOT EXISTS sarafu_fee_cents bigint;
+ALTER TABLE contributions ADD COLUMN IF NOT EXISTS net_cents bigint;
 ALTER TABLE contributions ADD COLUMN IF NOT EXISTS rate_json text;
 CREATE INDEX IF NOT EXISTS contrib_provider_ref_idx ON contributions (provider_ref);
 ALTER TABLE payouts ADD COLUMN IF NOT EXISTS method text NOT NULL DEFAULT 'paypal';
@@ -108,9 +118,9 @@ ALTER TABLE payouts ALTER COLUMN recipient_email DROP NOT NULL;
 ALTER TABLE payouts ADD COLUMN IF NOT EXISTS recipient_phone text;
 ALTER TABLE payouts ADD COLUMN IF NOT EXISTS recipient_bank text;
 ALTER TABLE payouts ADD COLUMN IF NOT EXISTS recipient_account text;
-ALTER TABLE payouts ADD COLUMN IF NOT EXISTS provider_fee_cents integer;
-ALTER TABLE payouts ADD COLUMN IF NOT EXISTS sarafu_fee_cents integer;
-ALTER TABLE payouts ADD COLUMN IF NOT EXISTS net_cents integer;
+ALTER TABLE payouts ADD COLUMN IF NOT EXISTS provider_fee_cents bigint;
+ALTER TABLE payouts ADD COLUMN IF NOT EXISTS sarafu_fee_cents bigint;
+ALTER TABLE payouts ADD COLUMN IF NOT EXISTS net_cents bigint;
 ALTER TABLE payouts ADD COLUMN IF NOT EXISTS rate_json text;
 ALTER TABLE payouts ADD COLUMN IF NOT EXISTS provider_ref text;
 `;

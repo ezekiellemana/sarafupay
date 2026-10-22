@@ -35,7 +35,7 @@ export default async function Home() {
   await connection();
   const wa = waLink("Hi SarafuPay 👋");
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col overflow-x-clip">
       <div className="kanga" />
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-4 sm:px-6 sm:py-5">
         <Logo />

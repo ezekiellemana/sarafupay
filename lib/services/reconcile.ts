@@ -1,6 +1,6 @@
 import "server-only";
 import { ApiError } from "@paypal/paypal-server-sdk";
-import { and, eq, gt, isNotNull, lt, or } from "drizzle-orm";
+import { and, eq, gt, isNotNull, lt } from "drizzle-orm";
 import { getDb, schema } from "../db";
 import { getOrderSummary } from "../paypal/orders";
 import { applyCapture, checkSnippeContribution, refreshPayout, settleOrder } from "./core";
@@ -158,7 +158,8 @@ export async function reconcile(deps: ReconcileDeps = realDeps): Promise<Reconci
   const processing = await db
     .select({ id: payouts.id })
     .from(payouts)
-    .where(and(eq(payouts.status, "processing"), or(isNotNull(payouts.paypalBatchId), isNotNull(payouts.providerRef))))
+    // Older than 2 minutes, so a payout whose provider call is still in flight is left alone.
+    .where(and(eq(payouts.status, "processing"), lt(payouts.executedAt, new Date(now - 2 * 60_000))))
     .limit(BATCH);
 
   for (const p of processing) {
