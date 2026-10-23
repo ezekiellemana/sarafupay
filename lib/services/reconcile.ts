@@ -109,7 +109,7 @@ export async function reconcile(deps: ReconcileDeps = realDeps): Promise<Reconci
         continue;
       }
       if (order.status === "COMPLETED") {
-        settled = await applyCapture(p.orderId, order.status, order.captureId, order.customId ?? p.id, order.payerEmail, order.paypalFeeCents);
+        settled = await applyCapture({ orderId: p.orderId, status: order.status, captureId: order.captureId, customId: order.customId ?? p.id, payerEmail: order.payerEmail, settled: order.settled });
       } else if (order.status === "APPROVED") {
         settled = await deps.settle(p.orderId);
       }

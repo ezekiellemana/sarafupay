@@ -9,7 +9,7 @@ import {
   type Order,
 } from "@paypal/paypal-server-sdk";
 import { paypalSdk } from "./client";
-import { centsToValue } from "../format";
+import { paypalSettlement, paypalValue, type Settlement } from "../currency";
 import { env } from "../env";
 
 export type CreatedOrder = { orderId: string; approveUrl: string };
@@ -34,7 +34,7 @@ export async function createContributionOrder(input: {
           customId: input.contributionId,
           description: `Contribution to ${input.collectionTitle}`.slice(0, 127),
           softDescriptor: "SARAFUPAY",
-          amount: { currencyCode: input.currency, value: centsToValue(input.amountCents) },
+          amount: { currencyCode: input.currency, value: paypalValue(input.amountCents, input.currency) },
         },
       ],
       paymentSource: {
@@ -66,6 +66,8 @@ export type CaptureResult = {
   /** Amount and currency actually captured, in cents. */
   amountCents?: number;
   currency?: string;
+  /** What the capture is worth in the account's currency (converted to USD when paid in another currency). */
+  settled?: Settlement;
 };
 
 function summarize(order: Order): CaptureResult {
@@ -75,6 +77,7 @@ function summarize(order: Order): CaptureResult {
   const fee = capture?.sellerReceivableBreakdown?.paypalFee?.value;
   const amt = capture?.amount?.value;
   return {
+    settled: capture ? paypalSettlement(capture.amount, capture.sellerReceivableBreakdown as unknown as Record<string, unknown>) : undefined,
     paypalFeeCents: fee !== undefined ? Math.round(Number(fee) * 100) : undefined,
     amountCents: amt !== undefined ? Math.round(Number(amt) * 100) : undefined,
     currency: capture?.amount?.currencyCode,

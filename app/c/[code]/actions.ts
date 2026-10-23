@@ -10,6 +10,7 @@ export async function contributeAction(code: string, form: FormData) {
   const message = String(form.get("message") ?? "").trim();
   const provider = form.get("method") === "card_or_paypal" ? "paypal" : "snippe";
   const phone = String(form.get("phone") ?? "").trim();
+  const payCurrency = String(form.get("currency") ?? "").trim().toUpperCase() || undefined;
   let cents: number;
   try {
     cents = toCents(String(form.get("amount") ?? ""));
@@ -26,6 +27,7 @@ export async function contributeAction(code: string, form: FormData) {
       message,
       provider,
       payerPhone: provider === "snippe" && phone ? phone : undefined,
+      payCurrency: provider === "paypal" ? payCurrency : undefined,
     });
     id = ctb.id;
   } catch (e) {

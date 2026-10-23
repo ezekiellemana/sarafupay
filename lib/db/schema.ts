@@ -57,6 +57,11 @@ export const contributions = pgTable(
     sarafuFeeCents: cents("sarafu_fee_cents"),
     netCents: cents("net_cents"),
     rateJson: text("rate_json"),
+    // What the payer actually paid, in their own currency (e.g. EUR 20.00 by card), when it differs
+    // from the settlement currency in amount_cents/currency (USD for PayPal). fx_rate as PayPal reports it.
+    payCurrency: text("pay_currency"),
+    payAmountCents: cents("pay_amount_cents"),
+    fxRate: text("fx_rate"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     paidAt: timestamp("paid_at", { withTimezone: true }),
   },

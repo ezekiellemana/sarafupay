@@ -663,21 +663,40 @@ body {
 .field { display: block; width: 100%; border-radius: 14px; border: 1.5px solid var(--line); background: #fff; padding: 0.7rem 0.85rem; font-size: 16px; font-weight: 400; }
 .field:focus { outline: none; border-color: var(--forest); }
 
-/* Phone number as ten digit boxes: 07XX XXX XXX. Fits a 320px screen. */
-.phone-digits { display: flex; gap: 4px; }
-.phone-digits .digit {
-  flex: 1 1 0; min-width: 0; height: 48px; padding: 0; border-radius: 10px; text-align: center;
-  font: 600 18px var(--font-jetbrains), monospace; color: var(--ink);
-  background: #fff; border: 1.5px solid var(--line); transition: border-color 0.15s ease, transform 0.15s ease;
-}
-.phone-digits .digit::placeholder { color: rgba(61, 82, 72, 0.28); }
-.phone-digits .digit:focus { outline: none; border-color: var(--forest); transform: translateY(-2px); box-shadow: 0 6px 12px -8px rgba(14, 59, 44, 0.6); }
-.phone-digits .digit.gap-before { margin-left: 6px; }
-@media (max-width: 380px) { .phone-digits { gap: 3px; } .phone-digits .digit { height: 42px; font-size: 16px; border-radius: 8px; } .phone-digits .digit.gap-before { margin-left: 4px; } }
+/* Phone number: one field that arranges itself (0712 345 678). */
+.phone-field { display: flex; align-items: center; gap: 10px; padding: 0 12px; border-radius: 14px; background: #fff; border: 1.5px solid var(--line); transition: border-color 0.15s ease, box-shadow 0.15s ease; }
+.phone-field:focus-within { border-color: var(--forest); box-shadow: 0 8px 16px -12px rgba(14, 59, 44, 0.6); }
+.phone-field.is-done { border-color: var(--forest-2); }
+.phone-flag { font-size: 20px; }
+.phone-ok { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 99px; background: var(--forest-2); color: #fff; font-size: 13px; animation: hs-pop 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.5) both; }
 
 /* Phones: shorter banner, clamped description, compact footer. */
 @media (max-width: 640px) {
   .col-banner { height: 210px; border-radius: 22px; }
   .col-purpose { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: 1rem; }
   .site-foot-cols { display: none; }
+}
+
+/* Pricing v2: two clean price lists and one logo strip. */
+.price-panel { height: 100%; padding: 1.4rem 1.5rem 0.6rem; border-radius: 24px; background: #fffdf7; border: 1.5px solid var(--line); box-shadow: 0 24px 40px -32px rgba(18, 38, 30, 0.5); }
+.works-with { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; --lh: 48px; }
+.works-with .logo-chip { width: 100%; }
+@media (max-width: 640px) { .works-with { grid-template-columns: repeat(4, 1fr); gap: 6px; --lh: 40px; } .works-with .logo-chip { padding: 5px; border-radius: 10px; } }
+
+/* SarafuPay coin mark (CoinMark): faces + milled edge in 3D; rests, then flips. */
+.coin { display: inline-block; flex-shrink: 0; width: var(--s); height: var(--s); perspective: 420px; }
+.coin-spin { position: relative; display: block; width: 100%; height: 100%; transform-style: preserve-3d; animation: coin-flip 6.5s cubic-bezier(0.45, 0.05, 0.25, 1) infinite; }
+.coin-face, .coin-edge { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 999px; }
+.coin-face { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.coin-front { transform: translateZ(1.6px); }
+.coin-back { transform: rotateY(180deg) translateZ(1.6px); }
+.coin-edge { background: radial-gradient(circle at 35% 30%, #e9c463, #b8860b 60%, #7a5a08); transform: translateZ(var(--z)); }
+.coin:hover .coin-spin, a:hover > .coin .coin-spin { animation: coin-flip-now 0.9s cubic-bezier(0.45, 0.05, 0.25, 1); }
+@keyframes coin-flip { 0%, 74% { transform: rotateY(0deg); } 100% { transform: rotateY(360deg); } }
+@keyframes coin-flip-now { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
+@media (max-width: 640px) {
+  .works-with { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin: 0 -20px; padding: 4px 20px; }
+  .works-with::-webkit-scrollbar { display: none; }
+  .works-with .logo-chip { flex: 0 0 84px; width: 84px; scroll-snap-align: start; }
+  .price-panel li > div { flex-direction: column; align-items: flex-start; gap: 2px; }
 }

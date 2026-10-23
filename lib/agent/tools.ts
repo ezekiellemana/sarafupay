@@ -184,10 +184,11 @@ export function buildTools(ctx: AgentContext): Record<string, Tool> {
 
     create_payment_link: tool({
       description:
-        "Create a secure payment link for the current user to contribute to a collection. Mobile money is in TZS via Snippe; card or PayPal is in USD via PayPal. Default to mobile money for Tanzanian numbers. Always use this; never invent links.",
+        "Create a secure payment link for the current user to contribute to a collection. Mobile money is in TZS. Card or PayPal can be in the payer's own currency (e.g. EUR, GBP, CAD; use USD if unsure); PayPal converts it to USD. Default to mobile money for Tanzanian numbers. Always use this; never invent links.",
       inputSchema: z.object({
         code,
-        amount: amount.describe("TZS for mobile_money (minimum 500), USD for card_or_paypal (minimum 1)"),
+        amount: amount.describe("TZS for mobile_money (minimum 500); for card_or_paypal, in `currency` (minimum 1)"),
+        currency: z.string().length(3).optional().describe("card_or_paypal only: ISO code the payer pays in, e.g. USD, EUR, GBP, CAD. Defaults to USD"),
         method: z.enum(["mobile_money", "card_or_paypal"]).optional().describe("Defaults to the collection's currency: mobile money for TZS, card/PayPal for USD"),
         display_name: z.string().max(80).optional().describe("Name shown to the organiser; defaults to the user's name"),
         message: z.string().max(280).optional().describe("Optional note to the organiser"),
@@ -206,11 +207,12 @@ export function buildTools(ctx: AgentContext): Record<string, Tool> {
           message: i.message,
           provider,
           payerPhone: provider === "snippe" && ctx.channel === "whatsapp" && ctx.user.phone.startsWith("255") ? ctx.user.phone : undefined,
+          payCurrency: provider === "paypal" ? i.currency?.toUpperCase() : undefined,
         });
         return {
           pay_url: payUrl(ctb.id),
-          amount: money(ctb.amountCents, ctb.currency),
-          via: provider === "snippe" ? "mobile money (Snippe)" : "card or PayPal (PayPal)",
+          amount: ctb.payCurrency && ctb.payAmountCents != null ? money(ctb.payAmountCents, ctb.payCurrency) : money(ctb.amountCents, ctb.currency),
+          via: provider === "snippe" ? "mobile money" : "card or PayPal",
           note: "Share pay_url exactly. They pay exactly this amount; the organiser carries the fees. They'll get a receipt here once the payment is confirmed.",
         };
       }),

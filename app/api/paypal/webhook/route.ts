@@ -1,6 +1,7 @@
 import { after, NextResponse } from "next/server";
 import { verifyPaypalWebhook } from "@/lib/paypal/webhooks";
 import { applyCapture, refreshPayout, settleOrder, settlePledgeInvoice } from "@/lib/services/core";
+import { paypalSettlement } from "@/lib/currency";
 
 type Event = { event_type: string; resource: Record<string, any> }; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -23,8 +24,13 @@ export async function POST(req: Request) {
           break;
         case "PAYMENT.CAPTURE.COMPLETED":
           {
-            const fee = r.seller_receivable_breakdown?.paypal_fee?.value;
-            await applyCapture(r.supplementary_data?.related_ids?.order_id, "COMPLETED", r.id, r.custom_id, undefined, fee !== undefined ? Math.round(Number(fee) * 100) : undefined);
+            await applyCapture({
+              orderId: r.supplementary_data?.related_ids?.order_id,
+              status: "COMPLETED",
+              captureId: r.id,
+              customId: r.custom_id,
+              settled: paypalSettlement(r.amount, r.seller_receivable_breakdown),
+            });
           }
           break;
         case "PAYMENT.PAYOUTS-ITEM.SUCCEEDED":

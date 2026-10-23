@@ -146,8 +146,9 @@ async function main() {
   console.log("✓ payment link created", ctb.id);
 
   // 3. PayPal capture -> receipts
-  await core.applyCapture("ORDER1", "COMPLETED", "CAPTURE1", ctb.id, "amina@example.com", 226); // PayPal fee $2.26
-  await core.applyCapture("ORDER1", "COMPLETED", "CAPTURE1", ctb.id, "amina@example.com", 226); // idempotent
+  const cap1 = { orderId: "ORDER1", status: "COMPLETED", captureId: "CAPTURE1", customId: ctb.id, payerEmail: "amina@example.com", settled: { grossCents: 4000, feeCents: 226, currency: "USD" } }; // PayPal fee $2.26
+  await core.applyCapture(cap1);
+  await core.applyCapture(cap1); // idempotent
   const [settled] = await db.select().from(schema.contributions).where(eq(schema.contributions.id, ctb.id));
   assert.equal(settled.providerFeeCents, 226, "PayPal's real fee is recorded");
   assert.equal(settled.sarafuFeeCents, 120, "SarafuPay 3% of $40");
@@ -158,6 +159,41 @@ async function main() {
   assert.ok(ownerMsgs.some((m) => m.includes("Amina") && m.includes("$40.00")), "owner alerted");
   assert.ok(aminaMsgs.some((m) => m.includes("Malipo yamepokelewa")), "Tanzanian contributor gets a Swahili receipt");
   console.log("✓ capture settled once, receipt + owner alert sent");
+
+  // 3b. Card payment in another currency: paid in EUR, settled in USD from PayPal's conversion.
+  {
+    const fx = await core.createCollection({ ownerId: col.ownerId, title: "FX test", targetCents: 1000_00, currency: "USD" });
+    const eur = await core.createContribution({ collection: fx, displayName: "Klaus", amountCents: 20_00, source: "web", provider: "paypal", payCurrency: "EUR" });
+    assert.equal(eur.payCurrency, "EUR");
+    assert.equal(eur.payAmountCents, 2000, "EUR 20.00 is what the payer pays");
+    assert.equal(eur.amountCents, 0, "USD value unknown until capture");
+    assert.equal(eur.currency, "USD");
+    // A capture PayPal kept in EUR (receiving preferences not set to convert) must not be booked as USD.
+    const held = await core.applyCapture({ orderId: "ORDER-EUR", status: "COMPLETED", captureId: "CAP-EUR", customId: eur.id, settled: { grossCents: 2000, feeCents: 100, currency: "EUR" } });
+    assert.equal(held?.status, "pending", "unconverted capture stays pending");
+    const { paypalSettlement } = await import("../lib/currency");
+    const settledEur = paypalSettlement(
+      { value: "20.00", currency_code: "EUR" },
+      {
+        gross_amount: { value: "20.00", currency_code: "EUR" },
+        paypal_fee: { value: "1.04", currency_code: "EUR" },
+        paypal_fee_in_receivable_currency: { value: "1.13", currency_code: "USD" },
+        receivable_amount: { value: "21.10", currency_code: "USD" },
+        exchange_rate: { source_currency: "EUR", target_currency: "USD", value: "1.1115" },
+      },
+    );
+    const paid = await core.applyCapture({ orderId: "ORDER-EUR", status: "COMPLETED", captureId: "CAP-EUR", customId: eur.id, settled: settledEur });
+    assert.equal(paid?.status, "paid");
+    assert.equal(paid?.amountCents, 2223, "USD gross = receivable $21.10 + fee $1.13");
+    assert.equal(paid?.providerFeeCents, 113, "PayPal fee in USD");
+    assert.equal(paid?.sarafuFeeCents, 67, "SarafuPay 3% of $22.23");
+    assert.equal(paid?.netCents, 2043);
+    assert.equal(paid?.fxRate, "1.1115");
+    assert.equal(paid?.payAmountCents, 2000, "original EUR amount kept for receipts");
+    await assert.rejects(core.createContribution({ collection: fx, displayName: "X", amountCents: 50_00, source: "web", provider: "paypal", payCurrency: "BRL" }), /not supported/);
+    await assert.rejects(core.createContribution({ collection: fx, displayName: "X", amountCents: 50_00, source: "web", provider: "paypal", payCurrency: "JPY" }), /Minimum/);
+    console.log("✓ card payment in EUR settles in USD from PayPal's conversion; unconverted captures stay pending");
+  }
 
   // 3b. Public supporters list: first names only, email search is exact-match only
   const byName = await core.searchSupporters(col.id, { q: "ami" });
@@ -283,7 +319,7 @@ async function main() {
     }),
     settle: async (id: string) => {
       captureCalls.push(id);
-      return core.applyCapture(id, "COMPLETED", `CAP-${id}`, reconcileOrders[id], "john@example.com");
+      return core.applyCapture({ orderId: id, status: "COMPLETED", captureId: `CAP-${id}`, customId: reconcileOrders[id], payerEmail: "john@example.com" });
     },
   };
   const rc1 = await reconcile(fakePaypal);

@@ -1,11 +1,13 @@
 import { env } from "@/lib/env";
 import Link from "next/link";
+import { CoinMark } from "./coin-mark";
+
+export { CoinMark };
 
 export function Logo({ light = false }: { light?: boolean }) {
   return (
     <Link href="/" className="inline-flex items-center gap-2 group" aria-label="SarafuPay home">
-      {/* eslint-disable-next-line @next/next/no-img-element -- static brand mark, no optimisation needed */}
-      <img src="/brand/sarafupay-icon.png" width={34} height={34} alt="" className="h-[34px] w-[34px] rounded-full" />
+      <CoinMark size={34} />
       <span className={`font-display text-xl font-semibold tracking-tight ${light ? "text-paper" : "text-ink"}`}>
         <span style={{ color: light ? undefined : "#035034" }}>Sarafu</span><span style={{ color: "#C4A237" }}>Pay</span>
       </span>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { CoinMark } from "@/components/coin-mark";
 
 type Msg = { from: "me" | "bot"; text: string };
 
@@ -110,8 +111,7 @@ export function Phone3D() {
         {/* the phone */}
         <div className="phone-body relative overflow-hidden rounded-[2.4rem] border-[10px] border-ink bg-[var(--chat-bg)]" style={{ transform: "translateZ(0)" }}>
           <div className="flex items-center gap-3 bg-forest px-4 py-3 text-paper">
-            {/* eslint-disable-next-line @next/next/no-img-element -- static brand mark */}
-            <img src="/brand/sarafupay-icon.png" alt="" width={36} height={36} className="h-9 w-9 rounded-full bg-paper" />
+            <CoinMark size={36} />
             <div>
               <p className="text-sm font-semibold">SarafuPay</p>
               <p className="text-[11px] opacity-75">{typing ? "inaandika…" : "online"}</p>

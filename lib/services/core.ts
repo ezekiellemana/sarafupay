@@ -14,6 +14,7 @@ import { dashboardUrl, payUrl } from "./links";
 import { langOf, t, type Lang } from "../i18n";
 import { payoutRail, quotePayment, quotePayout, railCurrency, type PayoutMethod, type Quote, type Rail } from "../pricing";
 import { getRates } from "./settings";
+import { isPaypalCurrency, minPayCents, SETTLE_CURRENCY, type Settlement } from "../currency";
 
 const { users, collections, contributions, pledges, payouts } = schema;
 
@@ -345,10 +346,24 @@ export async function createContribution(input: {
   /** Defaults to the rail of the collection's currency. */
   provider?: Rail;
   payerPhone?: string;
+  /**
+   * The currency the payer pays in (card/PayPal only; mobile money is TZS). amountCents is in this
+   * currency. Non-USD card payments settle in USD at capture, when PayPal reports the converted amount.
+   */
+  payCurrency?: string;
 }): Promise<Contribution> {
   if (input.collection.status !== "active") throw new Error("This collection is closed");
   const rail = input.provider ?? railForCurrency(input.collection.currency);
-  checkRailAmount(rail, input.amountCents);
+  const settleCur = SETTLE_CURRENCY[rail];
+  const payCur = (input.payCurrency ?? settleCur).toUpperCase();
+  if (rail === "snippe" && payCur !== "TZS") throw new Error("Mobile money is paid in TZS");
+  if (rail === "paypal" && !isPaypalCurrency(payCur)) throw new Error(`Card payments in ${payCur} are not supported`);
+  const converted = payCur !== settleCur;
+  if (converted) {
+    if (!Number.isFinite(input.amountCents) || input.amountCents < minPayCents(payCur)) throw new Error(`Minimum is ${money(minPayCents(payCur), payCur)}`);
+  } else {
+    checkRailAmount(rail, input.amountCents);
+  }
   const db = await getDb();
   const [row] = await db
     .insert(contributions)
@@ -357,8 +372,11 @@ export async function createContribution(input: {
       collectionId: input.collection.id,
       contributorId: input.contributorId ?? null,
       displayName: input.displayName.trim().slice(0, 80) || "Anonymous",
-      amountCents: input.amountCents,
+      // Settlement amount; for a converted card payment it is filled in from the capture.
+      amountCents: converted ? 0 : input.amountCents,
       currency: railCurrency(rail),
+      payCurrency: converted ? payCur : null,
+      payAmountCents: converted ? input.amountCents : null,
       provider: rail,
       payerPhone: input.payerPhone ? snippe.normalizeTzPhone(input.payerPhone) : null,
       source: input.source,
@@ -397,8 +415,8 @@ export async function startCheckout(contributionId: string): Promise<string> {
   }
   const order = await createContributionOrder({
     contributionId: ctb.id,
-    amountCents: ctb.amountCents,
-    currency: ctb.currency,
+    amountCents: ctb.payAmountCents ?? ctb.amountCents,
+    currency: ctb.payCurrency ?? ctb.currency,
     collectionTitle: col.title,
     collectionCode: col.code,
   });
@@ -445,17 +463,19 @@ async function settleContribution(
 /** Captures an approved PayPal order and settles the matching contribution. Idempotent. */
 export async function settleOrder(orderId: string): Promise<Contribution | undefined> {
   const result = await captureOrder(orderId);
-  return applyCapture(orderId, result.status, result.captureId, result.customId, result.payerEmail, result.paypalFeeCents);
+  return applyCapture({ orderId, status: result.status, captureId: result.captureId, customId: result.customId, payerEmail: result.payerEmail, settled: result.settled });
 }
 
-export async function applyCapture(
-  orderId: string | undefined,
-  status: string,
-  captureId?: string,
-  customId?: string,
-  payerEmail?: string,
-  paypalFeeCents?: number,
-): Promise<Contribution | undefined> {
+export async function applyCapture(input: {
+  orderId?: string;
+  status: string;
+  captureId?: string;
+  customId?: string;
+  payerEmail?: string;
+  /** The capture's value in the account currency (see paypalSettlement). */
+  settled?: Settlement;
+}): Promise<Contribution | undefined> {
+  const { orderId, status, captureId, customId, payerEmail, settled } = input;
   const db = await getDb();
   const key = customId
     ? eq(contributions.id, customId)
@@ -467,10 +487,27 @@ export async function applyCapture(
     const [c] = await db.select().from(contributions).where(key);
     return c;
   }
+  const [cur] = await db.select().from(contributions).where(key);
+  if (!cur || cur.status !== "pending") return cur;
+  // The balance is kept in USD. A capture still in another currency means the account is holding it
+  // in that currency (Payment Receiving Preferences not set to convert): leave it pending, loudly.
+  if (settled && settled.currency !== cur.currency) {
+    console.error(`[paypal] capture ${captureId} for ${cur.id} settled in ${settled.currency}, expected ${cur.currency}. Set PayPal receiving preferences to convert to ${cur.currency}.`);
+    return cur;
+  }
+  if (!settled && cur.payCurrency) {
+    console.error(`[paypal] capture ${captureId} for ${cur.id} has no settlement breakdown yet; leaving it pending.`);
+    return cur;
+  }
   return settleContribution(
     key,
-    { paypalCaptureId: captureId ?? null, payerEmail: payerEmail ?? null, ...(orderId ? { paypalOrderId: orderId } : {}) },
-    paypalFeeCents,
+    {
+      paypalCaptureId: captureId ?? null,
+      payerEmail: payerEmail ?? null,
+      ...(orderId ? { paypalOrderId: orderId } : {}),
+      ...(settled ? { amountCents: settled.grossCents, fxRate: settled.fxRate ?? null } : {}),
+    },
+    settled?.feeCents,
   );
 }
 
@@ -535,6 +572,12 @@ export async function checkSnippeContribution(contributionId: string): Promise<C
   return applySnippePayment({ contributionId: ctb.id, status: s.status, amountTzs: s.amountTzs });
 }
 
+/** What a contribution was worth: "TZS 50,000", or "€20.00 ($22.23)" for a converted card payment. */
+export function paidLabel(ctb: Contribution): string {
+  const settled = money(ctb.amountCents, ctb.currency);
+  return ctb.payCurrency && ctb.payAmountCents != null ? `${money(ctb.payAmountCents, ctb.payCurrency)} (${settled})` : settled;
+}
+
 /** "mobile money via Snippe", "PayPal" — how a contribution was paid, for receipts. */
 export function paidVia(ctb: Contribution): string {
   return ctb.provider === "snippe" ? "mobile money via Snippe" : "PayPal";
@@ -553,7 +596,8 @@ async function onContributionPaid(ctb: Contribution) {
   }
   const stats = await collectionStats(col);
   const owner = await getUser(col.ownerId);
-  const amount = money(ctb.amountCents, ctb.currency);
+  // A card payment in another currency reads "€20.00 ($22.23)": what they paid, then what it added.
+  const amount = paidLabel(ctb);
   if (ctb.contributorId) {
     const contributor = await getUser(ctb.contributorId);
     if (contributor) {

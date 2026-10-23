@@ -44,7 +44,7 @@ export default async function Thanks({ params, searchParams }: PageProps<"/c/[co
           <h1 className="font-display mt-4 text-3xl font-semibold">{paid ? "Asante sana!" : failed ? "Payment not completed" : "Almost there"}</h1>
           <p className="mt-2 text-ink-soft">
             {paid
-              ? `${money(ctb!.amountCents, ctb!.currency)} received for ${col.title}.`
+              ? `${ctb!.payCurrency && ctb!.payAmountCents != null ? money(ctb!.payAmountCents, ctb!.payCurrency) : money(ctb!.amountCents, ctb!.currency)} received for ${col.title}.`
               : failed
                 ? "No money moved."
                 : ctb?.provider === "snippe"

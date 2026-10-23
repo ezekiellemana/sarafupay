@@ -8,10 +8,10 @@ export function centsToValue(cents: number): string {
   return (cents / 100).toFixed(2);
 }
 
-const symbols: Record<string, string> = { USD: "$", EUR: "€", GBP: "£" };
+const symbols: Record<string, string> = { USD: "$", EUR: "€", GBP: "£", JPY: "¥", CAD: "CA$", AUD: "A$", NZD: "NZ$", CHF: "CHF ", HKD: "HK$", SGD: "S$" };
 
 /** Currencies shown without decimals (TZS has no coins in use). */
-const WHOLE = new Set(["TZS", "UGX", "KES", "JPY", "RWF"]);
+const WHOLE = new Set(["TZS", "UGX", "KES", "JPY", "RWF", "HUF", "TWD"]);
 
 export function money(cents: number, currency = "TZS"): string {
   const cur = currency.toUpperCase();

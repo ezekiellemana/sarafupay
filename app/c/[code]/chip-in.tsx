@@ -1,59 +1,82 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AmountInput } from "./amount-input";
-import { isTzMobile, PhoneDigits } from "./phone-digits";
+import { isTzMobile, PhoneInput } from "./phone-input";
+import { currencyForLocale, PAYPAL_CURRENCIES } from "@/lib/currency";
 
 type Method = "mobile_money" | "card_or_paypal";
 
-const METHODS: { id: Method; title: string; icon: string; currency: string }[] = [
-  { id: "mobile_money", title: "Mobile money", icon: "📱", currency: "TZS" },
-  { id: "card_or_paypal", title: "Card", icon: "💳", currency: "USD" },
+const METHODS: { id: Method; title: string; icon: string }[] = [
+  { id: "mobile_money", title: "Mobile money", icon: "📱" },
+  { id: "card_or_paypal", title: "Card", icon: "💳" },
 ];
 
+const currencyName = (code: string) => {
+  try {
+    return new Intl.DisplayNames(["en"], { type: "currency" }).of(code) ?? code;
+  } catch {
+    return code;
+  }
+};
+
 /**
- * Pick a way to pay, then the right fields open: amount, the mobile money number (mobile money
- * only), name and an optional message. Submits `method`, `amount`, `phone`, `name`, `message`.
+ * Pick a way to pay, then the right fields open. Mobile money is in TZS with the phone number;
+ * card is in the payer's own currency (preselected from their browser), converted by PayPal.
+ * Submits `method`, `currency`, `amount`, `phone`, `name`, `message`.
  */
 export function ChipIn({ disabled }: { disabled: boolean }) {
   const [method, setMethod] = useState<Method | null>(null);
   const [phone, setPhone] = useState("");
-  const m = METHODS.find((x) => x.id === method);
-  const phoneOk = method !== "mobile_money" || isTzMobile(phone);
+  const [cardCur, setCardCur] = useState("USD");
+  useEffect(() => {
+    // After mount, so the server and first client render agree.
+    const t = setTimeout(() => setCardCur(currencyForLocale(navigator.language)), 0);
+    return () => clearTimeout(t);
+  }, []);
+
+  const currency = method === "mobile_money" ? "TZS" : cardCur;
+  const ready = method !== "mobile_money" || isTzMobile(phone);
 
   return (
     <div className="space-y-4">
       <input type="hidden" name="method" value={method ?? ""} />
+      <input type="hidden" name="currency" value={currency} />
       <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="How would you like to pay?">
         {METHODS.map((x) => {
           const on = x.id === method;
           return (
-            <button
-              key={x.id}
-              type="button"
-              role="radio"
-              aria-checked={on}
-              onClick={() => setMethod(x.id)}
-              className={`method-pick ${on ? "is-on" : ""}`}
-            >
+            <button key={x.id} type="button" role="radio" aria-checked={on} onClick={() => setMethod(x.id)} className={`method-pick ${on ? "is-on" : ""}`}>
               <span className="text-2xl" aria-hidden>{x.icon}</span>
               <span className="font-semibold">{x.title}</span>
-              <span className="font-mono text-[11px] text-ink-soft">{x.currency}</span>
             </button>
           );
         })}
       </div>
 
-      {m ? (
-        <div key={m.id} className="chip-fields space-y-4">
-          {/* Remount on method change so decimals follow the currency. */}
-          <AmountInput currency={m.currency} />
+      {method ? (
+        <div key={method} className="chip-fields space-y-4">
+          {method === "card_or_paypal" ? (
+            <label className="block text-sm font-medium">
+              Currency
+              <select value={cardCur} onChange={(e) => setCardCur(e.target.value)} className="field mt-1.5">
+                {PAYPAL_CURRENCIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c} · {currencyName(c)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+
+          {/* Remount on currency change so the symbol and decimals follow it. */}
+          <AmountInput key={currency} currency={currency} />
 
           {method === "mobile_money" ? (
             <div>
               <p className="text-sm font-medium">Mobile money number</p>
               <div className="mt-1.5">
-                <PhoneDigits name="phone" onChange={setPhone} />
+                <PhoneInput name="phone" onChange={setPhone} />
               </div>
             </div>
           ) : null}
@@ -66,7 +89,7 @@ export function ChipIn({ disabled }: { disabled: boolean }) {
             Message <span className="font-normal text-ink-soft">(optional)</span>
             <input name="message" maxLength={280} placeholder="Hongera! 🎉" className="field mt-1.5" />
           </label>
-          <button disabled={disabled || !phoneOk} className="btn btn-primary w-full justify-center disabled:opacity-50">
+          <button disabled={disabled || !ready} className="btn btn-primary w-full justify-center disabled:opacity-50">
             {method === "mobile_money" ? "Pay with mobile money →" : "Pay by card →"}
           </button>
         </div>

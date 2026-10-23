@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Logo } from "@/components/brand";
+import { CoinMark } from "@/components/coin-mark";
 
 type Msg = { id: number; direction: "in" | "out"; text: string; at: string; pending?: boolean; fresh?: boolean };
 type Persona = { id: string; label: string; hint: string };
@@ -358,8 +359,7 @@ export function Simulator({ buyer, testMode = true }: { buyer: { email: string; 
         {/* Chat: full-bleed on phones, framed on larger screens */}
         <section className="sim-frame flex flex-1 flex-col overflow-hidden bg-[var(--chat-bg)] sm:rounded-[1.6rem] sm:border-[6px] sm:border-ink">
           <header className="flex items-center gap-3 bg-forest px-3 py-2.5 text-paper sm:px-4 sm:py-3 [padding-top:max(0.625rem,env(safe-area-inset-top))]">
-            {/* eslint-disable-next-line @next/next/no-img-element -- static brand mark */}
-            <img src="/brand/sarafupay-icon.png" alt="" width={40} height={40} className="h-10 w-10 shrink-0 rounded-full bg-paper" />
+            <CoinMark size={40} />
             <div className="min-w-0 flex-1">
               <p className="font-semibold leading-tight">SarafuPay</p>
               <p className="truncate text-xs opacity-80">{busy ? "typing…" : "AI agent · same brain as WhatsApp"}</p>
