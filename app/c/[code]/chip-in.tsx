@@ -2,18 +2,21 @@
 
 import { useState } from "react";
 import { AmountInput } from "./amount-input";
-import { Mark, Provider, type ProviderName } from "@/components/provider";
+import { CARDS, Mark, MOBILE_MONEY, Provider, type BrandName, type ProviderName } from "@/components/provider";
+
+const Logos = ({ names }: { names: BrandName[] }) => (
+  <span className="mt-1.5 flex flex-wrap items-center gap-2.5">
+    {names.map((n) => (
+      <Mark key={n} name={n} height={n === "Airtel Money" ? 30 : n === "Visa" ? 13 : 20} />
+    ))}
+  </span>
+);
 
 type Method = "mobile_money" | "card_or_paypal";
 
 const METHODS: { id: Method; title: string; sub: React.ReactNode; currency: string; via: ProviderName }[] = [
-  { id: "mobile_money", title: "Mobile money", sub: "Any Tanzanian mobile money number", currency: "TZS", via: "Snippe" },
-  { id: "card_or_paypal", title: "Card or PayPal", sub: (
-      <span className="mt-1 flex items-center gap-2">
-        <Mark name="Mastercard" height={16} />
-        <Mark name="PayPal" height={16} />
-      </span>
-    ), currency: "USD", via: "PayPal" },
+  { id: "mobile_money", title: "Mobile money", sub: <Logos names={MOBILE_MONEY} />, currency: "TZS", via: "Snippe" },
+  { id: "card_or_paypal", title: "Card or PayPal", sub: <Logos names={CARDS} />, currency: "USD", via: "PayPal" },
 ];
 
 /** Payment method choice + amount + payer details. Submits `method`, `amount`, `phone`, `name`, `message`. */

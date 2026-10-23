@@ -71,10 +71,6 @@ export function FeeCalculator({ rates }: { rates: Rates }) {
           <span>TZS 10K</span>
           <span>TZS 20M</span>
         </div>
-        <p className="mt-6 max-w-md text-sm leading-relaxed text-paper/75">
-          Friends pay exactly what they give by mobile money. The fees come out of the collection, and every one of them is
-          on the receipt.
-        </p>
       </div>
 
       <div className="rounded-[1.6rem] border border-paper/15 bg-paper/[0.06] p-5 sm:p-6">
@@ -90,14 +86,14 @@ export function FeeCalculator({ rates }: { rates: Rates }) {
           ))}
         </ul>
         <div className="mt-5 border-t border-paper/15 pt-5">
-          <p className="text-sm text-paper/70">Organiser receives on their phone</p>
+          <p className="text-sm text-paper/70">You receive</p>
           <p className="font-display mt-1 text-4xl font-semibold text-marigold">
             <Rolling value={out.netCents} />
           </p>
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-paper/10" aria-hidden>
             <div className="h-full rounded-full bg-marigold transition-[width] duration-500" style={{ width: `${kept}%` }} />
           </div>
-          <p className="mt-2 text-xs text-paper/60">{kept.toFixed(1)}% of everything raised, after one withdrawal.</p>
+          <p className="mt-2 text-xs text-paper/60">{kept.toFixed(1)}% kept</p>
         </div>
       </div>
     </div>

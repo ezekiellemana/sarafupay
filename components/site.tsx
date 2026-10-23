@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Logo, SandboxBadge } from "@/components/brand";
 import { waLink } from "@/lib/channels/whatsapp";
-import { Provider } from "@/components/provider";
+import { Mark } from "@/components/provider";
 
 /** Shared public header: logo, a few links, and the one action that matters. */
 export function SiteHeader({ cta = true }: { cta?: boolean }) {
@@ -41,9 +41,7 @@ export function SiteFooter() {
       <div className="mx-auto grid max-w-6xl gap-8 px-5 py-10 text-sm text-ink-soft sm:grid-cols-[1.4fr_1fr_1fr] sm:px-6">
         <div>
           <Logo />
-          <p className="mt-3 max-w-xs leading-relaxed">
-            Michango for weddings, funerals, medical bills and every group that collects together.
-          </p>
+          <p className="mt-3 max-w-xs leading-relaxed">Michango, without the notebook.</p>
         </div>
         <div className="space-y-2">
           <p className="font-semibold text-ink">Product</p>
@@ -58,10 +56,12 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="border-t border-line">
-        <p className="mx-auto max-w-6xl px-5 py-4 text-xs text-ink-soft sm:px-6">
-          © {new Date().getFullYear()} EPRIZE DIGITAL. Payments are processed by <Provider name="Snippe" /> (mobile money) and{" "}
-          <Provider name="PayPal" /> (card and PayPal). SarafuPay is the technology and record-keeping platform.
-        </p>
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-4 text-xs text-ink-soft sm:px-6">
+          <p>© {new Date().getFullYear()} EPRIZE DIGITAL</p>
+          <p className="flex items-center gap-3">
+            Payments by <Mark name="Snippe" height={22} /> <Mark name="PayPal" height={22} />
+          </p>
+        </div>
       </div>
     </footer>
   );

@@ -1,87 +1,154 @@
-import Link from "next/link";
 import { Provider } from "@/components/provider";
 import { SiteFooter, SiteHeader } from "@/components/site";
+import { ScrollFX } from "@/components/scroll-fx";
 
 export const metadata = {
   title: "Privacy Policy — SarafuPay",
-  description: "How SarafuPay handles your data when you use the WhatsApp agent, web simulator and treasurer dashboard.",
+  description: "How SarafuPay handles your data.",
 };
 
 const UPDATED = "23 October 2026";
+const CONTACT = "info@sarafupay.app";
+
+const GLANCE: [string, string][] = [
+  ["🔒", "No PINs or card numbers, ever"],
+  ["🙈", "Only the organiser sees amounts"],
+  ["🚫", "Never sold, no ads"],
+  ["🗑️", "Deleted on request"],
+];
+
+const SECTIONS: { id: string; title: string; body: React.ReactNode }[] = [
+  {
+    id: "who",
+    title: "Who runs SarafuPay",
+    body: (
+      <>
+        SarafuPay is a collection platform by EPRIZE DIGITAL. Payments are collected and paid out by licensed providers:{" "}
+        <Provider name="Snippe" /> for mobile money and <Provider name="PayPal" /> for card and PayPal. Contact:{" "}
+        <a className="font-medium text-forest underline underline-offset-4" href={`mailto:${CONTACT}`}>
+          {CONTACT}
+        </a>
+        .
+      </>
+    ),
+  },
+  {
+    id: "collect",
+    title: "What we collect",
+    body: (
+      <ul className="list-disc space-y-1 pl-5">
+        <li>Your WhatsApp number and profile name, so the agent can reply.</li>
+        <li>Your messages and voice notes to the agent, and its replies.</li>
+        <li>Details you give: name, collections, targets, pledges, and payout details (mobile money number, bank account or PayPal email).</li>
+        <li>Payment records from the providers: amounts, fees, references, and the payer&apos;s phone number or PayPal name and email.</li>
+        <li>Never mobile money PINs or card numbers. You approve payments on your phone or on PayPal.</li>
+      </ul>
+    ),
+  },
+  {
+    id: "use",
+    title: "How it is used",
+    body: (
+      <>
+        Only to run the service: collections, pay links, receipts, reminders, transparency updates, payouts you confirm with
+        your code, and accurate financial records. Public pages show totals, the payout ledger and supporters&apos; first names.
+        Full names and amounts are visible only to the organiser. Account numbers are masked.
+      </>
+    ),
+  },
+  {
+    id: "processors",
+    title: "Who processes it",
+    body: (
+      <>
+        <ul className="list-disc space-y-1 pl-5">
+          <li>Meta (WhatsApp Cloud API): message delivery.</li>
+          <li>Google (Gemini API): understanding messages and writing replies.</li>
+          <li><Provider name="Snippe" />: mobile money payments and payouts to mobile money and banks.</li>
+          <li><Provider name="PayPal" />: card and PayPal payments and PayPal payouts.</li>
+          <li>DigitalOcean: hosting and database.</li>
+        </ul>
+        <p className="mt-2">We do not sell your data or use it for advertising.</p>
+      </>
+    ),
+  },
+  {
+    id: "retention",
+    title: "Retention and deletion",
+    body: (
+      <>
+        Data is kept while you use the service; payment records as long as financial record-keeping requires. Email{" "}
+        <a className="font-medium text-forest underline underline-offset-4" href={`mailto:${CONTACT}`}>
+          {CONTACT}
+        </a>{" "}
+        to have your data deleted. Anything not needed for those records is removed within 7 days.
+      </>
+    ),
+  },
+  {
+    id: "security",
+    title: "Security",
+    body: "Provider webhooks are signature-verified, dashboards need a private key, and money moves only after the organiser's own code.",
+  },
+  { id: "changes", title: "Changes", body: "When this policy changes, the date above changes too." },
+];
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-dvh bg-paper text-ink">
+    <div className="min-h-dvh overflow-x-clip bg-paper text-ink">
+      <ScrollFX />
       <div className="kanga" />
       <SiteHeader />
-      <main className="mx-auto max-w-3xl px-5 pb-16 leading-relaxed">
-        <h1 className="font-display text-4xl font-semibold">Privacy Policy</h1>
-        <p className="mt-2 text-sm text-ink-soft">Last updated {UPDATED}</p>
+      <main className="mx-auto max-w-5xl px-5 pb-16 sm:px-6">
+        <section className="grid items-center gap-8 pb-10 pt-4 sm:pt-8 md:grid-cols-[1.2fr_0.8fr]">
+          <div>
+            <p className="rise font-mono text-xs uppercase tracking-[0.2em] text-ink-soft">Privacy</p>
+            <h1 className="rise d1 font-display mt-3 text-[2.6rem] font-semibold leading-[1.02] sm:text-6xl">Your data, kept small.</h1>
+            <p className="rise d2 mt-3 text-sm text-ink-soft">Updated {UPDATED}</p>
+          </div>
+          <div className="rise d3 shield-stage" aria-hidden>
+            <div className="shield">
+              <span className="shield-layer" style={{ "--z": "0px" } as React.CSSProperties} />
+              <span className="shield-layer" style={{ "--z": "18px" } as React.CSSProperties} />
+              <span className="shield-layer" style={{ "--z": "36px" } as React.CSSProperties} />
+              <span className="shield-lock">🔒</span>
+            </div>
+          </div>
+        </section>
 
-        <Section title="Who runs SarafuPay">
-          SarafuPay is a collection-management platform by EPRIZE DIGITAL. It
-          helps groups run collections (michango) through a WhatsApp agent and a web page. SarafuPay is a technology and
-          record-keeping service: payments are collected and paid out by licensed payment providers (<Provider name="Snippe" /> for mobile money,{" "}
-          <Provider name="PayPal" /> for card and PayPal payments). To reach us, message SarafuPay in the chat.
-        </Section>
-
-        <Section title="What SarafuPay collects">
-          <ul className="list-disc space-y-1 pl-5">
-            <li>Your WhatsApp phone number and profile name, so the agent can reply to you.</li>
-            <li>The messages and voice notes you send the agent, and its replies, kept as conversation history.</li>
-            <li>The details you give: your name, collection titles, targets, pledges, and payout details (mobile money number, bank and account number, or PayPal email).</li>
-            <li>
-              Payment records from the providers: amounts, fees, references, the payer&apos;s phone number (mobile money) or
-              name and email (PayPal). SarafuPay never sees or stores mobile money PINs or card numbers; you approve payments
-              on your phone or on PayPal.
+        <ul className="grid grid-cols-2 gap-3 md:grid-cols-4" data-reveal>
+          {GLANCE.map(([icon, t], i) => (
+            <li key={t} className="glance" style={{ "--i": i } as React.CSSProperties}>
+              <span className="text-2xl" aria-hidden>{icon}</span>
+              <span className="mt-2 block text-sm font-semibold leading-snug">{t}</span>
             </li>
-          </ul>
-        </Section>
+          ))}
+        </ul>
 
-        <Section title="How it is used">
-          Only to run the service: creating collections, sending pay links, receipts, reminders and transparency updates,
-          preparing payouts that the organiser confirms with a one-time code, showing the organiser&apos;s private
-          dashboard, and keeping accurate financial records. The public collection page shows totals, the payout ledger and
-          each supporter&apos;s first name and optional message, never amounts, phone numbers or emails. Full names and
-          amounts are visible only to that collection&apos;s organiser. Account numbers are shown masked in messages.
-        </Section>
-
-        <Section title="Who processes it">
-          <ul className="list-disc space-y-1 pl-5">
-            <li>Meta (WhatsApp Cloud API), to deliver messages.</li>
-            <li>Google (Gemini API), to understand messages and write replies.</li>
-            <li><Provider name="Snippe" />, to collect mobile money payments and send payouts to mobile money and banks.</li>
-            <li><Provider name="PayPal" />, to process card and PayPal payments and PayPal payouts.</li>
-            <li>DigitalOcean, which hosts the app and its database.</li>
-          </ul>
-          SarafuPay does not sell your data or use it for advertising.
-        </Section>
-
-        <Section title="Retention and deletion">
-          Conversation history and collection data are kept while you use the service. Payment and payout records are kept as
-          long as needed for financial record-keeping. You can ask for your data to be deleted at any time by emailing the
-          address above; anything not needed for those records is removed within 7 days.
-        </Section>
-
-        <Section title="Security">
-          Webhooks from Meta, Snippe and PayPal are signature-verified, dashboards are protected by a private owner key, and
-          money can only move after the organiser&apos;s own confirmation code.
-        </Section>
-
-        <Section title="Changes">
-          If this policy changes, the date at the top of this page is updated.
-        </Section>
+        <div className="mt-12 grid gap-10 md:grid-cols-[13rem_1fr]">
+          <nav className="hidden md:block" aria-label="On this page">
+            <ol className="sticky top-8 space-y-2 text-sm text-ink-soft">
+              {SECTIONS.map((s, i) => (
+                <li key={s.id}>
+                  <a href={`#${s.id}`} className="hover:text-ink">
+                    <span className="font-mono text-xs text-marigold">{String(i + 1).padStart(2, "0")}</span> {s.title}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </nav>
+          <div className="space-y-4">
+            {SECTIONS.map((s, i) => (
+              <section key={s.id} id={s.id} className="policy-card scroll-mt-6" data-reveal>
+                <p className="font-mono text-xs text-marigold">{String(i + 1).padStart(2, "0")}</p>
+                <h2 className="font-display mt-1 text-2xl font-semibold">{s.title}</h2>
+                <div className="mt-2 leading-relaxed text-ink-soft">{s.body}</div>
+              </section>
+            ))}
+          </div>
+        </div>
       </main>
       <SiteFooter />
     </div>
-  );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="mt-8">
-      <h2 className="font-display text-2xl font-semibold">{title}</h2>
-      <div className="mt-2 text-ink-soft">{children}</div>
-    </section>
   );
 }

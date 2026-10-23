@@ -4,123 +4,38 @@ import { SiteFooter, SiteHeader } from "@/components/site";
 import { CoinField } from "@/components/landing/coin-field";
 import { Phone3D } from "@/components/landing/phone-3d";
 import { FeeCalculator } from "@/components/landing/fee-calculator";
-import { Steps3D, type Step } from "@/components/landing/steps-3d";
+import { HowShow } from "@/components/landing/how-show";
 import { TiltCard } from "@/components/landing/tilt-card";
+import { Belt } from "@/components/landing/belt";
 import { Photo, type Shot } from "@/components/landing/photo";
-import { Mark, Provider, type ProviderName } from "@/components/provider";
+import { ScrollFX } from "@/components/scroll-fx";
+import { Mark, MarkTile, PAY_WITH, PAYOUT_TO } from "@/components/provider";
 import { waLink } from "@/lib/channels/whatsapp";
 import { getRates } from "@/lib/services/settings";
 import { rateSummary } from "@/lib/pricing";
 
-const steps: Step[] = [
-  {
-    n: "01",
-    chip: "2 minutes",
-    title: "Start in a chat",
-    body: "Tell SarafuPay what you're collecting for, in Swahili or English. It asks a few questions and opens the collection on the spot. No forms, no app.",
-  },
-  {
-    n: "02",
-    chip: "1 message",
-    title: "Share one message",
-    body: "Forward the invitation to your groups. Friends pay with mobile money, or by card or PayPal from abroad. Receipts arrive by themselves.",
-  },
-  {
-    n: "03",
-    chip: "Every shilling",
-    title: "Spend in the open",
-    body: "Ask “who hasn't paid?”, nudge pledges, pay the caterer straight to mobile money or a bank. Each payout needs your code and is reported to everyone who gave.",
-  },
+const occasions: { sw: string; en: string; shot: Shot }[] = [
+  { sw: "Harusi", en: "Weddings", shot: { name: "harusi", alt: "A bride and groom walk out of church as guests cheer", focus: "50% 45%" } },
+  { sw: "Msiba", en: "Funerals", shot: { name: "msiba", alt: "Family and neighbours sit together under a tree", focus: "50% 55%" } },
+  { sw: "Matibabu", en: "Medical bills", shot: { name: "matibabu", alt: "A doctor talks with a patient and her family", focus: "60% 50%" } },
+  { sw: "Ada ya shule", en: "School fees", shot: { name: "ada", alt: "Students writing at their desks in a sunny classroom", focus: "45% 50%" } },
+  { sw: "Vikundi", en: "Groups & VICOBA", shot: { name: "vikundi", alt: "A women's savings group meets under a tree", focus: "50% 55%" } },
+  { sw: "Jamii", en: "Community projects", shot: { name: "jamii", alt: "Villagers building a classroom together", focus: "50% 50%" } },
 ];
 
-const occasions: { sw: string; en: string; note: string; shot: Shot }[] = [
-  {
-    sw: "Harusi",
-    en: "Weddings and send-offs",
-    note: "The wedding committee, without the notebook.",
-    shot: { name: "harusi", alt: "A bride and groom walk out of church as guests in kitenge cheer and throw petals", focus: "50% 45%" },
-  },
-  {
-    sw: "Msiba",
-    en: "Funerals",
-    note: "Collect fast, show every shilling spent.",
-    shot: { name: "msiba", alt: "Family and neighbours sit together under a tree, comforting each other", focus: "50% 55%" },
-  },
-  {
-    sw: "Matibabu",
-    en: "Medical bills",
-    note: "Pay the hospital directly from the pot.",
-    shot: { name: "matibabu", alt: "A doctor talks warmly with a patient and her family on a hospital ward", focus: "60% 50%" },
-  },
-  {
-    sw: "Ada ya shule",
-    en: "School fees",
-    note: "Family and friends, one link.",
-    shot: { name: "ada", alt: "Students in green sweaters writing at their desks in a sunny classroom", focus: "45% 50%" },
-  },
-  {
-    sw: "Vikundi",
-    en: "Groups and VICOBA",
-    note: "Regular contributions with reminders.",
-    shot: { name: "vikundi", alt: "A women's savings group meets in a circle under a tree", focus: "50% 55%" },
-  },
-  {
-    sw: "Jamii",
-    en: "Churches, mosques and NGOs",
-    note: "A public ledger for every project.",
-    shot: { name: "jamii", alt: "Villagers building a classroom together, two leaders shaking hands", focus: "50% 50%" },
-  },
+const safety: { title: string; body: string; shot: Shot }[] = [
+  { title: "The AI can't move money", body: "Every payout needs your one-time code.", shot: { name: "code", alt: "A young man reads a message on his phone", focus: "50% 40%" } },
+  { title: "Every payout is reported", body: "Everyone who gave gets the receipt.", shot: { name: "broadcast", alt: "Friends smile at the same update on their phones", focus: "50% 40%" } },
+  { title: "Licensed providers hold the money", body: "SarafuPay keeps the records.", shot: { name: "providers", alt: "A shopkeeper confirms a mobile payment", focus: "50% 45%" } },
+  { title: "Private by role", body: "Only the organiser sees who gave what.", shot: { name: "privacy", alt: "A woman checks her phone privately", focus: "60% 45%" } },
 ];
 
-const safety: { title: string; body: React.ReactNode; shot: Shot }[] = [
-  {
-    title: "The AI can't move money",
-    body: "Payouts run only after the organiser replies with a one-time CONFIRM code. That step never goes through the AI.",
-    shot: { name: "code", alt: "A young man reads a message on his phone before replying", focus: "50% 40%" },
-  },
-  {
-    title: "Every payout is broadcast",
-    body: "Contributors get a transparency update with the recipient, the purpose, the fees and the provider reference.",
-    shot: { name: "broadcast", alt: "Four friends smile at the same update on their phones", focus: "50% 40%" },
-  },
-  {
-    title: "Payment providers hold the money",
-    body: (
-      <>
-        <Provider name="Snippe" /> collects and pays out mobile money; <Provider name="PayPal" /> handles card and PayPal. SarafuPay keeps the
-        records.
-      </>
-    ),
-    shot: { name: "providers", alt: "A shopkeeper confirms a mobile payment for a customer", focus: "50% 45%" },
-  },
-  {
-    title: "Privacy by role",
-    body: "Only the organiser sees who gave what. Everyone else sees totals and the payout ledger.",
-    shot: { name: "privacy", alt: "A woman checks her phone privately by a window", focus: "60% 45%" },
-  },
-];
-
-/** The payment strip: the providers' and card schemes' own marks, no words. */
-const marks: ProviderName[] = ["Snippe", "PayPal", "Mastercard"];
-
-const faqs: [string, React.ReactNode][] = [
-  [
-    "Who pays the fees?",
-    <>
-      The organiser. Contributors pay exactly what they give. <Provider name="Snippe" /> or <Provider name="PayPal" /> take their fee,
-      SarafuPay takes its percentage, and both are shown on every receipt and on the pricing page.
-    </>,
-  ],
-  [
-    "Who holds the money?",
-    <>
-      Licensed payment providers do: <Provider name="Snippe" /> for mobile money and <Provider name="PayPal" /> for card and PayPal payments.
-      SarafuPay is the technology and record-keeping layer.
-    </>,
-  ],
-  ["Can the AI send money by itself?", "No. A payout only moves after the organiser replies with a one-time CONFIRM code from their own phone, and that step never goes through the AI."],
-  ["Is there a minimum withdrawal?", "No. Withdraw any amount to mobile money or a bank. Fewer, larger withdrawals cost less, because each transfer has its own provider fee."],
-  ["Do my friends need an app?", "No. They pay from the link or the chat with the mobile money they already use, or a card if they're abroad."],
+const faqs: [string, string][] = [
+  ["Who pays the fees?", "The organiser. Friends pay exactly what they give."],
+  ["Who holds the money?", "Licensed payment providers. SarafuPay keeps the records."],
+  ["Can the AI send money?", "No. Only your one-time code releases a payout."],
+  ["Minimum withdrawal?", "None."],
+  ["Do friends need an app?", "No. A link or the chat is enough."],
 ];
 
 export default async function Home() {
@@ -130,6 +45,7 @@ export default async function Home() {
 
   return (
     <div className="flex min-h-screen flex-col overflow-x-clip">
+      <ScrollFX />
       <div className="kanga" />
       <SiteHeader />
 
@@ -138,11 +54,12 @@ export default async function Home() {
         <CoinField className="absolute inset-0 -top-24 opacity-60 [mask-image:radial-gradient(70%_22%_at_75%_72%,black_20%,transparent)] lg:opacity-70 lg:[mask-image:radial-gradient(55%_75%_at_80%_45%,black_30%,transparent)]" />
         <div className="relative mx-auto grid w-full max-w-6xl items-center gap-12 px-5 pb-16 pt-6 sm:px-6 lg:grid-cols-[1.08fr_0.92fr] lg:pb-24 lg:pt-10">
           <div>
-            <p className="rise inline-flex items-center gap-2 rounded-full border border-line bg-paper/80 px-3 py-1 text-xs font-medium text-ink-soft backdrop-blur-sm">
-              <span className="h-1.5 w-1.5 rounded-full bg-forest-2" /> Payments by
-              <Mark name="Snippe" height={16} />
-              <Mark name="PayPal" height={16} />
-              <Mark name="Mastercard" height={14} />
+            <p className="rise inline-flex items-center gap-3 rounded-full border border-line bg-paper/80 py-1.5 pl-3 pr-4 backdrop-blur-sm">
+              <span className="h-1.5 w-1.5 rounded-full bg-forest-2" />
+              <Mark name="Snippe" height={24} />
+              <Mark name="PayPal" height={24} />
+              <Mark name="Visa" height={14} />
+              <Mark name="Mastercard" height={20} />
             </p>
             <h1 className="rise d1 font-display mt-6 text-[2.9rem] font-semibold leading-[0.98] tracking-tight sm:text-7xl lg:text-[5.4rem]">
               Michango,
@@ -151,25 +68,24 @@ export default async function Home() {
               <br />
               notebook.
             </h1>
-            <p className="rise d2 mt-6 max-w-xl text-base leading-relaxed text-ink-soft sm:text-lg">
-              SarafuPay runs your group collection inside WhatsApp. Friends pay with the mobile money they already use, you see
-              who has paid in real time, and every payout is reported to everyone who gave.
+            <p className="rise d2 mt-6 max-w-md text-lg leading-relaxed text-ink-soft">
+              Group collections in one chat. Every shilling reported.
             </p>
             <div className="rise d3 mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               {wa ? (
                 <a href={wa} className="btn btn-primary justify-center" target="_blank" rel="noreferrer">
-                  Start a collection on WhatsApp →
+                  Start on WhatsApp →
                 </a>
               ) : null}
               <Link href="/chat" className={`btn ${wa ? "btn-ghost" : "btn-primary"} justify-center bg-paper/70 backdrop-blur-sm`}>
-                Try it in your browser
+                Try it now
               </Link>
             </div>
             <dl className="rise d4 mt-10 grid max-w-lg grid-cols-3 gap-4 border-t border-line pt-6 sm:gap-6">
               {[
-                ["0", "apps to install"],
-                [rateSummary(rates.snippePayment, "TZS"), "on mobile money, all in"],
-                ["100%", "payouts reported"],
+                ["0", "apps"],
+                [rateSummary(rates.snippePayment, "TZS"), "all-in fee"],
+                ["100%", "reported"],
               ].map(([k, v]) => (
                 <div key={v}>
                   <dt className="font-display text-2xl font-semibold sm:text-3xl">{k}</dt>
@@ -184,69 +100,70 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ---------- Payment methods ---------- */}
-      <section aria-label="Ways to pay" className="border-y border-line bg-paper-2/60 py-5">
-        <div className="marquee">
-          <div className="marquee-track !gap-14">
-            {[0, 1, 2, 3].flatMap((r) =>
-              marks.map((m) => (
-                <span key={`${r}-${m}`} className="flex items-center" aria-hidden={r > 0}>
-                  <Mark name={m} height={34} />
-                </span>
-              )),
-            )}
+      {/* ---------- Ways to pay and get paid: logos only ---------- */}
+      <section aria-label="Ways to pay and withdraw" className="logo-belt space-y-3 border-y border-line bg-paper-2/60 py-6">
+        {[PAY_WITH, PAYOUT_TO].map((row, r) => (
+          <div key={r} className="marquee">
+            <div className={`marquee-track !gap-4 ${r ? "reverse" : ""}`}>
+              {[0, 1, 2].flatMap((k) =>
+                row.map((m) => (
+                  <span key={`${k}-${m}`} aria-hidden={k > 0}>
+                    <MarkTile name={m} />
+                  </span>
+                )),
+              )}
+            </div>
           </div>
-        </div>
+        ))}
       </section>
 
-      {/* ---------- How it works ---------- */}
-      <section id="how" className="scroll-mt-4 bg-forest text-paper">
+      {/* ---------- How it works: a short 3D film ---------- */}
+      <section id="how" className="scroll-mt-4 overflow-hidden bg-forest text-paper">
         <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24">
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-marigold">How it works</p>
-          <h2 className="font-display mt-3 max-w-2xl text-4xl font-semibold leading-tight sm:text-5xl">
-            From the first message to the last shilling, in one chat.
-          </h2>
-          <div className="mt-14">
-            <Steps3D steps={steps} />
+          <div data-reveal>
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-marigold">How it works</p>
+            <h2 className="font-display mt-3 max-w-2xl text-4xl font-semibold leading-tight sm:text-5xl">Three steps. One chat.</h2>
+          </div>
+          <div className="mt-10 sm:mt-14" data-reveal style={{ "--rd": ".1s" } as React.CSSProperties}>
+            <HowShow />
           </div>
         </div>
       </section>
 
       {/* ---------- Occasions ---------- */}
-      <section className="mx-auto w-full max-w-6xl px-5 py-20 sm:px-6 sm:py-24">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-ink-soft">Kwa kila mchango</p>
-        <h2 className="font-display mt-3 max-w-2xl text-4xl font-semibold leading-tight sm:text-5xl">
-          Built for the way Tanzania collects together.
-        </h2>
-        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {occasions.map((o) => (
-            <TiltCard key={o.sw} className="photo-card">
-              <div className="photo-frame">
-                <Photo shot={o.shot} className="photo-img" />
-                <div className="photo-shade" aria-hidden />
-                <p className="photo-title font-display text-3xl font-semibold text-paper">{o.sw}</p>
-              </div>
-              <div className="p-5">
-                <p className="text-sm font-semibold text-ink">{o.en}</p>
-                <p className="mt-1 text-sm text-ink-soft">{o.note}</p>
-              </div>
-            </TiltCard>
-          ))}
+      <section className="mx-auto w-full max-w-6xl py-20 sm:px-6 sm:py-24">
+        <div className="px-5 sm:px-0" data-reveal>
+          <p className="font-mono text-xs uppercase tracking-[0.2em] text-ink-soft">Kwa kila mchango</p>
+          <h2 className="font-display mt-3 max-w-2xl text-4xl font-semibold leading-tight sm:text-5xl">For every occasion.</h2>
+        </div>
+        <div className="mt-8 sm:mt-10" data-reveal style={{ "--rd": ".1s" } as React.CSSProperties}>
+          <Belt label="Occasions">
+            {occasions.map((o) => (
+              <TiltCard key={o.sw} className="photo-card">
+                <div className="photo-frame !aspect-[4/5] sm:!aspect-[4/3]">
+                  <Photo shot={o.shot} className="photo-img" />
+                  <div className="photo-shade" aria-hidden />
+                  <div className="photo-title">
+                    <p className="font-display text-3xl font-semibold text-paper">{o.sw}</p>
+                    <p className="text-sm text-paper/80">{o.en}</p>
+                  </div>
+                </div>
+              </TiltCard>
+            ))}
+          </Belt>
         </div>
       </section>
 
       {/* ---------- Fee calculator ---------- */}
       <section id="fees" className="scroll-mt-4 px-3 sm:px-6">
-        <div className="calc-panel mx-auto max-w-6xl overflow-hidden rounded-[2rem] px-5 py-14 sm:px-10 sm:py-16">
+        <div className="calc-panel mx-auto max-w-6xl overflow-hidden rounded-[2rem] px-5 py-14 sm:px-10 sm:py-16" data-reveal>
           <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="font-mono text-xs uppercase tracking-[0.2em] text-marigold">Honest fees</p>
-              <h2 className="font-display mt-3 max-w-xl text-4xl font-semibold leading-tight text-paper sm:text-5xl">
-                See exactly what reaches the organiser.
-              </h2>
+              <h2 className="font-display mt-3 max-w-xl text-4xl font-semibold leading-tight text-paper sm:text-5xl">What reaches you.</h2>
             </div>
             <Link href="/pricing" className="text-sm font-medium text-paper underline underline-offset-4">
-              Full pricing →
+              Pricing →
             </Link>
           </div>
           <FeeCalculator rates={rates} />
@@ -254,36 +171,31 @@ export default async function Home() {
       </section>
 
       {/* ---------- Safety ---------- */}
-      <section id="trust" className="scroll-mt-4 mx-auto grid w-full max-w-6xl gap-12 px-5 py-20 sm:px-6 sm:py-24 md:grid-cols-[0.9fr_1.1fr]">
-        <div className="md:sticky md:top-8 md:self-start">
+      <section id="trust" className="scroll-mt-4 mx-auto w-full max-w-6xl py-20 sm:px-6 sm:py-24">
+        <div className="px-5 sm:px-0" data-reveal>
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-ink-soft">Safety</p>
-          <h2 className="font-display mt-3 text-4xl font-semibold leading-tight sm:text-5xl">
-            In a group collection, trust is the whole product.
-          </h2>
-          <p className="mt-5 max-w-md leading-relaxed text-ink-soft">
-            The AI makes SarafuPay easy to talk to. Moving money stays deterministic, double-checked and in your hands.
-          </p>
+          <h2 className="font-display mt-3 max-w-2xl text-4xl font-semibold leading-tight sm:text-5xl">Trust is the product.</h2>
         </div>
-        <ul className="grid gap-5 sm:grid-cols-2">
-          {safety.map((c) => (
-            <li key={c.title}>
-              <TiltCard className="photo-card">
-                <div className="photo-frame !aspect-[16/10]">
-                  <Photo shot={c.shot} className="photo-img" sizes="(min-width: 768px) 320px, 100vw" />
+        <div className="mt-8 sm:mt-10" data-reveal style={{ "--rd": ".1s" } as React.CSSProperties}>
+          <Belt label="Safety">
+            {safety.map((c) => (
+              <TiltCard key={c.title} className="photo-card">
+                <div className="photo-frame">
+                  <Photo shot={c.shot} className="photo-img" />
                   <div className="photo-shade" aria-hidden />
                 </div>
                 <div className="p-5">
                   <p className="font-semibold">{c.title}</p>
-                  <p className="mt-1 text-sm leading-relaxed text-ink-soft">{c.body}</p>
+                  <p className="mt-1 text-sm text-ink-soft">{c.body}</p>
                 </div>
               </TiltCard>
-            </li>
-          ))}
-        </ul>
+            ))}
+          </Belt>
+        </div>
       </section>
 
       {/* ---------- FAQ ---------- */}
-      <section className="mx-auto w-full max-w-3xl px-5 pb-20 sm:px-6">
+      <section className="mx-auto w-full max-w-3xl px-5 pb-20 sm:px-6" data-reveal>
         <h2 className="font-display text-3xl font-semibold sm:text-4xl">Questions</h2>
         <div className="mt-6 divide-y divide-line border-y border-line">
           {faqs.map(([q, a]) => (
@@ -302,17 +214,18 @@ export default async function Home() {
 
       {/* ---------- Final call ---------- */}
       <section className="px-3 pb-16 sm:px-6">
-        <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] bg-marigold px-6 py-14 text-center sm:py-16">
-          <h2 className="font-display mx-auto max-w-2xl text-4xl font-semibold leading-tight text-ink sm:text-5xl">
-            Your next michango can start in the next minute.
+        <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] bg-marigold px-6 py-16 text-center sm:py-20" data-reveal>
+          <CoinField className="absolute inset-0 opacity-50 [mask-image:radial-gradient(60%_80%_at_50%_50%,transparent_35%,black)]" />
+          <h2 className="relative font-display mx-auto max-w-2xl text-4xl font-semibold leading-tight text-ink sm:text-5xl">
+            Start your michango now.
           </h2>
-          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+          <div className="relative mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             {wa ? (
               <a href={wa} className="btn btn-primary justify-center" target="_blank" rel="noreferrer">
                 Start on WhatsApp →
               </a>
             ) : null}
-            <Link href="/chat" className="btn btn-ghost justify-center">Try it in your browser</Link>
+            <Link href="/chat" className="btn btn-ghost justify-center">Try it now</Link>
           </div>
         </div>
       </section>

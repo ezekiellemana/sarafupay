@@ -1,5 +1,7 @@
 import { Suspense } from "react";
 import { Provider } from "@/components/provider";
+import { TiltCard } from "@/components/landing/tilt-card";
+import { ScrollFX } from "@/components/scroll-fx";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
@@ -33,7 +35,8 @@ export default async function CollectionPage({ params, searchParams }: PageProps
   const err = typeof sp.err === "string" ? sp.err : null;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen overflow-x-clip">
+      <ScrollFX />
       <div className="kanga" />
       <SiteHeader cta={false} />
       <main className="mx-auto grid max-w-5xl grid-cols-1 gap-8 px-5 pb-20 sm:px-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
@@ -49,35 +52,41 @@ export default async function CollectionPage({ params, searchParams }: PageProps
             {col.status !== "active" ? <> · <span className="text-terracotta font-semibold">closed</span></> : null}
           </p>
 
-          <div className="card mt-8 p-5 sm:p-6">
-            <div className="flex items-end justify-between gap-4">
+          <TiltCard className="card stats-3d mt-8 p-5 sm:p-6">
+            <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="font-display text-4xl font-semibold">{money(stats.raisedCents, col.currency)}</p>
-                <p className="text-sm text-ink-soft">raised of {money(col.targetCents, col.currency)} goal</p>
+                <p className="text-sm text-ink-soft">of {money(col.targetCents, col.currency)}</p>
               </div>
-              <p className="font-mono text-2xl text-forest-2">{stats.percent}%</p>
+              <div className="ring-3d" style={{ "--pct": Math.min(100, stats.percent) } as React.CSSProperties}>
+                <svg viewBox="0 0 36 36" aria-hidden>
+                  <circle cx="18" cy="18" r="15" fill="none" stroke="var(--paper-2)" strokeWidth="4.5" />
+                  <circle className="ring-3d-fill" cx="18" cy="18" r="15" fill="none" stroke="var(--forest)" strokeWidth="4.5" strokeLinecap="round" />
+                </svg>
+                <span className="ring-3d-label font-display">{stats.percent}%</span>
+              </div>
             </div>
             <div className="mt-4"><Progress percent={stats.percent} /></div>
             <div className="mt-4 grid grid-cols-3 gap-3 text-sm">
               <div><p className="font-semibold">{stats.paidCount}</p><p className="text-ink-soft">{stats.paidCount === 1 ? "contribution" : "contributions"}</p></div>
               <div><p className="font-semibold">{money(stats.paidOutCents, col.currency)}</p><p className="text-ink-soft">withdrawn</p></div>
-              <div><p className="font-semibold">{money(stats.availableCents, col.currency)}</p><p className="text-ink-soft">balance after fees</p></div>
+              <div><p className="font-semibold">{money(stats.availableCents, col.currency)}</p><p className="text-ink-soft">balance</p></div>
             </div>
             {stats.balances.slice(1).map((b) => (
               <p key={b.currency} className="mt-3 border-t border-line pt-3 text-sm text-ink-soft">
                 Plus <strong className="text-ink">{money(b.raisedCents, b.currency)}</strong> by card or <Provider name="PayPal" /> · balance {money(b.availableCents, b.currency)}
               </p>
             ))}
-          </div>
+          </TiltCard>
           {col.status === "active" ? (
             <a href="#chip-in" className="btn btn-primary mt-4 w-full justify-center lg:hidden">
               Chip in ↓
             </a>
           ) : null}
 
-          <h2 className="font-display mt-10 text-2xl font-semibold">Where the money went</h2>
+          <h2 className="font-display mt-10 text-2xl font-semibold" data-reveal>Where the money went</h2>
           {ledger.length === 0 ? (
-            <p className="mt-2 text-sm text-ink-soft">No payouts yet. Every payout will be listed here and sent to contributors.</p>
+            <p className="mt-2 text-sm text-ink-soft">No payouts yet.</p>
           ) : (
             <ul className="mt-3">
               {ledger.map((p) => (
@@ -95,7 +104,7 @@ export default async function CollectionPage({ params, searchParams }: PageProps
           )}
 
           {stats.paidCount > 0 ? (
-            <section id="supporters" className="mt-10 scroll-mt-4">
+            <section id="supporters" className="mt-10 scroll-mt-4" data-reveal>
               <h2 className="font-display text-2xl font-semibold">Recent supporters</h2>
               <div className="mt-3">
                 <Suspense fallback={null}>
@@ -114,14 +123,14 @@ export default async function CollectionPage({ params, searchParams }: PageProps
           <form action={contributeAction.bind(null, col.code)} className="card overflow-hidden">
             <div className="bg-forest px-6 py-4 text-paper">
               <p className="font-display text-2xl font-semibold">Chip in</p>
-              <p className="text-sm opacity-80">Mobile money or card. You pay exactly what you give.</p>
+              <p className="text-sm opacity-80">You pay exactly what you give.</p>
             </div>
             <div className="space-y-4 p-5 sm:p-6">
               {sp.cancelled ? <p className="rounded-lg bg-paper-2 p-3 text-sm">Payment cancelled. No money moved.</p> : null}
               {err ? <p className="rounded-lg bg-terracotta/10 p-3 text-sm text-terracotta">{err === "amount" ? "Please enter a valid amount." : err}</p> : null}
               <ChipIn disabled={col.status !== "active"} />
               <p className="text-center text-xs text-ink-soft">
-                Prefer chatting? <a href={chat} className="underline">Contribute with the AI agent</a>
+                <a href={chat} className="underline">Or chip in by chat</a>
               </p>
             </div>
           </form>

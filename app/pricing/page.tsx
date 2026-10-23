@@ -1,41 +1,65 @@
 import Link from "next/link";
 import { connection } from "next/server";
 import { SiteFooter, SiteHeader } from "@/components/site";
+import { CoinField } from "@/components/landing/coin-field";
+import { TiltCard } from "@/components/landing/tilt-card";
+import { Belt } from "@/components/landing/belt";
+import { ScrollFX } from "@/components/scroll-fx";
 import { money } from "@/lib/format";
 import { quotePayment, quotePayout, rateSummary, type Rates } from "@/lib/pricing";
 import { getRates } from "@/lib/services/settings";
-import { Provider, type ProviderName } from "@/components/provider";
+import { CARDS, Mark, MOBILE_MONEY, Provider, type BrandName, type ProviderName } from "@/components/provider";
 
 export const metadata = {
   title: "Pricing · SarafuPay",
-  description: "Contributors pay exactly what they give. No monthly fees, no minimum withdrawal.",
+  description: "Friends pay exactly what they give. No monthly fee, no minimum withdrawal.",
 };
 
-type Row = { what: string; detail: string; price: string; split: React.ReactNode };
+type Rate = { providerPct: number; providerFixedCents: number; providerCapCents: number; sarafuPct: number };
+type Row = { what: string; logos: BrandName[]; price: string; prov: ProviderName; rate: Rate; cur: "TZS" | "USD" };
 
 function rows(r: Rates): { receive: Row[]; withdraw: Row[] } {
-  const split = (prov: ProviderName, rate: { providerPct: number; providerFixedCents: number; providerCapCents: number; sarafuPct: number }, cur: "TZS" | "USD") => {
-    const fixed = (c: number) => (cur === "TZS" ? `TZS ${(c / 100).toLocaleString("en-US")}` : `$${(c / 100).toFixed(2)}`);
-    const p = [rate.providerPct ? `${rate.providerPct}%` : "", rate.providerFixedCents ? fixed(rate.providerFixedCents) : ""].filter(Boolean).join(" + ");
-    const cap = rate.providerCapCents ? ` (max ${fixed(rate.providerCapCents)})` : "";
-    return (
-      <>
-        <Provider name={prov} /> {p}
-        {cap} · SarafuPay {rate.sarafuPct}%
-      </>
-    );
-  };
   return {
     receive: [
-      { what: "Mobile money", detail: "Any Tanzanian mobile money number · TZS", price: rateSummary(r.snippePayment, "TZS"), split: split("Snippe", r.snippePayment, "TZS") },
-      { what: "Card or PayPal", detail: "Any bank card or PayPal account · USD, for friends abroad", price: rateSummary(r.paypalPayment, "USD"), split: split("PayPal", r.paypalPayment, "USD") },
+      { what: "Mobile money", logos: MOBILE_MONEY, price: rateSummary(r.snippePayment, "TZS"), prov: "Snippe", rate: r.snippePayment, cur: "TZS" },
+      { what: "Card or PayPal", logos: CARDS, price: rateSummary(r.paypalPayment, "USD"), prov: "PayPal", rate: r.paypalPayment, cur: "USD" },
     ],
     withdraw: [
-      { what: "To mobile money", detail: "Any Tanzanian mobile money number · instant", price: rateSummary(r.snippePayoutMobile, "TZS"), split: split("Snippe", r.snippePayoutMobile, "TZS") },
-      { what: "To a bank account", detail: "40+ Tanzanian banks · minutes to 2 business days", price: rateSummary(r.snippePayoutBank, "TZS"), split: split("Snippe", r.snippePayoutBank, "TZS") },
-      { what: "To PayPal", detail: "From the USD balance", price: `up to ${r.paypalPayout.providerPct + r.paypalPayout.sarafuPct}%`, split: split("PayPal", r.paypalPayout, "USD") },
+      { what: "To mobile money", logos: MOBILE_MONEY, price: rateSummary(r.snippePayoutMobile, "TZS"), prov: "Snippe", rate: r.snippePayoutMobile, cur: "TZS" },
+      { what: "To a bank", logos: ["CRDB", "NMB", "NBC"], price: rateSummary(r.snippePayoutBank, "TZS"), prov: "Snippe", rate: r.snippePayoutBank, cur: "TZS" },
+      { what: "To PayPal", logos: ["PayPal"], price: `up to ${r.paypalPayout.providerPct + r.paypalPayout.sarafuPct}%`, prov: "PayPal", rate: r.paypalPayout, cur: "USD" },
     ],
   };
+}
+
+function Split({ row }: { row: Row }) {
+  const fixed = (c: number) => (row.cur === "TZS" ? `TZS ${(c / 100).toLocaleString("en-US")}` : `$${(c / 100).toFixed(2)}`);
+  const r = row.rate;
+  const p = [r.providerPct ? `${r.providerPct}%` : "", r.providerFixedCents ? fixed(r.providerFixedCents) : ""].filter(Boolean).join(" + ");
+  const cap = r.providerCapCents ? ` (max ${fixed(r.providerCapCents)})` : "";
+  return (
+    <>
+      <Provider name={row.prov} /> {p}
+      {cap} · SarafuPay {r.sarafuPct}%
+    </>
+  );
+}
+
+function PriceCard({ row }: { row: Row }) {
+  return (
+    <TiltCard className="price-card">
+      <div className="flex min-h-9 flex-wrap items-center gap-2">
+        {row.logos.map((l) => (
+          <Mark key={l} name={l} height={l === "Visa" ? 16 : l === "Airtel Money" ? 34 : 26} />
+        ))}
+      </div>
+      <p className="mt-5 font-semibold">{row.what}</p>
+      <p className="price-figure font-display text-5xl font-semibold leading-none text-forest">{row.price}</p>
+      <p className="mt-5 border-t border-line pt-3 font-mono text-xs text-ink-soft">
+        <Split row={row} />
+      </p>
+    </TiltCard>
+  );
 }
 
 export default async function PricingPage() {
@@ -46,65 +70,75 @@ export default async function PricingPage() {
   const out = quotePayout(r, "mobile_money", pay.netCents);
   const tz = (c: number) => money(c, "TZS");
 
-  const Card = ({ row }: { row: Row }) => (
-    <div className="card flex flex-col gap-1 p-5">
-      <p className="font-semibold">{row.what}</p>
-      <p className="font-display text-4xl font-semibold leading-tight text-forest">{row.price}</p>
-      <p className="text-sm text-ink-soft">{row.detail}</p>
-      <p className="mt-2 border-t border-line pt-2 font-mono text-xs text-ink-soft">{row.split}</p>
-    </div>
-  );
+  const receipt: [React.ReactNode, string, string?][] = [
+    ["Friends pay", tz(pay.grossCents), "strong"],
+    [<><Provider name="Snippe" /> fee</>, `− ${tz(pay.providerFeeCents)}`],
+    ["SarafuPay fee", `− ${tz(pay.sarafuFeeCents)}`],
+    ["Balance", tz(pay.netCents), "strong"],
+    [<><Provider name="Snippe" /> transfer</>, `− ${tz(out.providerFeeCents)}`],
+    ["SarafuPay payout fee", `− ${tz(out.sarafuFeeCents)}`],
+  ];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen overflow-x-clip">
+      <ScrollFX />
       <div className="kanga" />
       <SiteHeader />
-      <main className="mx-auto max-w-5xl px-5 pb-20 sm:px-6">
-        <section className="rise max-w-2xl">
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-ink-soft">Pricing</p>
-          <h1 className="font-display mt-3 text-[2.5rem] font-semibold leading-tight sm:text-6xl">You only pay when money moves.</h1>
-          <p className="mt-4 text-lg leading-relaxed text-ink-soft">
-            Contributors pay exactly what they give. The organiser covers the fees, which come out of the collection. No monthly
-            fee, no setup fee, no minimum withdrawal.
-          </p>
+      <main>
+        <section className="relative">
+          <CoinField className="absolute inset-0 -top-24 opacity-50 [mask-image:radial-gradient(50%_70%_at_85%_40%,black_20%,transparent)]" />
+          <div className="relative mx-auto max-w-5xl px-5 pb-6 pt-6 sm:px-6 sm:pt-10">
+            <p className="rise font-mono text-xs uppercase tracking-[0.2em] text-ink-soft">Pricing</p>
+            <h1 className="rise d1 font-display mt-3 max-w-2xl text-[2.6rem] font-semibold leading-[1.02] sm:text-7xl">
+              Pay only when money moves.
+            </h1>
+            <p className="rise d2 mt-4 text-lg text-ink-soft">No monthly fee. No minimum withdrawal.</p>
+          </div>
         </section>
 
-        <h2 className="font-display mt-12 text-2xl font-semibold">Receiving contributions</h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          {receive.map((row) => <Card key={row.what} row={row} />)}
-        </div>
+        <section className="mx-auto max-w-5xl py-10 sm:px-6">
+          <h2 className="font-display px-5 text-2xl font-semibold sm:px-0" data-reveal>Receiving</h2>
+          <div className="mt-4" data-reveal style={{ "--rd": ".08s" } as React.CSSProperties}>
+            <Belt label="Receiving prices" cols={2}>
+              {receive.map((row) => <PriceCard key={row.what} row={row} />)}
+            </Belt>
+          </div>
 
-        <h2 className="font-display mt-12 text-2xl font-semibold">Withdrawing</h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-3">
-          {withdraw.map((row) => <Card key={row.what} row={row} />)}
-        </div>
-
-        <section className="card mt-12 p-6 sm:p-8">
-          <h2 className="font-display text-2xl font-semibold">A worked example</h2>
-          <p className="mt-1 text-sm text-ink-soft">A wedding collection raises TZS 100,000 by mobile money and the organiser withdraws it all to mobile money.</p>
-          <dl className="mt-5 grid gap-x-8 gap-y-2 font-mono text-sm sm:grid-cols-[1fr_auto]">
-            <dt>Contributors pay</dt><dd className="sm:text-right">{tz(pay.grossCents)}</dd>
-            <dt className="text-ink-soft"><Provider name="Snippe" /> fee</dt><dd className="text-ink-soft sm:text-right">− {tz(pay.providerFeeCents)}</dd>
-            <dt className="text-ink-soft">SarafuPay fee</dt><dd className="text-ink-soft sm:text-right">− {tz(pay.sarafuFeeCents)}</dd>
-            <dt className="font-semibold">Collection balance</dt><dd className="font-semibold sm:text-right">{tz(pay.netCents)}</dd>
-            <dt className="text-ink-soft"><Provider name="Snippe" /> transfer fee</dt><dd className="text-ink-soft sm:text-right">− {tz(out.providerFeeCents)}</dd>
-            <dt className="text-ink-soft">SarafuPay payout fee</dt><dd className="text-ink-soft sm:text-right">− {tz(out.sarafuFeeCents)}</dd>
-            <dt className="border-t border-line pt-2 font-semibold text-forest">Organiser receives</dt>
-            <dd className="border-t border-line pt-2 font-semibold text-forest sm:text-right">{tz(out.netCents)}</dd>
-          </dl>
-          <p className="mt-5 text-sm text-ink-soft">
-            Fewer, larger withdrawals cost less, because each transfer has its own provider fee. Every receipt and every
-            transparency update shows each fee.
-          </p>
+          <h2 className="font-display mt-8 px-5 text-2xl font-semibold sm:px-0" data-reveal>Withdrawing</h2>
+          <div className="mt-4" data-reveal style={{ "--rd": ".08s" } as React.CSSProperties}>
+            <Belt label="Withdrawal prices">
+              {withdraw.map((row) => <PriceCard key={row.what} row={row} />)}
+            </Belt>
+          </div>
         </section>
 
-        <section className="mt-12 max-w-2xl text-sm leading-relaxed text-ink-soft">
-          <h2 className="font-display text-xl font-semibold text-ink">Who handles the money</h2>
-          <p className="mt-2">
-            SarafuPay is a technology and record-keeping platform by EPRIZE DIGITAL. Mobile money is collected and paid out by <Provider name="Snippe" />;
-            card and PayPal payments by <Provider name="PayPal" />. SarafuPay never sees your PIN or card details.
-          </p>
-          <Link href="/" className="btn btn-ghost mt-6">Back to SarafuPay</Link>
+        <section className="mx-auto grid max-w-5xl items-center gap-10 px-5 pb-20 sm:px-6 lg:grid-cols-[0.8fr_1.2fr]">
+          <div data-reveal>
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-ink-soft">Example</p>
+            <h2 className="font-display mt-3 text-4xl font-semibold leading-tight sm:text-5xl">TZS 100,000 raised.</h2>
+            <p className="mt-3 text-ink-soft">Withdrawn once to mobile money.</p>
+          </div>
+          <div data-reveal style={{ "--rd": ".1s" } as React.CSSProperties}>
+            <TiltCard className="receipt">
+              <p className="font-mono text-xs uppercase tracking-[0.2em] text-ink-soft">Receipt</p>
+              <dl className="mt-4 grid grid-cols-[1fr_auto] gap-x-6 gap-y-2.5 font-mono text-sm">
+                {receipt.map(([k, v, s], i) => (
+                  <div key={i} className={`receipt-row contents ${s ? "font-semibold" : "text-ink-soft"}`} style={{ "--i": i } as React.CSSProperties}>
+                    <dt>{k}</dt>
+                    <dd className="text-right">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+              <div className="mt-5 flex items-end justify-between border-t-2 border-dashed border-line pt-4">
+                <p className="font-semibold text-forest">You receive</p>
+                <p className="font-display text-4xl font-semibold text-forest">{tz(out.netCents)}</p>
+              </div>
+            </TiltCard>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-5xl px-5 pb-20 sm:px-6" data-reveal>
+          <Link href="/" className="btn btn-ghost">← SarafuPay</Link>
         </section>
       </main>
       <SiteFooter />
