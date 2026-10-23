@@ -6,8 +6,8 @@ import { Phone3D } from "@/components/landing/phone-3d";
 import { FeeCalculator } from "@/components/landing/fee-calculator";
 import { Steps3D, type Step } from "@/components/landing/steps-3d";
 import { TiltCard } from "@/components/landing/tilt-card";
-import { Credit, Photo, type Shot } from "@/components/landing/photo";
-import { Provider } from "@/components/provider";
+import { Photo, type Shot } from "@/components/landing/photo";
+import { Mark, Provider, type ProviderName } from "@/components/provider";
 import { waLink } from "@/lib/channels/whatsapp";
 import { getRates } from "@/lib/services/settings";
 import { rateSummary } from "@/lib/pricing";
@@ -100,15 +100,8 @@ const safety: { title: string; body: React.ReactNode; shot: Shot }[] = [
   },
 ];
 
-/** The payment strip: plain words for the ways to pay, official marks for the providers. */
-const methods: React.ReactNode[] = [
-  "Mobile money",
-  <Provider key="s" name="Snippe" />,
-  "Bank cards",
-  <Provider key="p" name="PayPal" />,
-  "40+ Tanzanian banks",
-  "Payouts in minutes",
-];
+/** The payment strip: the providers' and card schemes' own marks, no words. */
+const marks: ProviderName[] = ["Snippe", "PayPal", "Mastercard"];
 
 const faqs: [string, React.ReactNode][] = [
   [
@@ -146,7 +139,10 @@ export default async function Home() {
         <div className="relative mx-auto grid w-full max-w-6xl items-center gap-12 px-5 pb-16 pt-6 sm:px-6 lg:grid-cols-[1.08fr_0.92fr] lg:pb-24 lg:pt-10">
           <div>
             <p className="rise inline-flex items-center gap-2 rounded-full border border-line bg-paper/80 px-3 py-1 text-xs font-medium text-ink-soft backdrop-blur-sm">
-              <span className="h-1.5 w-1.5 rounded-full bg-forest-2" /> Payments by <Provider name="Snippe" /> and <Provider name="PayPal" />
+              <span className="h-1.5 w-1.5 rounded-full bg-forest-2" /> Payments by
+              <Mark name="Snippe" height={16} />
+              <Mark name="PayPal" height={16} />
+              <Mark name="Mastercard" height={14} />
             </p>
             <h1 className="rise d1 font-display mt-6 text-[2.9rem] font-semibold leading-[0.98] tracking-tight sm:text-7xl lg:text-[5.4rem]">
               Michango,
@@ -189,18 +185,18 @@ export default async function Home() {
       </section>
 
       {/* ---------- Payment methods ---------- */}
-      <section aria-label="Ways to pay" className="border-y border-line bg-paper-2/60 py-4">
-        <div className="marquee" aria-hidden>
-          <div className="marquee-track">
-            {[...methods, ...methods].map((m, i) => (
-              <span key={i} className="flex items-center gap-6 font-display text-lg text-ink-soft sm:text-xl">
-                {m}
-                <span className="h-1.5 w-1.5 rounded-full bg-marigold" />
-              </span>
-            ))}
+      <section aria-label="Ways to pay" className="border-y border-line bg-paper-2/60 py-5">
+        <div className="marquee">
+          <div className="marquee-track !gap-14">
+            {[0, 1, 2, 3].flatMap((r) =>
+              marks.map((m) => (
+                <span key={`${r}-${m}`} className="flex items-center" aria-hidden={r > 0}>
+                  <Mark name={m} height={34} />
+                </span>
+              )),
+            )}
           </div>
         </div>
-        <p className="sr-only">Pay with mobile money, a bank card or PayPal. Payments are processed by Snippe and PayPal.</p>
       </section>
 
       {/* ---------- How it works ---------- */}
@@ -229,7 +225,6 @@ export default async function Home() {
                 <Photo shot={o.shot} className="photo-img" />
                 <div className="photo-shade" aria-hidden />
                 <p className="photo-title font-display text-3xl font-semibold text-paper">{o.sw}</p>
-                <Credit shot={o.shot} className="absolute right-3 top-3 rounded-full bg-ink/40 px-2 py-1 backdrop-blur-sm" />
               </div>
               <div className="p-5">
                 <p className="text-sm font-semibold text-ink">{o.en}</p>
@@ -276,7 +271,6 @@ export default async function Home() {
                 <div className="photo-frame !aspect-[16/10]">
                   <Photo shot={c.shot} className="photo-img" sizes="(min-width: 768px) 320px, 100vw" />
                   <div className="photo-shade" aria-hidden />
-                  <Credit shot={c.shot} className="absolute bottom-3 right-3" />
                 </div>
                 <div className="p-5">
                   <p className="font-semibold">{c.title}</p>

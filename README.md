@@ -4,7 +4,7 @@ Group collections (michango) for weddings, funerals, medical bills, school fees 
 groups, run from WhatsApp. Friends pay with mobile money or by card/PayPal from abroad; every payout needs the organiser's one-time code and is
 reported to everyone who gave.
 
-Live at **https://sarafupay.app** · by EPRIZE DIGITAL, Dodoma, Tanzania.
+Live at **https://sarafupay.app** · by EPRIZE DIGITAL.
 
 ## How money moves
 

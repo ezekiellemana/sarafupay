@@ -42,7 +42,7 @@ export function SiteFooter() {
         <div>
           <Logo />
           <p className="mt-3 max-w-xs leading-relaxed">
-            Michango for weddings, funerals, medical bills and every group that collects together. Made in Dodoma, Tanzania.
+            Michango for weddings, funerals, medical bills and every group that collects together.
           </p>
         </div>
         <div className="space-y-2">
@@ -55,7 +55,6 @@ export function SiteFooter() {
           <p className="font-semibold text-ink">Company</p>
           <p>EPRIZE DIGITAL</p>
           <p><Link href="/privacy" className="hover:text-ink">Privacy</Link></p>
-          <p className="select-all">ezekielaugustino@gmail.com</p>
         </div>
       </div>
       <div className="border-t border-line">

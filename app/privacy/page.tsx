@@ -19,14 +19,10 @@ export default function PrivacyPage() {
         <p className="mt-2 text-sm text-ink-soft">Last updated {UPDATED}</p>
 
         <Section title="Who runs SarafuPay">
-          SarafuPay is a collection-management platform by EPRIZE DIGITAL (Dodoma, Tanzania), founded by Ezekiel Lemana. It
+          SarafuPay is a collection-management platform by EPRIZE DIGITAL. It
           helps groups run collections (michango) through a WhatsApp agent and a web page. SarafuPay is a technology and
           record-keeping service: payments are collected and paid out by licensed payment providers (<Provider name="Snippe" /> for mobile money,{" "}
-          <Provider name="PayPal" /> for card and PayPal payments). Contact:{" "}
-          <a className="underline" href="mailto:ezekielaugustino@gmail.com">
-            ezekielaugustino@gmail.com
-          </a>
-          .
+          <Provider name="PayPal" /> for card and PayPal payments). To reach us, message SarafuPay in the chat.
         </Section>
 
         <Section title="What SarafuPay collects">

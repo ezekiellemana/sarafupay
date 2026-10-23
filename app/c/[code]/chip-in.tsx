@@ -2,13 +2,18 @@
 
 import { useState } from "react";
 import { AmountInput } from "./amount-input";
-import { Provider, type ProviderName } from "@/components/provider";
+import { Mark, Provider, type ProviderName } from "@/components/provider";
 
 type Method = "mobile_money" | "card_or_paypal";
 
-const METHODS: { id: Method; title: string; sub: string; currency: string; via: ProviderName }[] = [
+const METHODS: { id: Method; title: string; sub: React.ReactNode; currency: string; via: ProviderName }[] = [
   { id: "mobile_money", title: "Mobile money", sub: "Any Tanzanian mobile money number", currency: "TZS", via: "Snippe" },
-  { id: "card_or_paypal", title: "Card or PayPal", sub: "Any bank card or PayPal account, in US dollars", currency: "USD", via: "PayPal" },
+  { id: "card_or_paypal", title: "Card or PayPal", sub: (
+      <span className="mt-1 flex items-center gap-2">
+        <Mark name="Mastercard" height={16} />
+        <Mark name="PayPal" height={16} />
+      </span>
+    ), currency: "USD", via: "PayPal" },
 ];
 
 /** Payment method choice + amount + payer details. Submits `method`, `amount`, `phone`, `name`, `message`. */
