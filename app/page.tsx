@@ -38,37 +38,37 @@ const occasions: { sw: string; en: string; note: string; shot: Shot }[] = [
     sw: "Harusi",
     en: "Weddings and send-offs",
     note: "The wedding committee, without the notebook.",
-    shot: { id: "1608009232260-9b527a5bb9bd", page: "BC6s0iEa_CQ", by: "Steward Masweneng", alt: "A bride and groom walk out of church between rows of cheering guests", focus: "50% 60%" },
+    shot: { name: "harusi", alt: "A bride and groom walk out of church as guests in kitenge cheer and throw petals", focus: "50% 45%" },
   },
   {
     sw: "Msiba",
     en: "Funerals",
     note: "Collect fast, show every shilling spent.",
-    shot: { id: "1509099896299-af46ad97ff57", page: "SPS796v4KmM", by: "Annie Spratt", alt: "Women in headscarves gathered quietly together", focus: "50% 40%" },
+    shot: { name: "msiba", alt: "Family and neighbours sit together under a tree, comforting each other", focus: "50% 55%" },
   },
   {
     sw: "Matibabu",
     en: "Medical bills",
     note: "Pay the hospital directly from the pot.",
-    shot: { id: "1631217871099-88310a909a32", page: "nR2C9AVzfHY", by: "National Cancer Institute", alt: "A doctor in a white coat talks with a patient", focus: "70% 40%" },
+    shot: { name: "matibabu", alt: "A doctor talks warmly with a patient and her family on a hospital ward", focus: "60% 50%" },
   },
   {
     sw: "Ada ya shule",
     en: "School fees",
     note: "Family and friends, one link.",
-    shot: { id: "1536337005238-94b997371b40", page: "83tkHLPgg2Q", by: "Ben White", alt: "A smiling schoolboy writing at his desk in class", focus: "60% 45%" },
+    shot: { name: "ada", alt: "Students in green sweaters writing at their desks in a sunny classroom", focus: "45% 50%" },
   },
   {
     sw: "Vikundi",
     en: "Groups and VICOBA",
     note: "Regular contributions with reminders.",
-    shot: { id: "1655720357872-ce227e4164ba", page: "M7ALc3UuX_g", by: "Iwaria Inc.", alt: "Three women in a group meeting going through their records", focus: "55% 50%" },
+    shot: { name: "vikundi", alt: "A women's savings group meets in a circle under a tree", focus: "50% 55%" },
   },
   {
     sw: "Jamii",
     en: "Churches, mosques and NGOs",
     note: "A public ledger for every project.",
-    shot: { id: "1444664361762-afba083a4d77", page: "9cx4-QowgLc", by: "Avel Chuklanov", alt: "A crowd with hands raised in celebration", focus: "50% 35%" },
+    shot: { name: "jamii", alt: "Villagers building a classroom together, two leaders shaking hands", focus: "50% 50%" },
   },
 ];
 
@@ -76,12 +76,12 @@ const safety: { title: string; body: React.ReactNode; shot: Shot }[] = [
   {
     title: "The AI can't move money",
     body: "Payouts run only after the organiser replies with a one-time CONFIRM code. That step never goes through the AI.",
-    shot: { id: "1688989667243-221eee13cbdb", page: "P4yr0fvEfsc", by: "Divaris Shirichena", alt: "A man checks a code on his phone", focus: "55% 8%" },
+    shot: { name: "code", alt: "A young man reads a message on his phone before replying", focus: "50% 40%" },
   },
   {
     title: "Every payout is broadcast",
     body: "Contributors get a transparency update with the recipient, the purpose, the fees and the provider reference.",
-    shot: { id: "1644043350898-2f4ff1e17912", page: "O8SpYxOFnK8", by: "Francis Odeyemi", alt: "Two friends read the same update on their phones", focus: "50% 40%" },
+    shot: { name: "broadcast", alt: "Four friends smile at the same update on their phones", focus: "50% 40%" },
   },
   {
     title: "Payment providers hold the money",
@@ -91,12 +91,12 @@ const safety: { title: string; body: React.ReactNode; shot: Shot }[] = [
         records.
       </>
     ),
-    shot: { id: "1734255026082-82fdc81991f0", page: "cnVn4Gg4b00", by: "Tunde Buremo", alt: "Traders and buyers around a market stall", focus: "50% 50%" },
+    shot: { name: "providers", alt: "A shopkeeper confirms a mobile payment for a customer", focus: "50% 45%" },
   },
   {
     title: "Privacy by role",
     body: "Only the organiser sees who gave what. Everyone else sees totals and the payout ledger.",
-    shot: { id: "1714327676544-48dafc3ffa41", page: "PF6JfGfmqOI", by: "Lisa Marie Theck", alt: "A woman looks privately at her phone", focus: "50% 35%" },
+    shot: { name: "privacy", alt: "A woman checks her phone privately by a window", focus: "60% 45%" },
   },
 ];
 
