@@ -4,7 +4,6 @@ import { connection } from "next/server";
 import { Logo, Progress } from "@/components/brand";
 import { collectionStats, findCollection, getContribution } from "@/lib/services/core";
 import { money } from "@/lib/format";
-import { Provider } from "@/components/provider";
 import { CoinField } from "@/components/landing/coin-field";
 import { TiltCard } from "@/components/landing/tilt-card";
 
@@ -18,7 +17,6 @@ export default async function Thanks({ params, searchParams }: PageProps<"/c/[co
   const stats = await collectionStats(col);
   const paid = ctb?.status === "paid";
   const failed = ctb?.status === "failed";
-  const via = ctb?.provider === "snippe" ? ("Snippe" as const) : ("PayPal" as const);
   const ref = ctb?.provider === "snippe" ? ctb.providerRef : ctb?.paypalCaptureId;
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -51,9 +49,9 @@ export default async function Thanks({ params, searchParams }: PageProps<"/c/[co
                 ? "No money moved."
                 : ctb?.provider === "snippe"
                   ? "Approve the prompt on your phone."
-                  : <>Waiting for <Provider name={via} />…</>}
+                  : "Waiting for confirmation…"}
           </p>
-          {paid && ref ? <p className="mt-2 font-mono text-xs text-ink-soft"><Provider name={via} /> ref {ref}</p> : null}
+          {paid && ref ? <p className="mt-2 font-mono text-xs text-ink-soft">Ref {ref}</p> : null}
           <div className="mt-6 text-left">
             <Progress percent={stats.percent} />
             <p className="mt-2 text-sm text-ink-soft">

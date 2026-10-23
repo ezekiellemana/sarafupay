@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Logo, SandboxBadge } from "@/components/brand";
 import { waLink } from "@/lib/channels/whatsapp";
-import { Mark } from "@/components/provider";
 
 /** Shared public header: logo, a few links, and the one action that matters. */
 export function SiteHeader({ cta = true }: { cta?: boolean }) {
@@ -38,18 +37,18 @@ export function SiteHeader({ cta = true }: { cta?: boolean }) {
 export function SiteFooter() {
   return (
     <footer className="border-t border-line">
-      <div className="mx-auto grid max-w-6xl gap-8 px-5 py-10 text-sm text-ink-soft sm:grid-cols-[1.4fr_1fr_1fr] sm:px-6">
+      <div className="mx-auto grid max-w-6xl gap-8 px-5 py-6 text-sm sm:py-10 text-ink-soft sm:grid-cols-[1.4fr_1fr_1fr] sm:px-6">
         <div>
           <Logo />
           <p className="mt-3 max-w-xs leading-relaxed">Michango, without the notebook.</p>
         </div>
-        <div className="space-y-2">
+        <div className="site-foot-cols space-y-2">
           <p className="font-semibold text-ink">Product</p>
           <p><Link href="/#how" className="hover:text-ink">How it works</Link></p>
           <p><Link href="/pricing" className="hover:text-ink">Pricing</Link></p>
           <p><Link href="/chat" className="hover:text-ink">Try it in your browser</Link></p>
         </div>
-        <div className="space-y-2">
+        <div className="site-foot-cols space-y-2">
           <p className="font-semibold text-ink">Company</p>
           <p>EPRIZE DIGITAL</p>
           <p><Link href="/privacy" className="hover:text-ink">Privacy</Link></p>
@@ -58,8 +57,9 @@ export function SiteFooter() {
       <div className="border-t border-line">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-4 text-xs text-ink-soft sm:px-6">
           <p>© {new Date().getFullYear()} EPRIZE DIGITAL</p>
-          <p className="flex items-center gap-3">
-            Payments by <Mark name="Snippe" height={22} /> <Mark name="PayPal" height={22} />
+          <p className="flex gap-4 sm:hidden">
+            <Link href="/pricing">Pricing</Link>
+            <Link href="/privacy">Privacy</Link>
           </p>
         </div>
       </div>

@@ -8,7 +8,7 @@ import { ScrollFX } from "@/components/scroll-fx";
 import { money } from "@/lib/format";
 import { quotePayment, quotePayout, rateSummary, type Rates } from "@/lib/pricing";
 import { getRates } from "@/lib/services/settings";
-import { BANKS, CARDS, LogoRow, MOBILE_MONEY, Provider, type BrandName, type ProviderName } from "@/components/provider";
+import { BANKS, CARDS, LogoRow, MOBILE_MONEY, type BrandName, type ProviderName } from "@/components/provider";
 
 export const metadata = {
   title: "Pricing · SarafuPay",
@@ -39,7 +39,7 @@ function Split({ row }: { row: Row }) {
   const cap = r.providerCapCents ? ` (max ${fixed(r.providerCapCents)})` : "";
   return (
     <>
-      <Provider name={row.prov} /> {p}
+      Provider {p}
       {cap} · SarafuPay {r.sarafuPct}%
     </>
   );
@@ -68,10 +68,10 @@ export default async function PricingPage() {
 
   const receipt: [React.ReactNode, string, string?][] = [
     ["Friends pay", tz(pay.grossCents), "strong"],
-    [<><Provider name="Snippe" /> fee</>, `− ${tz(pay.providerFeeCents)}`],
+    ["Provider fee", `− ${tz(pay.providerFeeCents)}`],
     ["SarafuPay fee", `− ${tz(pay.sarafuFeeCents)}`],
     ["Balance", tz(pay.netCents), "strong"],
-    [<><Provider name="Snippe" /> transfer</>, `− ${tz(out.providerFeeCents)}`],
+    ["Transfer fee", `− ${tz(out.providerFeeCents)}`],
     ["SarafuPay payout fee", `− ${tz(out.sarafuFeeCents)}`],
   ];
 

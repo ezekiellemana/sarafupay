@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Provider } from "@/components/provider";
 
 type Msg = { from: "me" | "bot"; text: string };
 
@@ -136,7 +135,7 @@ export function Phone3D() {
         <div className="float-card -left-24 top-[4.5rem] hidden lg:block" style={{ "--z": "40px", "--d": "0s" } as React.CSSProperties}>
           <p className="text-[11px] uppercase tracking-wider text-ink-soft">Payment received</p>
           <p className="font-display text-xl font-semibold">TZS 50,000</p>
-          <p className="flex items-center gap-2 text-xs text-ink-soft">Amina <Provider name="Snippe" label={false} size="1.4em" /></p>
+          <p className="text-xs text-ink-soft">Amina · mobile money</p>
         </div>
         <div className="float-card -right-16 -top-8 hidden lg:block" style={{ "--z": "70px", "--d": "-2s" } as React.CSSProperties}>
           <div className="flex items-center gap-3">

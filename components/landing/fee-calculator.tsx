@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { quotePayment, quotePayout, type Rates } from "@/lib/pricing";
-import { Provider } from "@/components/provider";
 
 const STEPS = [10_000, 20_000, 50_000, 100_000, 200_000, 500_000, 1_000_000, 2_000_000, 3_000_000, 5_000_000, 10_000_000, 20_000_000];
 const tzs = (cents: number) => `TZS ${Math.round(cents / 100).toLocaleString("en-US")}`;
@@ -40,9 +39,9 @@ export function FeeCalculator({ rates }: { rates: Rates }) {
   const kept = (out.netCents / gross) * 100;
 
   const rows: [string, React.ReactNode, number, string][] = [
-    ["in", <><Provider name="Snippe" /> collection fee</>, pay.providerFeeCents, "bg-terracotta"],
+    ["in", "Provider fee", pay.providerFeeCents, "bg-terracotta"],
     ["sp", "SarafuPay fee", pay.sarafuFeeCents, "bg-marigold"],
-    ["out", <><Provider name="Snippe" /> transfer fee</>, out.providerFeeCents, "bg-terracotta/70"],
+    ["out", "Transfer fee", out.providerFeeCents, "bg-terracotta/70"],
     ["spo", "SarafuPay payout fee", out.sarafuFeeCents, "bg-marigold/70"],
   ];
 

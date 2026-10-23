@@ -11,7 +11,6 @@ import { money } from "@/lib/format";
 import { waLink } from "@/lib/channels/whatsapp";
 import { categoryEmoji, categoryPhoto, simulatorUrl } from "@/lib/services/links";
 import { Photo } from "@/components/landing/photo";
-import { Mark } from "@/components/provider";
 import { contributeAction } from "./actions";
 import { ChipIn } from "./chip-in";
 import { SupporterSearch } from "./supporter-search";
@@ -65,7 +64,7 @@ export default async function CollectionPage({ params, searchParams }: PageProps
       <main className="mx-auto mt-6 grid max-w-6xl grid-cols-1 gap-6 px-5 pb-20 sm:px-6 lg:mt-8 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)] lg:gap-10">
         {/* Raised so far */}
         <section className="min-w-0 rise d1">
-          {col.purpose ? <p className="mb-5 max-w-xl text-lg leading-relaxed text-ink-soft">{col.purpose}</p> : null}
+          {col.purpose ? <p className="col-purpose mb-5 max-w-xl text-lg leading-relaxed text-ink-soft">{col.purpose}</p> : null}
           <TiltCard fill={false} className="card stats-3d p-5 sm:p-6">
             <div className="flex items-center justify-between gap-4">
               <div className="min-w-0">
@@ -95,7 +94,7 @@ export default async function CollectionPage({ params, searchParams }: PageProps
             </dl>
             {stats.balances.slice(1).map((b) => (
               <p key={b.currency} className="mt-3 flex items-center gap-2 border-t border-line pt-3 text-sm text-ink-soft">
-                <Mark name="PayPal" height={18} /> <strong className="text-ink">{money(b.raisedCents, b.currency)}</strong> · balance {money(b.availableCents, b.currency)}
+                💳 <strong className="text-ink">{money(b.raisedCents, b.currency)}</strong> by card
               </p>
             ))}
           </TiltCard>
@@ -106,7 +105,6 @@ export default async function CollectionPage({ params, searchParams }: PageProps
           <form action={contributeAction.bind(null, col.code)} className="card chip-card overflow-hidden">
             <div className="chip-head px-6 py-5 text-paper">
               <p className="font-display text-2xl font-semibold">Chip in</p>
-              <p className="text-sm opacity-80">You pay exactly what you give.</p>
             </div>
             <div className="space-y-4 p-5 sm:p-6">
               {sp.cancelled ? <p className="rounded-lg bg-paper-2 p-3 text-sm">Payment cancelled. No money moved.</p> : null}
@@ -129,12 +127,12 @@ export default async function CollectionPage({ params, searchParams }: PageProps
               {ledger.map((p) => (
                 <li key={p.id} className="ledger-card">
                   <span className="ledger-icon" aria-hidden>
-                    {p.method === "paypal" ? <Mark name="PayPal" height={20} /> : p.method === "bank" ? "🏦" : "📱"}
+                    {p.method === "paypal" ? "💳" : p.method === "bank" ? "🏦" : "📱"}
                   </span>
                   <span className="min-w-0 flex-1">
                     <strong className="block truncate">{p.recipientName ?? "Recipient"}</strong>
                     <span className="block truncate text-xs text-ink-soft">
-                      {p.note ?? (p.method === "bank" ? "bank" : p.method === "paypal" ? "PayPal" : "mobile money")}
+                      {p.note ?? (p.method === "bank" ? "bank" : p.method === "paypal" ? "card" : "mobile money")}
                       {p.status === "processing" ? <span className="ml-2 text-marigold">processing</span> : null}
                     </span>
                   </span>
@@ -165,11 +163,11 @@ export default async function CollectionPage({ params, searchParams }: PageProps
   );
 }
 
-/** "TZS 564K", "TZS 1.2M", "$45": short amounts for the small stat boxes. */
+/** "564K", "1.2M", "$45": short amounts for the small stat boxes (the currency is shown above them). */
 function compact(cents: number, currency: string): string {
   const v = cents / 100;
   const n = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(v);
-  return currency === "TZS" ? `TZS ${n}` : currency === "USD" ? `$${n}` : `${currency} ${n}`;
+  return currency === "USD" ? `$${n}` : n;
 }
 
 const AVATAR_TONES = ["bg-marigold/30", "bg-forest/15", "bg-terracotta/20", "bg-paper-2"];

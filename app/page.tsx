@@ -94,7 +94,7 @@ export default async function Home() {
               ))}
             </dl>
           </div>
-          <div className="rise d3">
+          <div className="rise d3 hidden sm:block">
             <Phone3D />
           </div>
         </div>
