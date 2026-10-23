@@ -1,17 +1,27 @@
 import Link from "next/link";
-import { Logo } from "@/components/brand";
+import { SiteFooter, SiteHeader } from "@/components/site";
+
+export const metadata = { title: "Link unavailable · SarafuPay", robots: { index: false } };
 
 export default async function PayError({ searchParams }: PageProps<"/pay/error">) {
   const { m } = await searchParams;
   return (
-    <main className="mx-auto max-w-lg px-5 py-12 text-center sm:px-6 sm:py-16">
-      <Logo />
-      <div className="card mt-8 p-6 sm:mt-10 sm:p-8">
-        <p className="text-4xl">😕</p>
-        <h1 className="font-display mt-3 text-2xl font-semibold">Payment link unavailable</h1>
-        <p className="mt-2 text-ink-soft">{typeof m === "string" ? m : "Something went wrong."}</p>
-        <Link href="/chat" className="btn btn-primary mt-6">Ask the agent for a new link</Link>
-      </div>
-    </main>
+    <div className="flex min-h-dvh flex-col overflow-x-clip">
+      <div className="kanga" />
+      <SiteHeader cta={false} />
+      <main className="mx-auto flex w-full max-w-lg flex-1 flex-col items-center justify-center px-5 py-12 text-center">
+        <div className="split-coin" aria-hidden>
+          <span className="split-half left">S</span>
+          <span className="split-half right">S</span>
+        </div>
+        <h1 className="rise d1 font-display mt-8 text-4xl font-semibold">Link unavailable</h1>
+        <p className="rise d2 mt-2 text-ink-soft">{typeof m === "string" ? m : "No money moved."}</p>
+        <div className="rise d3 mt-8 flex flex-col gap-3 sm:flex-row">
+          <Link href="/chat" className="btn btn-primary justify-center">Get a new link</Link>
+          <Link href="/" className="btn btn-ghost justify-center">Home</Link>
+        </div>
+      </main>
+      <SiteFooter />
+    </div>
   );
 }

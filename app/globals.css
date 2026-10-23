@@ -556,3 +556,95 @@ body {
 .ring-3d-label { position: absolute; inset: 0; display: grid; place-items: center; font-size: 20px; font-weight: 600; color: var(--forest-2); }
 .stats-3d { transform-style: preserve-3d; }
 @media (prefers-reduced-motion: reduce) { .ring-3d-fill { stroke-dashoffset: calc(94.25 - 94.25 * var(--pct) / 100); } }
+
+/* Uniform logo cells (LogoChip / LogoRow). */
+.logo-chip {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: var(--lw, 84px); height: var(--lh, 48px); padding: 6px 8px; border-radius: 14px;
+  background: #fff; border: 1px solid rgba(217, 201, 168, 0.8);
+  box-shadow: 0 8px 18px -16px rgba(18, 38, 30, 0.6);
+}
+.logo-chip img { max-width: 100%; max-height: calc(100% * var(--b, 1)); width: auto; height: auto; object-fit: contain; }
+.logo-more { font: 600 14px var(--font-jetbrains), monospace; color: var(--forest); background: var(--paper-2); }
+.price-logos { --lw: 62px; --lh: 40px; min-height: 40px; flex-wrap: nowrap !important; gap: 6px !important; }
+.price-logos .logo-chip { padding: 5px 6px; border-radius: 11px; }
+.method-logos { --lw: 50px; --lh: 32px; gap: 5px !important; flex-wrap: nowrap !important; }
+.method-logos .logo-chip { padding: 5px 7px; border-radius: 10px; }
+.supported { display: grid; gap: 1.5rem; padding: 1.5rem; border-radius: 26px; background: #fffaf0; border: 1.5px solid var(--line); }
+@media (min-width: 768px) { .supported { grid-template-columns: 1fr 0.8fr; } .supported-group:last-child { grid-column: 1 / -1; } }
+.supported-logos { display: grid !important; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 10px; --lh: 54px; }
+.supported-logos .logo-chip { width: 100%; padding: 8px; }
+@media (max-width: 640px) { .supported-logos { grid-template-columns: repeat(3, 1fr); gap: 8px; --lh: 46px; } }
+.fx [data-reveal] .supported-group .logo-chip { opacity: 0; transform: translateY(12px) rotateX(35deg); transition: opacity .45s ease, transform .55s cubic-bezier(.22,1,.36,1); }
+.fx .is-in .supported-group .logo-chip { opacity: 1; transform: none; }
+.fx .is-in .supported-group .logo-chip:nth-child(n) { transition-delay: calc(var(--i) * .15s + .05s); }
+
+/* Collection page */
+.col-banner { position: relative; height: 270px; overflow: hidden; border-radius: 28px; background: var(--forest); box-shadow: 0 40px 60px -40px rgba(18, 38, 30, 0.7); }
+@media (min-width: 640px) { .col-banner { height: 360px; } }
+.col-banner-img { position: absolute; inset: -40px 0; }
+.col-banner-img img { width: 100%; height: 100%; object-fit: cover; scale: 1.05; }
+.col-banner-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(14, 59, 44, 0.05) 20%, rgba(14, 59, 44, 0.88) 100%); }
+.stat-chip { padding: 0.6rem 0.7rem; border-radius: 14px; background: var(--paper); border: 1px solid var(--line); min-width: 0; }
+.stat-chip dt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip-head { background: radial-gradient(80% 120% at 100% 0%, rgba(242, 165, 22, 0.35), transparent 60%), var(--forest); }
+.chip-card { box-shadow: 0 40px 60px -40px rgba(18, 38, 30, 0.55); }
+.ledger-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 18px; background: #fffaf0; border: 1.5px solid var(--line); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.ledger-card:hover { transform: translateY(-2px) rotateX(4deg); box-shadow: 0 16px 24px -18px rgba(18, 38, 30, 0.5); }
+.ledger-icon { display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; border-radius: 12px; background: var(--paper-2); font-size: 18px; }
+
+/* Thank-you page: gold coin that spins in with a tick; a phone waiting for the PIN. */
+.paid-coin {
+  display: grid; place-items: center; width: 92px; height: 92px; margin: 0 auto; border-radius: 999px;
+  background: radial-gradient(circle at 35% 30%, #ffe7a3, #e2a83a 55%, #9a6a12);
+  box-shadow: inset 0 0 0 6px rgba(110, 70, 8, 0.25), 0 24px 30px -16px rgba(110, 70, 8, 0.7);
+  animation: coin-in 1.2s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+}
+.paid-coin span { font-size: 44px; font-weight: 700; color: #fffaf0; text-shadow: 0 2px 0 rgba(110, 70, 8, 0.5); }
+@keyframes coin-in { from { transform: translateZ(40px) rotateY(-900deg) scale(0.3); opacity: 0; } to { transform: translateZ(40px) rotateY(0) scale(1); opacity: 1; } }
+.wait-phone {
+  position: relative; width: 74px; height: 128px; margin: 0 auto; padding: 8px 6px; border-radius: 18px;
+  background: #0b241c; transform: translateZ(40px) rotateY(-18deg) rotateX(8deg);
+  box-shadow: 0 24px 30px -16px rgba(0, 0, 0, 0.6); animation: wait-bob 3s ease-in-out infinite;
+}
+.wait-phone::after { content: ""; position: absolute; inset: -14px; border-radius: 28px; border: 2px solid var(--marigold); opacity: 0; animation: wait-ring 1.8s ease-out infinite; }
+.wait-screen { display: grid; place-content: center; gap: 6px; height: 100%; border-radius: 12px; background: #efe6d4; text-align: center; }
+.wait-dots { display: flex; gap: 5px; }
+.wait-dots i { width: 8px; height: 8px; border-radius: 99px; background: var(--line); animation: wait-dot 2s infinite; }
+.wait-dots i:nth-child(2) { animation-delay: 0.25s; } .wait-dots i:nth-child(3) { animation-delay: 0.5s; } .wait-dots i:nth-child(4) { animation-delay: 0.75s; }
+@keyframes wait-dot { 0%, 15% { background: var(--line); } 30%, 80% { background: var(--forest); } 100% { background: var(--line); } }
+@keyframes wait-ring { 0% { opacity: 0.8; transform: scale(0.9); } 100% { opacity: 0; transform: scale(1.15); } }
+@keyframes wait-bob { 0%, 100% { transform: translateZ(40px) rotateY(-18deg) rotateX(8deg); } 50% { transform: translateZ(40px) rotateY(-10deg) rotateX(4deg) translateY(-6px); } }
+
+/* Error page: a coin split in two, halves drifting apart in 3D. 404: extruded numerals. */
+.split-coin { position: relative; width: 130px; height: 130px; perspective: 600px; }
+.split-half {
+  position: absolute; inset: 0; display: grid; place-items: center; border-radius: 999px;
+  font: 700 64px Georgia, serif; color: #6e4608;
+  background: radial-gradient(circle at 35% 30%, #ffe7a3, #e2a83a 55%, #9a6a12);
+  box-shadow: inset 0 0 0 7px rgba(110, 70, 8, 0.22), 0 26px 30px -18px rgba(110, 70, 8, 0.7);
+}
+.split-half.left { clip-path: polygon(0 0, 54% 0, 44% 30%, 56% 52%, 42% 74%, 50% 100%, 0 100%); animation: split-l 3.5s ease-in-out infinite; }
+.split-half.right { clip-path: polygon(54% 0, 100% 0, 100% 100%, 50% 100%, 42% 74%, 56% 52%, 44% 30%); animation: split-r 3.5s ease-in-out infinite; }
+@keyframes split-l { 0%, 100% { transform: translateX(-6px) rotateY(18deg) rotateZ(-6deg); } 50% { transform: translateX(-16px) rotateY(28deg) rotateZ(-10deg); } }
+@keyframes split-r { 0%, 100% { transform: translateX(6px) rotateY(-18deg) rotateZ(6deg); } 50% { transform: translateX(16px) rotateY(-28deg) rotateZ(10deg); } }
+.four04 {
+  font-size: clamp(7rem, 30vw, 14rem); font-weight: 700; line-height: 0.9; color: var(--forest);
+  text-shadow: 1px 1px 0 #0b3024, 2px 2px 0 #0b3024, 3px 3px 0 #0b3024, 4px 4px 0 #0b3024, 5px 5px 0 #0b3024, 6px 6px 0 #0b3024, 7px 7px 0 var(--marigold), 14px 18px 30px rgba(18, 38, 30, 0.35);
+  transform: perspective(700px) rotateX(14deg); animation: four04 6s ease-in-out infinite;
+}
+@keyframes four04 { 50% { transform: perspective(700px) rotateX(6deg) rotateY(-8deg) translateY(-8px); } }
+
+/* Chat simulator: numbered steps and an empty-chat welcome with a spinning coin. */
+.sim-steps { counter-reset: s; }
+.sim-steps li { counter-increment: s; display: flex; gap: 10px; align-items: center; }
+.sim-steps li::before { content: counter(s); display: grid; place-items: center; width: 22px; height: 22px; flex-shrink: 0; border-radius: 99px; background: var(--forest); color: var(--paper); font: 600 11px var(--font-jetbrains), monospace; }
+.sim-empty { display: grid; place-items: center; padding: 14vh 1rem 2rem; text-align: center; perspective: 600px; }
+.sim-coin {
+  display: grid; place-items: center; width: 84px; height: 84px; border-radius: 99px;
+  font: 700 40px Georgia, serif; color: #6e4608;
+  background: radial-gradient(circle at 35% 30%, #ffe7a3, #e2a83a 55%, #9a6a12);
+  box-shadow: inset 0 0 0 6px rgba(110, 70, 8, 0.22), 0 24px 28px -16px rgba(110, 70, 8, 0.7);
+  animation: sim-spin 5s ease-in-out infinite;
+}
+@keyframes sim-spin { 0%, 100% { transform: rotateY(-25deg) translateY(0); } 50% { transform: rotateY(205deg) translateY(-8px); } }

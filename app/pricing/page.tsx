@@ -8,7 +8,7 @@ import { ScrollFX } from "@/components/scroll-fx";
 import { money } from "@/lib/format";
 import { quotePayment, quotePayout, rateSummary, type Rates } from "@/lib/pricing";
 import { getRates } from "@/lib/services/settings";
-import { CARDS, Mark, MOBILE_MONEY, Provider, type BrandName, type ProviderName } from "@/components/provider";
+import { BANKS, CARDS, LogoRow, MOBILE_MONEY, Provider, type BrandName, type ProviderName } from "@/components/provider";
 
 export const metadata = {
   title: "Pricing · SarafuPay",
@@ -26,7 +26,7 @@ function rows(r: Rates): { receive: Row[]; withdraw: Row[] } {
     ],
     withdraw: [
       { what: "To mobile money", logos: MOBILE_MONEY, price: rateSummary(r.snippePayoutMobile, "TZS"), prov: "Snippe", rate: r.snippePayoutMobile, cur: "TZS" },
-      { what: "To a bank", logos: ["CRDB", "NMB", "NBC"], price: rateSummary(r.snippePayoutBank, "TZS"), prov: "Snippe", rate: r.snippePayoutBank, cur: "TZS" },
+      { what: "To a bank", logos: BANKS, price: rateSummary(r.snippePayoutBank, "TZS"), prov: "Snippe", rate: r.snippePayoutBank, cur: "TZS" },
       { what: "To PayPal", logos: ["PayPal"], price: `up to ${r.paypalPayout.providerPct + r.paypalPayout.sarafuPct}%`, prov: "PayPal", rate: r.paypalPayout, cur: "USD" },
     ],
   };
@@ -48,11 +48,7 @@ function Split({ row }: { row: Row }) {
 function PriceCard({ row }: { row: Row }) {
   return (
     <TiltCard className="price-card">
-      <div className="flex min-h-9 flex-wrap items-center gap-2">
-        {row.logos.map((l) => (
-          <Mark key={l} name={l} height={l === "Visa" ? 16 : l === "Airtel Money" ? 34 : 26} />
-        ))}
-      </div>
+      <LogoRow names={row.logos} max={row.logos.length > 4 ? 3 : 4} className="price-logos" />
       <p className="mt-5 font-semibold">{row.what}</p>
       <p className="price-figure font-display text-5xl font-semibold leading-none text-forest">{row.price}</p>
       <p className="mt-5 border-t border-line pt-3 font-mono text-xs text-ink-soft">
@@ -109,6 +105,21 @@ export default async function PricingPage() {
             <Belt label="Withdrawal prices">
               {withdraw.map((row) => <PriceCard key={row.what} row={row} />)}
             </Belt>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-5xl px-5 pb-16 sm:px-6">
+          <div className="supported" data-reveal>
+            {([
+              ["Mobile money", MOBILE_MONEY],
+              ["Cards", CARDS],
+              ["Banks", BANKS],
+            ] as [string, BrandName[]][]).map(([t, names], i) => (
+              <div key={t} className="supported-group" style={{ "--i": i } as React.CSSProperties}>
+                <p className="font-mono text-xs uppercase tracking-[0.2em] text-ink-soft">{t}</p>
+                <LogoRow names={names} className="supported-logos mt-3" />
+              </div>
+            ))}
           </div>
         </section>
 

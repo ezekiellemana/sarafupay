@@ -301,22 +301,12 @@ export function Simulator({ buyer, testMode = true }: { buyer: { email: string; 
   const helpPanel = (
     <>
       <div className="text-sm leading-relaxed text-ink-soft">
-        <p className="font-semibold text-ink">How to test</p>
-        <ol className="mt-2 list-decimal space-y-1 pl-4">
-          <li>As <b>Organiser</b>, start a collection.</li>
-          <li>Switch to <b>Amina</b> and send “Contribute CODE”.</li>
-          <li>{testMode ? "Open the pay link and pay with the sandbox buyer below." : "Open the pay link and pay a small amount with mobile money or card. This is real money."}</li>
-          <li>
-            Back as Organiser: see the alert, then try a payout
-            {buyer.payee ? (
-              <>
-                , e.g. <span className="select-all break-all font-mono text-xs">pay {buyer.payee} $5 for the deposit</span>, and reply
-                with the CONFIRM code.
-              </>
-            ) : (
-              " to your own mobile money number, and reply with the CONFIRM code."
-            )}
-          </li>
+        <p className="font-semibold text-ink">Try it in 4 taps</p>
+        <ol className="sim-steps mt-3 space-y-2">
+          <li><span><b>Organiser</b>: start a collection</span></li>
+          <li><span><b>Amina</b>: send “Contribute CODE”</span></li>
+          <li><span>{testMode ? "Pay the link (test mode)" : "Pay the link (real money, keep it small)"}</span></li>
+          <li><span><b>Organiser</b>: pay out, reply CONFIRM</span></li>
         </ol>
         {testMode ? (<><button onClick={() => setShowLogin((s) => !s)} className="mt-3 font-medium text-forest-2 underline">
           {showLogin ? "Hide" : "Show"} sandbox buyer login
@@ -338,8 +328,7 @@ export function Simulator({ buyer, testMode = true }: { buyer: { email: string; 
 
       <div className="border-t border-line pt-4 text-xs text-ink-soft">
         <p>
-          🔒 This is your <b>private session</b>. Other visitors can&apos;t see your chats.
-          {testMode ? " Payments run in test mode (no real money)." : " Payments are real: use small amounts while trying it."}
+          🔒 Private session.{testMode ? " Test mode, no real money." : " Real payments."}
         </p>
         <button
           onClick={() => void startFresh()}
@@ -431,8 +420,15 @@ export function Simulator({ buyer, testMode = true }: { buyer: { email: string; 
           <div ref={scroller} className="chat-scroll flex-1 space-y-2 overflow-y-auto overscroll-contain px-3 py-4 sm:px-6">
             <p className="mx-auto w-fit max-w-full rounded-lg bg-paper/80 px-3 py-1 text-center text-[11px] text-ink-soft">
               Chatting as <b>{me.label}</b>
-              {phones[active] ? <> (+{phones[active]})</> : null} · private session{testMode ? " · test mode" : ""}
+              {testMode ? " · test mode" : ""}
             </p>
+            {msgs.length === 0 ? (
+              <div className="sim-empty" aria-hidden>
+                <div className="sim-coin">S</div>
+                <p className="font-display mt-5 text-2xl font-semibold text-ink">Habari! 👋</p>
+                <p className="mt-1 text-sm text-ink-soft">Tap a suggestion to start.</p>
+              </div>
+            ) : null}
             {msgs.map((m) => (
               <div key={m.id} className={`flex ${m.direction === "in" ? "justify-end" : "justify-start"}`}>
                 <div

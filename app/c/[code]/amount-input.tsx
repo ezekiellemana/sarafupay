@@ -82,8 +82,7 @@ export function AmountInput({ currency, initial, via = "PayPal" }: { currency: s
                 on ? "border-forest bg-forest text-paper" : "border-line bg-white hover:border-forest"
               }`}
             >
-              {meta.symbol}
-              {v.toLocaleString("en-US")}
+              {v >= 1000 ? `${(v / 1000).toLocaleString("en-US")}K` : `${meta.symbol}${v}`}
             </button>
           );
         })}
@@ -91,7 +90,7 @@ export function AmountInput({ currency, initial, via = "PayPal" }: { currency: s
       <p id="amount-hint" className="mt-2 text-xs text-ink-soft" aria-live="polite">
         {value > 0 ? (
           <>
-            You pay exactly <strong className="text-ink">{fmt(value)}</strong> via <Provider name={via} />. The organiser covers the fees.
+            You pay exactly <strong className="text-ink">{fmt(value)}</strong> via <Provider name={via} />.
           </>
         ) : (
           "Enter how much you'd like to give"

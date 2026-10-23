@@ -13,43 +13,52 @@ async function main() {
   await core.updateUser(owner.id, { name: "Enzo" });
   const col = await core.createCollection({
     ownerId: owner.id,
-    title: "Neema & Baraka's Wedding",
-    purpose: "Help us give Neema and Baraka a beautiful send-off: venue, catering and the choir. Every contribution counts. Asanteni!",
+    title: "Harusi ya Neema & Baraka",
+    purpose: "Venue, catering and the choir for Neema and Baraka's wedding. Asanteni!",
     category: "wedding",
-    targetCents: 150000,
-    currency: "USD",
+    targetCents: 3_000_000_00,
+    currency: "TZS",
     deadline: "2026-12-20",
   });
+  // Mobile money contributions in TZS, settled through the real Snippe path (fees computed, no network).
   const people = [
-    ["Amina", 4000, "chat"], ["John", 2500, "web"], ["Fatuma", 10000, "chat"], ["Baraka's uncle", 20000, "chat"],
-    ["Grace", 1500, "web"], ["Juma", 5000, "chat"], ["Mary (London)", 7500, "web"], ["Peter", 3000, "chat"],
-    ["Halima", 6000, "chat"], ["Kelvin", 2000, "web"], ["Rehema", 12000, "chat"], ["Daudi", 4500, "chat"],
+    ["Amina", 50_000, "sim", "Hongera sana!"], ["John", 20_000, "web", ""], ["Fatuma", 100_000, "sim", "Mungu awabariki"],
+    ["Baraka's uncle", 300_000, "sim", ""], ["Grace", 15_000, "web", "🎉"], ["Juma", 50_000, "sim", ""],
+    ["Halima", 60_000, "sim", "Karibu familia"], ["Peter", 30_000, "sim", ""], ["Kelvin", 25_000, "web", ""],
+    ["Rehema", 120_000, "sim", "Furaha tele"], ["Daudi", 45_000, "sim", ""], ["Zuhura", 200_000, "web", "Hongereni!"],
   ] as const;
   let day = 0;
-  for (const [name, cents, ch] of people) {
+  for (const [name, tzs, ch, msg] of people) {
     const u = await core.getOrCreateUser(`sim:2557${String(10000000 + day * 7919)}`, "sim");
     await core.updateUser(u.id, { name });
-    const c = await core.createContribution({ collection: col, contributorId: u.id, displayName: name, amountCents: cents, source: ch === "web" ? "web" : "sim" });
+    const c = await core.createContribution({ collection: col, contributorId: u.id, displayName: name, amountCents: tzs * 100, source: ch, message: msg || undefined });
+    await core.applySnippePayment({ contributionId: c.id, status: "completed", amountTzs: tzs });
     const paidAt = new Date(Date.now() - (12 - day) * 86400000 * 1.5);
-    await db.update(schema.contributions).set({ status: "paid", paidAt, paypalCaptureId: `DEMO${String(day).padStart(4, "0")}CAPTURE` }).where(eq(schema.contributions.id, c.id));
+    await db.update(schema.contributions).set({ paidAt, providerRef: `SNP${String(day).padStart(6, "0")}` }).where(eq(schema.contributions.id, c.id));
     day++;
   }
-  // Pledges relative to today, so the scoreboard always shows one kept, one past its date and two upcoming.
+  // Pledges relative to today: one kept, one past its date and two upcoming.
   const inDays = (n: number) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
   const pledges = [
-    ["Selemani", 5000, inDays(-3), "open"],
-    ["Agnes", 3000, inDays(4), "open"],
-    ["Musa", 10000, inDays(18), "open"],
-    ["Zawadi", 4000, inDays(-6), "fulfilled"],
+    ["Selemani", 50_000, inDays(-3), "open"],
+    ["Agnes", 30_000, inDays(4), "open"],
+    ["Musa", 100_000, inDays(18), "open"],
+    ["Zawadi", 40_000, inDays(-6), "fulfilled"],
   ] as const;
-  for (const [name, cents, due, status] of pledges) {
-    const u = await core.getOrCreateUser(`sim:2556${String(20000000 + cents)}`, "sim");
+  for (const [name, tzs, due, status] of pledges) {
+    const u = await core.getOrCreateUser(`sim:2556${String(20000000 + tzs)}`, "sim");
     await core.updateUser(u.id, { name });
-    const pl = await core.createPledge({ collection: col, user: u, displayName: name, amountCents: cents, dueDate: due });
+    const pl = await core.createPledge({ collection: col, user: u, displayName: name, amountCents: tzs * 100, dueDate: due });
     if (status !== "open") await db.update(schema.pledges).set({ status }).where(eq(schema.pledges.id, pl.id));
   }
-  const p = await core.proposePayout({ collection: col, requester: owner, destination: { method: "paypal", email: "mama.lishe@example.com", name: "Mama Lishe Catering" }, amountCents: 30000, note: "catering deposit" });
-  await db.update(schema.payouts).set({ status: "success", executedAt: new Date(), paypalBatchId: "DEMOBATCH", paypalItemId: "DEMOITEM" }).where(eq(schema.payouts.id, p.id));
+  const p = await core.proposePayout({
+    collection: col,
+    requester: owner,
+    destination: { method: "mobile_money", phone: "255712345678", name: "Mama Lishe Catering" },
+    amountCents: 400_000_00,
+    note: "catering deposit",
+  });
+  await db.update(schema.payouts).set({ status: "success", executedAt: new Date(), providerRef: "SNPPAYOUT01" }).where(eq(schema.payouts.id, p.id));
   const fresh = (await core.findCollection(col.code))!;
   console.log("Seeded", col.code);
   console.log("Public:", collectionUrl(col.code));

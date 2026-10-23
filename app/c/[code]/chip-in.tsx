@@ -2,15 +2,9 @@
 
 import { useState } from "react";
 import { AmountInput } from "./amount-input";
-import { CARDS, Mark, MOBILE_MONEY, Provider, type BrandName, type ProviderName } from "@/components/provider";
+import { CARDS, LogoRow, MOBILE_MONEY, Provider, type BrandName, type ProviderName } from "@/components/provider";
 
-const Logos = ({ names }: { names: BrandName[] }) => (
-  <span className="mt-1.5 flex flex-wrap items-center gap-2.5">
-    {names.map((n) => (
-      <Mark key={n} name={n} height={n === "Airtel Money" ? 30 : n === "Visa" ? 13 : 20} />
-    ))}
-  </span>
-);
+const Logos = ({ names }: { names: BrandName[] }) => <LogoRow names={names} className="method-logos mt-2" />;
 
 type Method = "mobile_money" | "card_or_paypal";
 

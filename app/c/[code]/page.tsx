@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import { Provider } from "@/components/provider";
 import { TiltCard } from "@/components/landing/tilt-card";
 import { ScrollFX } from "@/components/scroll-fx";
 import Link from "next/link";
@@ -10,7 +9,9 @@ import { SiteFooter, SiteHeader } from "@/components/site";
 import { collectionStats, findCollection, getUser, listPayouts, searchSupporters, type Supporter } from "@/lib/services/core";
 import { money } from "@/lib/format";
 import { waLink } from "@/lib/channels/whatsapp";
-import { categoryEmoji, simulatorUrl } from "@/lib/services/links";
+import { categoryEmoji, categoryPhoto, simulatorUrl } from "@/lib/services/links";
+import { Photo } from "@/components/landing/photo";
+import { Mark } from "@/components/provider";
 import { contributeAction } from "./actions";
 import { ChipIn } from "./chip-in";
 import { SupporterSearch } from "./supporter-search";
@@ -39,24 +40,37 @@ export default async function CollectionPage({ params, searchParams }: PageProps
       <ScrollFX />
       <div className="kanga" />
       <SiteHeader cta={false} />
-      <main className="mx-auto grid max-w-5xl grid-cols-1 gap-8 px-5 pb-20 sm:px-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-        <section className="rise min-w-0">
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-ink-soft">
-            {categoryEmoji(col.category)} {col.category} · code {col.code}
-          </p>
-          <h1 className="font-display mt-3 break-words text-[2.25rem] font-semibold leading-tight sm:text-6xl">{col.title}</h1>
-          {col.purpose ? <p className="mt-4 max-w-xl text-lg text-ink-soft leading-relaxed">{col.purpose}</p> : null}
-          <p className="mt-3 text-sm text-ink-soft">
-            Organised by <strong className="text-ink">{owner?.name ?? "the organiser"}</strong>
-            {col.deadline ? <> · closes {col.deadline}</> : null}
-            {col.status !== "active" ? <> · <span className="text-terracotta font-semibold">closed</span></> : null}
-          </p>
 
-          <TiltCard className="card stats-3d mt-8 p-5 sm:p-6">
+      {/* ---------- Banner: the occasion photo, drifting in depth behind the title ---------- */}
+      <section className="mx-auto max-w-6xl px-3 sm:px-6">
+        <div className="col-banner rise">
+          <div className="col-banner-img" data-depth>
+            <Photo shot={{ name: categoryPhoto(col.category), alt: "" }} sizes="(min-width: 1152px) 1152px, 100vw" />
+          </div>
+          <div className="col-banner-shade" aria-hidden />
+          <div className="relative flex h-full flex-col justify-end p-5 sm:p-8">
+            <p className="inline-flex w-fit items-center gap-2 rounded-full bg-paper/90 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.18em] text-ink">
+              {categoryEmoji(col.category)} {col.category} · {col.code}
+            </p>
+            <h1 className="font-display mt-3 max-w-3xl break-words text-[2.1rem] font-semibold leading-[1.05] text-paper sm:text-6xl">{col.title}</h1>
+            <p className="mt-2 text-sm text-paper/85">
+              by <strong className="text-paper">{owner?.name ?? "the organiser"}</strong>
+              {col.deadline ? <> · closes {col.deadline}</> : null}
+              {col.status !== "active" ? <> · <span className="rounded-full bg-terracotta px-2 py-0.5 font-semibold text-paper">closed</span></> : null}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <main className="mx-auto mt-6 grid max-w-6xl grid-cols-1 gap-6 px-5 pb-20 sm:px-6 lg:mt-8 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)] lg:gap-10">
+        {/* Raised so far */}
+        <section className="min-w-0 rise d1">
+          {col.purpose ? <p className="mb-5 max-w-xl text-lg leading-relaxed text-ink-soft">{col.purpose}</p> : null}
+          <TiltCard fill={false} className="card stats-3d p-5 sm:p-6">
             <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="font-display text-4xl font-semibold">{money(stats.raisedCents, col.currency)}</p>
-                <p className="text-sm text-ink-soft">of {money(col.targetCents, col.currency)}</p>
+              <div className="min-w-0">
+                <p className="font-display text-[2.1rem] font-semibold leading-none sm:text-5xl">{money(stats.raisedCents, col.currency)}</p>
+                <p className="mt-1 text-sm text-ink-soft">of {money(col.targetCents, col.currency)}</p>
               </div>
               <div className="ring-3d" style={{ "--pct": Math.min(100, stats.percent) } as React.CSSProperties}>
                 <svg viewBox="0 0 36 36" aria-hidden>
@@ -67,61 +81,30 @@ export default async function CollectionPage({ params, searchParams }: PageProps
               </div>
             </div>
             <div className="mt-4"><Progress percent={stats.percent} /></div>
-            <div className="mt-4 grid grid-cols-3 gap-3 text-sm">
-              <div><p className="font-semibold">{stats.paidCount}</p><p className="text-ink-soft">{stats.paidCount === 1 ? "contribution" : "contributions"}</p></div>
-              <div><p className="font-semibold">{money(stats.paidOutCents, col.currency)}</p><p className="text-ink-soft">withdrawn</p></div>
-              <div><p className="font-semibold">{money(stats.availableCents, col.currency)}</p><p className="text-ink-soft">balance</p></div>
-            </div>
+            <dl className="mt-4 grid grid-cols-3 gap-3 text-sm">
+              {[
+                [String(stats.paidCount), stats.paidCount === 1 ? "gift" : "gifts"],
+                [compact(stats.paidOutCents, col.currency), "paid out"],
+                [compact(stats.availableCents, col.currency), "balance"],
+              ].map(([k, v]) => (
+                <div key={v} className="stat-chip">
+                  <dt className="font-semibold">{k}</dt>
+                  <dd className="text-xs text-ink-soft">{v}</dd>
+                </div>
+              ))}
+            </dl>
             {stats.balances.slice(1).map((b) => (
-              <p key={b.currency} className="mt-3 border-t border-line pt-3 text-sm text-ink-soft">
-                Plus <strong className="text-ink">{money(b.raisedCents, b.currency)}</strong> by card or <Provider name="PayPal" /> · balance {money(b.availableCents, b.currency)}
+              <p key={b.currency} className="mt-3 flex items-center gap-2 border-t border-line pt-3 text-sm text-ink-soft">
+                <Mark name="PayPal" height={18} /> <strong className="text-ink">{money(b.raisedCents, b.currency)}</strong> · balance {money(b.availableCents, b.currency)}
               </p>
             ))}
           </TiltCard>
-          {col.status === "active" ? (
-            <a href="#chip-in" className="btn btn-primary mt-4 w-full justify-center lg:hidden">
-              Chip in ↓
-            </a>
-          ) : null}
-
-          <h2 className="font-display mt-10 text-2xl font-semibold" data-reveal>Where the money went</h2>
-          {ledger.length === 0 ? (
-            <p className="mt-2 text-sm text-ink-soft">No payouts yet.</p>
-          ) : (
-            <ul className="mt-3">
-              {ledger.map((p) => (
-                <li key={p.id} className="ledger-row flex items-baseline justify-between gap-4 py-3">
-                  <span>
-                    <strong>{p.recipientName ?? "Recipient"}</strong>
-                    <span className="text-ink-soft"> · {p.method === "bank" ? "bank" : p.method === "paypal" ? <Provider name="PayPal" /> : "mobile money"}</span>
-                    {p.note ? <span className="text-ink-soft"> · {p.note}</span> : null}
-                    {p.status === "processing" ? <span className="ml-2 text-xs text-marigold">processing</span> : null}
-                  </span>
-                  <span className="font-mono">{money(p.amountCents, p.currency)}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {stats.paidCount > 0 ? (
-            <section id="supporters" className="mt-10 scroll-mt-4" data-reveal>
-              <h2 className="font-display text-2xl font-semibold">Recent supporters</h2>
-              <div className="mt-3">
-                <Suspense fallback={null}>
-                  <SupporterSearch initial={q} />
-                </Suspense>
-              </div>
-              <SupporterList items={supporters.items} q={q} byEmail={supporters.byEmail} />
-              {supporters.pages > 1 ? (
-                <Pager code={col.code} q={q} page={supporters.page} pages={supporters.pages} total={supporters.total} />
-              ) : null}
-            </section>
-          ) : null}
         </section>
 
-        <aside id="chip-in" className="rise d2 min-w-0 h-fit scroll-mt-4 lg:sticky lg:top-6">
-          <form action={contributeAction.bind(null, col.code)} className="card overflow-hidden">
-            <div className="bg-forest px-6 py-4 text-paper">
+        {/* Chip in: right after the numbers on phones, a sticky column on desktop */}
+        <aside id="chip-in" className="rise d2 min-w-0 h-fit scroll-mt-4 lg:sticky lg:top-6 lg:row-span-2">
+          <form action={contributeAction.bind(null, col.code)} className="card chip-card overflow-hidden">
+            <div className="chip-head px-6 py-5 text-paper">
               <p className="font-display text-2xl font-semibold">Chip in</p>
               <p className="text-sm opacity-80">You pay exactly what you give.</p>
             </div>
@@ -135,10 +118,58 @@ export default async function CollectionPage({ params, searchParams }: PageProps
             </div>
           </form>
         </aside>
+
+        {/* Where the money went + supporters */}
+        <section className="min-w-0">
+          <h2 className="font-display text-2xl font-semibold" data-reveal>Where the money went</h2>
+          {ledger.length === 0 ? (
+            <p className="mt-2 text-sm text-ink-soft" data-reveal>No payouts yet.</p>
+          ) : (
+            <ul className="mt-3 space-y-2" data-reveal>
+              {ledger.map((p) => (
+                <li key={p.id} className="ledger-card">
+                  <span className="ledger-icon" aria-hidden>
+                    {p.method === "paypal" ? <Mark name="PayPal" height={20} /> : p.method === "bank" ? "🏦" : "📱"}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <strong className="block truncate">{p.recipientName ?? "Recipient"}</strong>
+                    <span className="block truncate text-xs text-ink-soft">
+                      {p.note ?? (p.method === "bank" ? "bank" : p.method === "paypal" ? "PayPal" : "mobile money")}
+                      {p.status === "processing" ? <span className="ml-2 text-marigold">processing</span> : null}
+                    </span>
+                  </span>
+                  <span className="font-mono text-sm font-semibold">{money(p.amountCents, p.currency)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {stats.paidCount > 0 ? (
+            <section id="supporters" className="mt-10 scroll-mt-4" data-reveal>
+              <h2 className="font-display text-2xl font-semibold">Supporters</h2>
+              <div className="mt-3">
+                <Suspense fallback={null}>
+                  <SupporterSearch initial={q} />
+                </Suspense>
+              </div>
+              <SupporterList items={supporters.items} q={q} byEmail={supporters.byEmail} />
+              {supporters.pages > 1 ? (
+                <Pager code={col.code} q={q} page={supporters.page} pages={supporters.pages} total={supporters.total} />
+              ) : null}
+            </section>
+          ) : null}
+        </section>
       </main>
       <SiteFooter />
     </div>
   );
+}
+
+/** "TZS 564K", "TZS 1.2M", "$45": short amounts for the small stat boxes. */
+function compact(cents: number, currency: string): string {
+  const v = cents / 100;
+  const n = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(v);
+  return currency === "TZS" ? `TZS ${n}` : currency === "USD" ? `$${n}` : `${currency} ${n}`;
 }
 
 const AVATAR_TONES = ["bg-marigold/30", "bg-forest/15", "bg-terracotta/20", "bg-paper-2"];

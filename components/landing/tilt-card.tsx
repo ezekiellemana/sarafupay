@@ -3,7 +3,7 @@
 import { useRef } from "react";
 
 /** A card that leans toward the pointer with a moving highlight. Touch and reduced motion: flat. */
-export function TiltCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+export function TiltCard({ children, className = "", fill = true }: { children: React.ReactNode; className?: string; fill?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const onMove = (e: React.PointerEvent) => {
     if (e.pointerType !== "mouse") return;
@@ -24,8 +24,8 @@ export function TiltCard({ children, className = "" }: { children: React.ReactNo
     el.style.setProperty("--ty", "0deg");
   };
   return (
-    <div style={{ perspective: "900px" }} className="h-full">
-      <div ref={ref} onPointerMove={onMove} onPointerLeave={reset} className={`tilt-card h-full ${className}`}>
+    <div style={{ perspective: "900px" }} className={fill ? "h-full" : ""}>
+      <div ref={ref} onPointerMove={onMove} onPointerLeave={reset} className={`tilt-card ${fill ? "h-full" : ""} ${className}`}>
         {children}
       </div>
     </div>

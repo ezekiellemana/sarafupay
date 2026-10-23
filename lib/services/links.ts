@@ -13,6 +13,11 @@ export const simulatorUrl = (text?: string) =>
 export const CATEGORY_EMOJI: Record<string, string> = {
   wedding: "💍", funeral: "🕊️", medical: "🩺", education: "🎓", community: "🏘️", nonprofit: "🤝", celebration: "🎉", other: "✨",
 };
+/** The site photo (public/photos) that fits each collection category. */
+export const CATEGORY_PHOTO: Record<string, string> = {
+  wedding: "harusi", funeral: "msiba", medical: "matibabu", education: "ada", community: "vikundi", nonprofit: "jamii", celebration: "harusi", other: "jamii",
+};
+export const categoryPhoto = (category?: string | null) => CATEGORY_PHOTO[category ?? ""] ?? "jamii";
 export const categoryEmoji = (category?: string | null) => CATEGORY_EMOJI[category ?? ""] ?? "🤝";
 
 /** Ready-to-forward message for WhatsApp groups, in the organiser's language. */
