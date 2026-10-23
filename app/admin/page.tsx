@@ -7,6 +7,7 @@ import { RATE_KEYS, RATE_LABELS, quotePayment, quotePayout, rateSummary, type Ra
 import { getRates, saveRates } from "@/lib/services/settings";
 import { isAdmin, recentActivity, revenue } from "@/lib/services/admin";
 import { snippeConfigured, paypalConfigured, env } from "@/lib/env";
+import { ourWebhookUrl, pointNumberHere, webhookStatus } from "@/lib/channels/whatsapp-webhook";
 
 export const metadata = { title: "Admin · SarafuPay", robots: { index: false } };
 
@@ -30,6 +31,14 @@ async function saveAction(form: FormData) {
   redirect(`/admin?key=${encodeURIComponent(key)}&saved=1`);
 }
 
+async function connectWhatsAppAction(form: FormData) {
+  "use server";
+  const key = String(form.get("key") ?? "");
+  if (!isAdmin(key)) notFound();
+  const r = await pointNumberHere();
+  redirect(`/admin?key=${encodeURIComponent(key)}&wa=${r.ok ? "ok" : encodeURIComponent(r.detail ?? "failed")}`);
+}
+
 /** Worked example for one row, so a typo in a rate is visible before anyone pays it. */
 function example(rates: Rates, k: RateKey): string {
   const L = RATE_LABELS[k];
@@ -47,7 +56,8 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
   const sp = await searchParams;
   const key = typeof sp.key === "string" ? sp.key : "";
   if (!isAdmin(key)) notFound();
-  const [rates, rev, act] = await Promise.all([getRates(), revenue(), recentActivity(12)]);
+  const [rates, rev, act, wa] = await Promise.all([getRates(), revenue(), recentActivity(12), webhookStatus()]);
+  const waMsg = typeof sp.wa === "string" ? sp.wa : null;
   const earned = new Map<string, number>();
   for (const r of rev) earned.set(r.currency, (earned.get(r.currency) ?? 0) + r.sarafuCents);
 
@@ -71,6 +81,41 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
         <section>
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-ink-soft">Admin</p>
           <h1 className="font-display mt-2 text-4xl font-semibold">Pricing and earnings</h1>
+        </section>
+
+        {/* WhatsApp: which website this number's messages go to */}
+        <section className="card p-5 sm:p-6">
+          <h2 className="font-display text-2xl font-semibold">WhatsApp</h2>
+          {!wa.configured ? (
+            <p className="mt-2 text-sm text-ink-soft">Not configured: add WHATSAPP_ACCESS_TOKEN and WHATSAPP_PHONE_NUMBER_ID.</p>
+          ) : (
+            <>
+              <dl className="mt-3 grid gap-x-6 gap-y-1 font-mono text-xs sm:grid-cols-[10rem_1fr]">
+                <dt className="text-ink-soft">This number</dt>
+                <dd>{env.waDisplayNumber() ? `+${env.waDisplayNumber()}` : env.waPhoneNumberId()}</dd>
+                <dt className="text-ink-soft">Number override</dt>
+                <dd>{wa.phoneOverride || "none"}</dd>
+                <dt className="text-ink-soft">App default</dt>
+                <dd>{wa.appDefault || "unknown"}</dd>
+                <dt className="text-ink-soft">Status</dt>
+                <dd className={wa.pointsHere ? "font-semibold text-forest" : "font-semibold text-terracotta"}>
+                  {wa.error ? `error: ${wa.error}` : wa.pointsHere ? "messages arrive here ✓" : "messages go elsewhere"}
+                </dd>
+              </dl>
+              {waMsg ? (
+                <p className={`mt-3 rounded-lg p-3 text-sm ${waMsg === "ok" ? "bg-forest/10 text-forest" : "bg-terracotta/10 text-terracotta"}`}>
+                  {waMsg === "ok" ? "Done. This number now sends its messages to sarafupay.app." : waMsg}
+                </p>
+              ) : null}
+              {!wa.pointsHere ? (
+                <form action={connectWhatsAppAction} className="mt-4">
+                  <input type="hidden" name="key" value={key} />
+                  <button className="btn btn-primary">Send this number&apos;s messages to {ourWebhookUrl()}</button>
+                  <p className="mt-2 text-xs text-ink-soft">Only this number changes. Other numbers in the Meta app keep their own website.</p>
+                </form>
+              ) : null}
+            </>
+          )}
         </section>
 
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
