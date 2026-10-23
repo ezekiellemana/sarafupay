@@ -4,6 +4,9 @@ import { startCheckout } from "@/lib/services/core";
 // Short, stable link we share in chat; creates the PayPal order on click so it never expires in the chat.
 export async function GET(_req: Request, ctx: RouteContext<"/pay/[id]">) {
   const { id } = await ctx.params;
+  // Payment links are contribution ids (ctb_…). Anything else is an old SarafuPay collection link
+  // (/pay/<slug>) from before the move.
+  if (!id.startsWith("ctb_")) redirect(`/moved?from=${encodeURIComponent(id)}`);
   let url: string;
   try {
     url = await startCheckout(id);
