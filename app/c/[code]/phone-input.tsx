@@ -21,7 +21,7 @@ function pretty(local: string): string {
  * One phone field that arranges the number as it is typed (0712 345 678). Accepts +255 / 255
  * forms and pasted numbers. Submits the ten local digits as `name`.
  */
-export function PhoneInput({ name, onChange }: { name: string; onChange?: (local: string) => void }) {
+export function PhoneInput({ name, onChange, label = "Mobile money number" }: { name: string; onChange?: (local: string) => void; label?: string }) {
   const [shown, setShown] = useState("");
   const local = toLocal(shown);
   const done = /^0[67]\d{8}$/.test(local);
@@ -39,7 +39,7 @@ export function PhoneInput({ name, onChange }: { name: string; onChange?: (local
         inputMode="tel"
         autoComplete="tel-national"
         placeholder="0712 345 678"
-        aria-label="Mobile money number"
+        aria-label={label}
         className="min-w-0 flex-1 bg-transparent py-3 font-mono text-lg tracking-wider outline-none"
       />
       {done ? <span className="phone-ok" aria-hidden>✓</span> : null}

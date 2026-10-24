@@ -1,10 +1,16 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { Logo, SandboxBadge } from "@/components/brand";
 import { waLink } from "@/lib/channels/whatsapp";
+import { detectVisitor } from "@/lib/visitor";
+import { copy } from "@/lib/copy";
+import { LangSwitch } from "@/components/lang-switch";
 
-/** Shared public header: logo, a few links, and the one action that matters. */
-export function SiteHeader({ cta = true, lang = "en" }: { cta?: boolean; lang?: "sw" | "en" }) {
-  const wa = waLink(lang === "sw" ? "Habari SarafuPay 👋" : "Hi SarafuPay 👋");
+/** Shared public header: logo, a few links, the language switch, and the one action that matters. */
+export async function SiteHeader({ cta = true }: { cta?: boolean }) {
+  const v = await detectVisitor();
+  const c = copy(v.lang);
+  const wa = waLink(c.greet);
   return (
     <header className="relative z-20 mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-5 py-4 sm:px-6 sm:py-5">
       <div className="flex items-center gap-3">
@@ -13,19 +19,22 @@ export function SiteHeader({ cta = true, lang = "en" }: { cta?: boolean; lang?: 
           <SandboxBadge />
         </span>
       </div>
-      <nav className="flex items-center gap-5 text-sm font-medium text-ink-soft">
-        <Link href="/#how" className="hidden hover:text-ink sm:inline">How it works</Link>
-        <Link href="/#trust" className="hidden hover:text-ink sm:inline">Safety</Link>
-        <Link href="/pricing" className="hover:text-ink">Pricing</Link>
+      <nav className="flex items-center gap-4 text-sm font-medium text-ink-soft sm:gap-5">
+        <Link href="/#how" className="hidden hover:text-ink lg:inline">{c.nav.how}</Link>
+        <Link href="/#trust" className="hidden hover:text-ink sm:inline">{c.nav.safety}</Link>
+        <Link href="/pricing" className="hover:text-ink">{c.nav.pricing}</Link>
+        <Suspense fallback={null}>
+          <LangSwitch lang={v.lang} />
+        </Suspense>
         {cta ? (
           wa ? (
             <a href={wa} target="_blank" rel="noreferrer" className="btn btn-primary !px-4 !py-2 text-sm">
-              <span className="sm:hidden">Start</span>
-              <span className="hidden sm:inline">Start on WhatsApp</span>
+              <span className="sm:hidden">{c.nav.start}</span>
+              <span className="hidden sm:inline">{c.nav.startWa}</span>
             </a>
           ) : (
             <Link href="/chat" className="btn btn-primary !px-4 !py-2 text-sm">
-              Try it
+              {c.nav.tryIt}
             </Link>
           )
         ) : null}
@@ -34,32 +43,33 @@ export function SiteHeader({ cta = true, lang = "en" }: { cta?: boolean; lang?: 
   );
 }
 
-export function SiteFooter() {
+export async function SiteFooter() {
+  const c = copy((await detectVisitor()).lang);
   return (
     <footer className="border-t border-line">
       <div className="mx-auto grid max-w-6xl gap-8 px-5 py-6 text-sm sm:py-10 text-ink-soft sm:grid-cols-[1.4fr_1fr_1fr] sm:px-6">
         <div>
           <Logo />
-          <p className="mt-3 max-w-xs leading-relaxed">Michango, without the notebook.</p>
+          <p className="mt-3 max-w-xs leading-relaxed">{c.foot.tagline}</p>
         </div>
         <div className="site-foot-cols space-y-2">
-          <p className="font-semibold text-ink">Product</p>
-          <p><Link href="/#how" className="hover:text-ink">How it works</Link></p>
-          <p><Link href="/pricing" className="hover:text-ink">Pricing</Link></p>
-          <p><Link href="/chat" className="hover:text-ink">Try it in your browser</Link></p>
+          <p className="font-semibold text-ink">{c.foot.product}</p>
+          <p><Link href="/#how" className="hover:text-ink">{c.nav.how}</Link></p>
+          <p><Link href="/pricing" className="hover:text-ink">{c.nav.pricing}</Link></p>
+          <p><Link href="/chat" className="hover:text-ink">{c.foot.tryBrowser}</Link></p>
         </div>
         <div className="site-foot-cols space-y-2">
-          <p className="font-semibold text-ink">Company</p>
+          <p className="font-semibold text-ink">{c.foot.company}</p>
           <p>EPRIZE DIGITAL</p>
-          <p><Link href="/privacy" className="hover:text-ink">Privacy</Link></p>
+          <p><Link href="/privacy" className="hover:text-ink">{c.foot.privacy}</Link></p>
         </div>
       </div>
       <div className="border-t border-line">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-4 text-xs text-ink-soft sm:px-6">
           <p>© {new Date().getFullYear()} EPRIZE DIGITAL</p>
           <p className="flex gap-4 sm:hidden">
-            <Link href="/pricing">Pricing</Link>
-            <Link href="/privacy">Privacy</Link>
+            <Link href="/pricing">{c.nav.pricing}</Link>
+            <Link href="/privacy">{c.foot.privacy}</Link>
           </p>
         </div>
       </div>

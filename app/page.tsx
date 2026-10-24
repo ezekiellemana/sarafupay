@@ -14,7 +14,8 @@ import { waLink } from "@/lib/channels/whatsapp";
 import { getRates } from "@/lib/services/settings";
 import { rateSummary } from "@/lib/pricing";
 import { detectVisitor } from "@/lib/visitor";
-import { perUsd, tr } from "@/lib/locale";
+import { perUsd } from "@/lib/locale";
+import { copy } from "@/lib/copy";
 
 const occasions: { sw: string; en: string; shot: Shot }[] = [
   { sw: "Harusi", en: "Weddings", shot: { name: "harusi", alt: "A bride and groom walk out of church as guests cheer", focus: "50% 45%" } },
@@ -25,32 +26,25 @@ const occasions: { sw: string; en: string; shot: Shot }[] = [
   { sw: "Jamii", en: "Community projects", shot: { name: "jamii", alt: "Villagers building a classroom together", focus: "50% 50%" } },
 ];
 
-const safety: { title: string; body: string; shot: Shot }[] = [
-  { title: "The AI can't move money", body: "Every payout needs your one-time code.", shot: { name: "code", alt: "A young man reads a message on his phone", focus: "50% 40%" } },
-  { title: "Every payout is reported", body: "Everyone who gave gets the receipt.", shot: { name: "broadcast", alt: "Friends smile at the same update on their phones", focus: "50% 40%" } },
-  { title: "Licensed providers hold the money", body: "SarafuPay keeps the records.", shot: { name: "providers", alt: "A shopkeeper confirms a mobile payment", focus: "50% 45%" } },
-  { title: "Private by role", body: "Only the organiser sees who gave what.", shot: { name: "privacy", alt: "A woman checks her phone privately", focus: "60% 45%" } },
-];
-
-const faqs: [string, string][] = [
-  ["Who pays the fees?", "The organiser. Friends pay exactly what they give."],
-  ["Who holds the money?", "Licensed payment providers. SarafuPay keeps the records."],
-  ["Can the AI send money?", "No. Only your one-time code releases a payout."],
-  ["Minimum withdrawal?", "None."],
-  ["Do friends need an app?", "No. A link or the chat is enough."],
+const safetyShots: Shot[] = [
+  { name: "code", alt: "A young man reads a message on his phone", focus: "50% 40%" },
+  { name: "broadcast", alt: "Friends smile at the same update on their phones", focus: "50% 40%" },
+  { name: "providers", alt: "A shopkeeper confirms a mobile payment", focus: "50% 45%" },
+  { name: "privacy", alt: "A woman checks her phone privately", focus: "60% 45%" },
 ];
 
 export default async function Home({ searchParams }: PageProps<"/">) {
   await connection();
   const v = await detectVisitor((await searchParams).country);
-  const wa = waLink(tr(v, "Habari SarafuPay 👋", "Hi SarafuPay 👋"));
+  const c = copy(v.lang);
+  const wa = waLink(c.greet);
   const rates = await getRates();
 
   return (
     <div className="flex min-h-screen flex-col overflow-x-clip">
       <ScrollFX />
       <div className="kanga" />
-      <SiteHeader lang={v.lang} />
+      <SiteHeader />
 
       {/* ---------- Hero ---------- */}
       <section className="relative">
@@ -67,28 +61,38 @@ export default async function Home({ searchParams }: PageProps<"/">) {
             <h1 className="rise d1 font-display mt-6 text-[2.9rem] font-semibold leading-[0.98] tracking-tight sm:text-7xl lg:text-[5.4rem]">
               Michango,
               <br />
-              <span className="hero-ink italic">without</span> the
-              <br />
-              notebook.
+              {v.lang === "sw" ? (
+                <>
+                  <span className="hero-ink italic">bila</span>
+                  <br />
+                  daftari.
+                </>
+              ) : (
+                <>
+                  <span className="hero-ink italic">without</span> the
+                  <br />
+                  notebook.
+                </>
+              )}
             </h1>
             <p className="rise d2 mt-6 max-w-md text-lg leading-relaxed text-ink-soft">
-              Group collections in one chat. {["TZS", "KES", "UGX"].includes(v.cur) ? "Every shilling reported." : "Every cent reported."}
+              {c.home.sub} {["TZS", "KES", "UGX"].includes(v.cur) ? c.home.shilling : c.home.cent}
             </p>
             <div className="rise d3 mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               {wa ? (
                 <a href={wa} className="btn btn-primary justify-center" target="_blank" rel="noreferrer">
-                  Start on WhatsApp →
+                  {c.home.startWa}
                 </a>
               ) : null}
               <Link href="/chat" className={`btn ${wa ? "btn-ghost" : "btn-primary"} justify-center bg-paper/70 backdrop-blur-sm`}>
-                Try it now
+                {c.home.tryNow}
               </Link>
             </div>
             <dl className="rise d4 mt-10 grid max-w-lg grid-cols-3 gap-4 border-t border-line pt-6 sm:gap-6">
               {[
-                ["0", "apps"],
-                [v.mobileMoney ? rateSummary(rates.snippePayment, "TZS") : rateSummary(rates.paypalPayment, "USD"), "all-in fee"],
-                ["100%", "reported"],
+                ["0", c.home.apps],
+                [v.mobileMoney ? rateSummary(rates.snippePayment, "TZS") : rateSummary(rates.paypalPayment, "USD"), c.home.fee],
+                ["100%", c.home.reported],
               ].map(([k, v]) => (
                 <div key={v}>
                   <dt className="font-display text-2xl font-semibold sm:text-3xl">{k}</dt>
@@ -124,11 +128,11 @@ export default async function Home({ searchParams }: PageProps<"/">) {
       <section id="how" className="scroll-mt-4 overflow-hidden bg-forest text-paper">
         <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24">
           <div data-reveal>
-            <p className="font-mono text-xs uppercase tracking-[0.2em] text-marigold">How it works</p>
-            <h2 className="font-display mt-3 max-w-2xl text-4xl font-semibold leading-tight sm:text-5xl">Three steps. One chat.</h2>
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-marigold">{c.home.howKicker}</p>
+            <h2 className="font-display mt-3 max-w-2xl text-4xl font-semibold leading-tight sm:text-5xl">{c.home.howTitle}</h2>
           </div>
           <div className="mt-10 sm:mt-14" data-reveal style={{ "--rd": ".1s" } as React.CSSProperties}>
-            <HowShow v={v} />
+            <HowShow v={v} steps={c.how} />
           </div>
         </div>
       </section>
@@ -136,8 +140,8 @@ export default async function Home({ searchParams }: PageProps<"/">) {
       {/* ---------- Occasions ---------- */}
       <section className="mx-auto w-full max-w-6xl py-20 sm:px-6 sm:py-24">
         <div className="px-5 sm:px-0" data-reveal>
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-ink-soft">{tr(v, "Kwa kila mchango", "Michango · group giving")}</p>
-          <h2 className="font-display mt-3 max-w-2xl text-4xl font-semibold leading-tight sm:text-5xl">For every occasion.</h2>
+          <p className="font-mono text-xs uppercase tracking-[0.2em] text-ink-soft">{c.home.occKicker}</p>
+          <h2 className="font-display mt-3 max-w-2xl text-4xl font-semibold leading-tight sm:text-5xl">{c.home.occTitle}</h2>
         </div>
         <div className="mt-8 sm:mt-10" data-reveal style={{ "--rd": ".1s" } as React.CSSProperties}>
           <Belt label="Occasions">
@@ -162,34 +166,34 @@ export default async function Home({ searchParams }: PageProps<"/">) {
         <div className="calc-panel mx-auto max-w-6xl overflow-hidden rounded-[2rem] px-5 py-14 sm:px-10 sm:py-16" data-reveal>
           <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="font-mono text-xs uppercase tracking-[0.2em] text-marigold">Honest fees</p>
-              <h2 className="font-display mt-3 max-w-xl text-4xl font-semibold leading-tight text-paper sm:text-5xl">What reaches you.</h2>
+              <p className="font-mono text-xs uppercase tracking-[0.2em] text-marigold">{c.home.feesKicker}</p>
+              <h2 className="font-display mt-3 max-w-xl text-4xl font-semibold leading-tight text-paper sm:text-5xl">{c.home.feesTitle}</h2>
             </div>
             <Link href="/pricing" className="text-sm font-medium text-paper underline underline-offset-4">
-              Pricing →
+              {c.home.pricingLink}
             </Link>
           </div>
-          <FeeCalculator rates={rates} v={v} perUsd={perUsd(v.cur)} />
+          <FeeCalculator rates={rates} v={v} perUsd={perUsd(v.cur)} t={c.calc} />
         </div>
       </section>
 
       {/* ---------- Safety ---------- */}
       <section id="trust" className="scroll-mt-4 mx-auto w-full max-w-6xl py-20 sm:px-6 sm:py-24">
         <div className="px-5 sm:px-0" data-reveal>
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-ink-soft">Safety</p>
-          <h2 className="font-display mt-3 max-w-2xl text-4xl font-semibold leading-tight sm:text-5xl">Trust is the product.</h2>
+          <p className="font-mono text-xs uppercase tracking-[0.2em] text-ink-soft">{c.home.safetyKicker}</p>
+          <h2 className="font-display mt-3 max-w-2xl text-4xl font-semibold leading-tight sm:text-5xl">{c.home.safetyTitle}</h2>
         </div>
         <div className="mt-8 sm:mt-10" data-reveal style={{ "--rd": ".1s" } as React.CSSProperties}>
-          <Belt label="Safety">
-            {safety.map((c) => (
-              <TiltCard key={c.title} className="photo-card">
+          <Belt label={c.home.safetyKicker}>
+            {c.home.safety.map(([title, body], k) => (
+              <TiltCard key={title} className="photo-card">
                 <div className="photo-frame">
-                  <Photo shot={c.shot} className="photo-img" />
+                  <Photo shot={safetyShots[k]} className="photo-img" />
                   <div className="photo-shade" aria-hidden />
                 </div>
                 <div className="p-5">
-                  <p className="font-semibold">{c.title}</p>
-                  <p className="mt-1 text-sm text-ink-soft">{c.body}</p>
+                  <p className="font-semibold">{title}</p>
+                  <p className="mt-1 text-sm text-ink-soft">{body}</p>
                 </div>
               </TiltCard>
             ))}
@@ -199,9 +203,9 @@ export default async function Home({ searchParams }: PageProps<"/">) {
 
       {/* ---------- FAQ ---------- */}
       <section className="mx-auto w-full max-w-3xl px-5 pb-20 sm:px-6" data-reveal>
-        <h2 className="font-display text-3xl font-semibold sm:text-4xl">Questions</h2>
+        <h2 className="font-display text-3xl font-semibold sm:text-4xl">{c.home.questions}</h2>
         <div className="mt-6 divide-y divide-line border-y border-line">
-          {faqs.map(([q, a]) => (
+          {c.home.faqs.map(([q, a]) => (
             <details key={q} className="faq group py-4">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold">
                 {q}
@@ -220,15 +224,15 @@ export default async function Home({ searchParams }: PageProps<"/">) {
         <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] bg-marigold px-6 py-16 text-center sm:py-20" data-reveal>
           <CoinField className="absolute inset-0 opacity-50 [mask-image:radial-gradient(60%_80%_at_50%_50%,transparent_35%,black)]" />
           <h2 className="relative font-display mx-auto max-w-2xl text-4xl font-semibold leading-tight text-ink sm:text-5xl">
-            Start your michango now.
+            {c.home.finalTitle}
           </h2>
           <div className="relative mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             {wa ? (
               <a href={wa} className="btn btn-primary justify-center" target="_blank" rel="noreferrer">
-                Start on WhatsApp →
+                {c.home.startWa}
               </a>
             ) : null}
-            <Link href="/chat" className="btn btn-ghost justify-center">Try it now</Link>
+            <Link href="/chat" className="btn btn-ghost justify-center">{c.home.tryNow}</Link>
           </div>
         </div>
       </section>

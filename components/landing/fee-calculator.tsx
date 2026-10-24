@@ -3,13 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { quotePayment, quotePayout, type Rates } from "@/lib/pricing";
 import { fmt, friendly, type Visitor } from "@/lib/locale";
+import type { Copy } from "@/lib/copy";
 
 type Rail = "mobile" | "card";
 const STEPS: Record<Rail, number[]> = {
   mobile: [10_000, 20_000, 50_000, 100_000, 200_000, 500_000, 1_000_000, 2_000_000, 3_000_000, 5_000_000, 10_000_000, 20_000_000],
   card: [20, 50, 100, 200, 500, 1_000, 2_000, 5_000, 10_000, 20_000, 50_000, 100_000],
 };
-const CUR: Record<Rail, string> = { mobile: "TZS", card: "USD" };
 const show = (rail: Rail, cents: number) =>
   rail === "mobile"
     ? fmt("TZS", cents / 100)
@@ -44,7 +44,7 @@ function Rolling({ value, rail }: { value: number; rail: Rail }) {
  * (Tanzania) and card in any currency, which PayPal settles in USD. Visitors outside Tanzania
  * start on card and also see the rough value in their own currency.
  */
-export function FeeCalculator({ rates, v, perUsd }: { rates: Rates; v: Visitor; perUsd: number }) {
+export function FeeCalculator({ rates, v, perUsd, t }: { rates: Rates; v: Visitor; perUsd: number; t: Copy["calc"] }) {
   const [rail, setRail] = useState<Rail>(v.mobileMoney ? "mobile" : "card");
   const [i, setI] = useState(6);
   const steps = STEPS[rail];
@@ -55,10 +55,10 @@ export function FeeCalculator({ rates, v, perUsd }: { rates: Rates; v: Visitor; 
   const local = rail === "card" && v.cur !== "USD" ? fmt(v.cur, friendly((out.netCents / 100) * perUsd)) : null;
 
   const rows: [string, React.ReactNode, number, string][] = [
-    ["in", "Provider fee", pay.providerFeeCents, "bg-terracotta"],
-    ["sp", "SarafuPay fee", pay.sarafuFeeCents, "bg-marigold"],
-    ["out", "Transfer fee", out.providerFeeCents, "bg-terracotta/70"],
-    ["spo", "SarafuPay payout fee", out.sarafuFeeCents, "bg-marigold/70"],
+    ["in", t.providerFee, pay.providerFeeCents, "bg-terracotta"],
+    ["sp", t.sarafuFee, pay.sarafuFeeCents, "bg-marigold"],
+    ["out", t.transferFee, out.providerFeeCents, "bg-terracotta/70"],
+    ["spo", t.payoutFee, out.sarafuFeeCents, "bg-marigold/70"],
   ];
 
   return (
@@ -74,12 +74,12 @@ export function FeeCalculator({ rates, v, perUsd }: { rates: Rates; v: Visitor; 
               onClick={() => setRail(r)}
               className={`rounded-full px-4 py-1.5 transition-colors ${rail === r ? "bg-paper text-ink" : "text-paper/75 hover:text-paper"}`}
             >
-              {r === "mobile" ? "📱 Mobile money" : "💳 Card"}
+              {r === "mobile" ? t.mobile : t.card}
             </button>
           ))}
         </div>
         <label htmlFor="calc-amount" className="block text-sm font-medium text-paper/80">
-          Your collection raises
+          {t.raises}
         </label>
         <p className="font-display mt-1 text-5xl font-semibold tracking-tight text-paper sm:text-6xl">
           <Rolling key={rail} value={gross} rail={rail} />
@@ -101,7 +101,7 @@ export function FeeCalculator({ rates, v, perUsd }: { rates: Rates; v: Visitor; 
           <span>{short(rail, steps[steps.length - 1])}</span>
         </div>
         <p className="mt-3 text-xs text-paper/60">
-          {rail === "mobile" ? "Tanzania · TZS" : `Any card currency · settles in ${CUR.card}`}
+          {rail === "mobile" ? t.tz : t.anyCard}
         </p>
       </div>
 
@@ -118,7 +118,7 @@ export function FeeCalculator({ rates, v, perUsd }: { rates: Rates; v: Visitor; 
           ))}
         </ul>
         <div className="mt-5 border-t border-paper/15 pt-5">
-          <p className="text-sm text-paper/70">You receive</p>
+          <p className="text-sm text-paper/70">{t.receive}</p>
           <p className="font-display mt-1 text-4xl font-semibold text-marigold">
             <Rolling key={rail} value={out.netCents} rail={rail} />
           </p>
@@ -126,7 +126,7 @@ export function FeeCalculator({ rates, v, perUsd }: { rates: Rates; v: Visitor; 
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-paper/10" aria-hidden>
             <div className="h-full rounded-full bg-marigold transition-[width] duration-500" style={{ width: `${kept}%` }} />
           </div>
-          <p className="mt-2 text-xs text-paper/60">{kept.toFixed(1)}% kept</p>
+          <p className="mt-2 text-xs text-paper/60">{kept.toFixed(1)}% {t.kept}</p>
         </div>
       </div>
     </div>

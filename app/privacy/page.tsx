@@ -1,21 +1,31 @@
 import { Provider } from "@/components/provider";
 import { SiteFooter, SiteHeader } from "@/components/site";
 import { ScrollFX } from "@/components/scroll-fx";
+import { connection } from "next/server";
+import { detectVisitor } from "@/lib/visitor";
 
 export const metadata = {
   title: "Privacy Policy — SarafuPay",
   description: "How SarafuPay handles your data.",
 };
 
-const UPDATED = "23 October 2026";
+const UPDATED = "24 October 2026";
 const CONTACT = "info@sarafupay.app";
 
-const GLANCE: [string, string][] = [
-  ["🔒", "No PINs or card numbers, ever"],
-  ["🙈", "Only the organiser sees amounts"],
-  ["🚫", "Never sold, no ads"],
-  ["🗑️", "Deleted on request"],
-];
+const GLANCE: Record<"sw" | "en", [string, string][]> = {
+  en: [
+    ["🔒", "No PINs or card numbers, ever"],
+    ["🙈", "Only the organiser sees amounts"],
+    ["🚫", "Never sold, no ads"],
+    ["🗑️", "Deleted on request"],
+  ],
+  sw: [
+    ["🔒", "Hatuchukui PIN wala namba za kadi"],
+    ["🙈", "Mwandaaji pekee anaona viasi"],
+    ["🚫", "Haziuzwi, hakuna matangazo"],
+    ["🗑️", "Zinafutwa ukiomba"],
+  ],
+};
 
 const SECTIONS: { id: string; title: string; body: React.ReactNode }[] = [
   {
@@ -38,7 +48,7 @@ const SECTIONS: { id: string; title: string; body: React.ReactNode }[] = [
     body: (
       <ul className="list-disc space-y-1 pl-5">
         <li>Your WhatsApp number and profile name, so the agent can reply.</li>
-        <li>Your messages and voice notes to the agent, and its replies.</li>
+        <li>Your messages, voice notes and photos (such as receipts) sent to the agent, and its replies.</li>
         <li>Details you give: name, collections, targets, pledges, and payout details (mobile money number, bank account or PayPal email).</li>
         <li>Payment records from the providers: amounts, fees, references, and the payer&apos;s phone number or PayPal name and email.</li>
         <li>Never mobile money PINs or card numbers. You approve payments on your phone or on PayPal.</li>
@@ -63,7 +73,8 @@ const SECTIONS: { id: string; title: string; body: React.ReactNode }[] = [
       <>
         <ul className="list-disc space-y-1 pl-5">
           <li>Meta (WhatsApp Cloud API): message delivery.</li>
-          <li>Google (Gemini API): understanding messages and writing replies.</li>
+          <li>Meta (Muse models through the Meta Model API): understanding messages, voice notes and receipt photos, writing replies and drawing share cards.</li>
+          <li>Google (Gemini API): the same, as a backup when Meta&apos;s models are unavailable.</li>
           <li><Provider name="Snippe" />: mobile money payments and payouts to mobile money and banks.</li>
           <li><Provider name="PayPal" />: card and PayPal payments and PayPal payouts.</li>
           <li>DigitalOcean: hosting and database.</li>
@@ -93,7 +104,9 @@ const SECTIONS: { id: string; title: string; body: React.ReactNode }[] = [
   { id: "changes", title: "Changes", body: "When this policy changes, the date above changes too." },
 ];
 
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
+  await connection();
+  const sw = (await detectVisitor()).lang === "sw";
   return (
     <div className="min-h-dvh overflow-x-clip bg-paper text-ink">
       <ScrollFX />
@@ -102,9 +115,10 @@ export default function PrivacyPage() {
       <main className="mx-auto max-w-5xl px-5 pb-16 sm:px-6">
         <section className="grid items-center gap-8 pb-10 pt-4 sm:pt-8 md:grid-cols-[1.2fr_0.8fr]">
           <div>
-            <p className="rise font-mono text-xs uppercase tracking-[0.2em] text-ink-soft">Privacy</p>
-            <h1 className="rise d1 font-display mt-3 text-[2.6rem] font-semibold leading-[1.02] sm:text-6xl">Your data, kept small.</h1>
-            <p className="rise d2 mt-3 text-sm text-ink-soft">Updated {UPDATED}</p>
+            <p className="rise font-mono text-xs uppercase tracking-[0.2em] text-ink-soft">{sw ? "Faragha" : "Privacy"}</p>
+            <h1 className="rise d1 font-display mt-3 text-[2.6rem] font-semibold leading-[1.02] sm:text-6xl">{sw ? "Taarifa zako, chache tu." : "Your data, kept small."}</h1>
+            <p className="rise d2 mt-3 text-sm text-ink-soft">{sw ? "Imesasishwa" : "Updated"} {UPDATED}</p>
+            {sw ? <p className="mt-2 text-sm text-ink-soft">Sera kamili iko kwa Kiingereza hapa chini.</p> : null}
           </div>
           <div className="rise d3 shield-stage" aria-hidden>
             <div className="shield">
@@ -117,7 +131,7 @@ export default function PrivacyPage() {
         </section>
 
         <ul className="grid grid-cols-2 gap-3 md:grid-cols-4" data-reveal>
-          {GLANCE.map(([icon, t], i) => (
+          {GLANCE[sw ? "sw" : "en"].map(([icon, t], i) => (
             <li key={t} className="glance" style={{ "--i": i } as React.CSSProperties}>
               <span className="text-2xl" aria-hidden>{icon}</span>
               <span className="mt-2 block text-sm font-semibold leading-snug">{t}</span>

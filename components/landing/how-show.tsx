@@ -5,11 +5,7 @@ import { ex, tr, type Visitor } from "@/lib/locale";
 
 const DURATION = 5600;
 
-const STEPS = [
-  { n: "01", title: "Start in a chat", line: "Say what you're collecting for." },
-  { n: "02", title: "Share one link", line: "Friends pay. You see it live." },
-  { n: "03", title: "Pay out in the open", line: "Your code. Everyone's receipt." },
-];
+const NUMS = ["01", "02", "03"];
 
 /* ---------- the three scenes (pure CSS 3D; animations restart when the scene remounts) ---------- */
 
@@ -125,7 +121,8 @@ const SCENES = [SceneStart, SceneShare, SceneOut];
  * screen, with tabs that fill as each scene plays. Tap a tab to jump. Pauses off screen and in
  * background tabs; reduced motion shows each scene's final frame.
  */
-export function HowShow({ v }: { v: Visitor }) {
+export function HowShow({ v, steps }: { v: Visitor; steps: { title: string; line: string }[] }) {
+  const STEPS = steps.map((s, k) => ({ ...s, n: NUMS[k] }));
   const [i, setI] = useState(0);
   const [on, setOn] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -146,7 +143,7 @@ export function HowShow({ v }: { v: Visitor }) {
 
   useEffect(() => {
     if (!on) return;
-    const t = setTimeout(() => setI((v) => (v + 1) % STEPS.length), DURATION);
+    const t = setTimeout(() => setI((v) => (v + 1) % NUMS.length), DURATION);
     return () => clearTimeout(t);
   }, [i, on]);
 

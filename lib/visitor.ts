@@ -1,5 +1,5 @@
 import "server-only";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { createRequire } from "node:module";
 import { visitorFor, type Visitor } from "./locale";
 
@@ -37,7 +37,7 @@ export function countryForIp(ip: string | null): string | null {
  */
 export async function detectVisitor(override?: string | string[]): Promise<Visitor> {
   const h = await headers();
-  const forced = typeof override === "string" ? override.toUpperCase() : null;
+  const forced = (typeof override === "string" ? override : h.get("x-sp-country"))?.toUpperCase() ?? null;
   const edge = (h.get("cf-ipcountry") ?? h.get("x-vercel-ip-country") ?? "").toUpperCase();
   const accept = h.get("accept-language") ?? "";
   const region = /^[a-z]{2,3}[-_]([A-Z]{2})/i.exec(accept)?.[1]?.toUpperCase() ?? null;
@@ -46,5 +46,10 @@ export async function detectVisitor(override?: string | string[]): Promise<Visit
     (/^[A-Z]{2}$/.test(edge) && edge !== "XX" && edge !== "T1" ? edge : null) ||
     countryForIp(clientIp(h)) ||
     region;
-  return visitorFor(country, accept);
+  const v = visitorFor(country, accept);
+  // The visitor's own choice of language (header switch) wins over the guess.
+  const chosen = (await cookies()).get(LANG_COOKIE)?.value;
+  return chosen === "sw" || chosen === "en" ? { ...v, lang: chosen } : v;
 }
+
+export const LANG_COOKIE = "sp_lang";

@@ -15,6 +15,9 @@ import { contributeAction } from "./actions";
 import { ChipIn } from "./chip-in";
 import { SupporterSearch } from "./supporter-search";
 import { offlineSummary } from "@/lib/services/trust";
+import { detectVisitor } from "@/lib/visitor";
+import { copy, type Copy } from "@/lib/copy";
+import { isPaypalCurrency } from "@/lib/currency";
 
 
 export default async function CollectionPage({ params, searchParams }: PageProps<"/c/[code]">) {
@@ -23,6 +26,8 @@ export default async function CollectionPage({ params, searchParams }: PageProps
   const sp = await searchParams;
   const col = await findCollection(code);
   if (!col) notFound();
+  const v = await detectVisitor(sp.country);
+  const t = copy(v.lang).col;
   const q = typeof sp.q === "string" ? sp.q : "";
   const pageNo = Number(typeof sp.page === "string" ? sp.page : 1) || 1;
   const [stats, owner, supporters, pays, outside] = await Promise.all([
@@ -34,7 +39,8 @@ export default async function CollectionPage({ params, searchParams }: PageProps
   ]);
   const dups = outside.flagged.filter((f) => f.check === "duplicate").length;
   const ledger = pays.filter((p) => p.status === "success" || p.status === "processing");
-  const chat = waLink(`Contribute ${col.code}`) ?? simulatorUrl(`Contribute ${col.code}`);
+  const join = `${v.lang === "sw" ? "Changia" : "Contribute"} ${col.code}`;
+  const chat = waLink(join) ?? simulatorUrl(join);
   const err = typeof sp.err === "string" ? sp.err : null;
 
   return (
@@ -56,9 +62,9 @@ export default async function CollectionPage({ params, searchParams }: PageProps
             </p>
             <h1 className="font-display mt-3 max-w-3xl break-words text-[2.1rem] font-semibold leading-[1.05] text-paper sm:text-6xl">{col.title}</h1>
             <p className="mt-2 text-sm text-paper/85">
-              by <strong className="text-paper">{owner?.name ?? "the organiser"}</strong>
-              {col.deadline ? <> · closes {col.deadline}</> : null}
-              {col.status !== "active" ? <> · <span className="rounded-full bg-terracotta px-2 py-0.5 font-semibold text-paper">closed</span></> : null}
+              {t.by} <strong className="text-paper">{owner?.name ?? "—"}</strong>
+              {col.deadline ? <> · {t.closes} {col.deadline}</> : null}
+              {col.status !== "active" ? <> · <span className="rounded-full bg-terracotta px-2 py-0.5 font-semibold text-paper">{t.closed}</span></> : null}
             </p>
           </div>
         </div>
@@ -72,7 +78,7 @@ export default async function CollectionPage({ params, searchParams }: PageProps
             <div className="flex items-center justify-between gap-4">
               <div className="min-w-0">
                 <p className="font-display text-[2.1rem] font-semibold leading-none sm:text-5xl">{money(stats.raisedCents, col.currency)}</p>
-                <p className="mt-1 text-sm text-ink-soft">of {money(col.targetCents, col.currency)}</p>
+                <p className="mt-1 text-sm text-ink-soft">{t.of} {money(col.targetCents, col.currency)}</p>
               </div>
               <div className="ring-3d" style={{ "--pct": Math.min(100, stats.percent) } as React.CSSProperties}>
                 <svg viewBox="0 0 36 36" aria-hidden>
@@ -85,9 +91,9 @@ export default async function CollectionPage({ params, searchParams }: PageProps
             <div className="mt-4"><Progress percent={stats.percent} /></div>
             <dl className="mt-4 grid grid-cols-3 gap-3 text-sm">
               {[
-                [String(stats.paidCount), stats.paidCount === 1 ? "gift" : "gifts"],
-                [compact(stats.paidOutCents, col.currency), "paid out"],
-                [compact(stats.availableCents, col.currency), "balance"],
+                [String(stats.paidCount), stats.paidCount === 1 ? t.gift : t.gifts],
+                [compact(stats.paidOutCents, col.currency), t.paidOut],
+                [compact(stats.availableCents, col.currency), t.balance],
               ].map(([k, v]) => (
                 <div key={v} className="stat-chip">
                   <dt className="font-semibold">{k}</dt>
@@ -97,7 +103,7 @@ export default async function CollectionPage({ params, searchParams }: PageProps
             </dl>
             {stats.balances.slice(1).map((b) => (
               <p key={b.currency} className="mt-3 flex items-center gap-2 border-t border-line pt-3 text-sm text-ink-soft">
-                💳 <strong className="text-ink">{money(b.raisedCents, b.currency)}</strong> by card
+                💳 <strong className="text-ink">{money(b.raisedCents, b.currency)}</strong> {t.byCard}
               </p>
             ))}
           </TiltCard>
@@ -106,20 +112,20 @@ export default async function CollectionPage({ params, searchParams }: PageProps
           <ul className="trust-list mt-4 space-y-2 text-sm" aria-label="Transparency">
             <li className="flex items-center gap-3 rounded-2xl border border-line bg-paper/70 px-4 py-3">
               <span aria-hidden>🔒</span>
-              <span className="min-w-0 flex-1">Paid via SarafuPay</span>
+              <span className="min-w-0 flex-1">{t.viaSarafu}</span>
               <strong className="shrink-0 font-mono">{stats.balances.map((b) => money(b.raisedCents, b.currency)).join(" + ")}</strong>
             </li>
             <li className="flex items-center gap-3 rounded-2xl border border-line bg-paper/70 px-4 py-3">
               <span aria-hidden>📤</span>
-              <span className="min-w-0 flex-1">Paid out, code-confirmed</span>
+              <span className="min-w-0 flex-1">{t.paidOutCode}</span>
               <strong className="shrink-0 font-mono">{ledger.length ? stats.balances.map((b) => money(b.paidOutCents, b.currency)).join(" + ") : "—"}</strong>
             </li>
             {outside.confirmed.length || dups ? (
               <li className="flex items-center gap-3 rounded-2xl border border-line bg-paper/70 px-4 py-3">
                 <span aria-hidden>🔎</span>
                 <span className="min-w-0 flex-1">
-                  Paid outside, AI-checked
-                  {dups ? <span className="block text-xs text-terracotta">{dups} duplicate{dups === 1 ? "" : "s"} caught, not counted</span> : null}
+                  {t.outside}
+                  {dups ? <span className="block text-xs text-terracotta">{t.dupes(dups)}</span> : null}
                 </span>
                 <strong className="shrink-0 font-mono">{outside.confirmed.length ? outside.confirmed.map((c) => money(c.totalCents, c.currency)).join(" + ") : "—"}</strong>
               </li>
@@ -131,14 +137,19 @@ export default async function CollectionPage({ params, searchParams }: PageProps
         <aside id="chip-in" className="rise d2 min-w-0 h-fit scroll-mt-4 lg:sticky lg:top-6 lg:row-span-2">
           <form action={contributeAction.bind(null, col.code)} className="card chip-card overflow-hidden">
             <div className="chip-head px-6 py-5 text-paper">
-              <p className="font-display text-2xl font-semibold">Chip in</p>
+              <p className="font-display text-2xl font-semibold">{t.chipIn}</p>
             </div>
             <div className="space-y-4 p-5 sm:p-6">
-              {sp.cancelled ? <p className="rounded-lg bg-paper-2 p-3 text-sm">Payment cancelled. No money moved.</p> : null}
-              {err ? <p className="rounded-lg bg-terracotta/10 p-3 text-sm text-terracotta">{err === "amount" ? "Please enter a valid amount." : err}</p> : null}
-              <ChipIn disabled={col.status !== "active"} />
+              {sp.cancelled ? <p className="rounded-lg bg-paper-2 p-3 text-sm">{t.cancelled}</p> : null}
+              {err ? <p className="rounded-lg bg-terracotta/10 p-3 text-sm text-terracotta">{err === "amount" ? t.badAmount : err}</p> : null}
+              <ChipIn
+                disabled={col.status !== "active"}
+                t={copy(v.lang).chip}
+                cardFirst={!v.mobileMoney}
+                cardCurrency={isPaypalCurrency(v.cur) ? v.cur : "USD"}
+              />
               <p className="text-center text-xs text-ink-soft">
-                <a href={chat} className="underline">Or chip in by chat</a>
+                <a href={chat} className="underline">{t.byChat}</a>
               </p>
             </div>
           </form>
@@ -146,9 +157,9 @@ export default async function CollectionPage({ params, searchParams }: PageProps
 
         {/* Where the money went + supporters */}
         <section className="min-w-0">
-          <h2 className="font-display text-2xl font-semibold" data-reveal>Where the money went</h2>
+          <h2 className="font-display text-2xl font-semibold" data-reveal>{t.whereWent}</h2>
           {ledger.length === 0 ? (
-            <p className="mt-2 text-sm text-ink-soft" data-reveal>No payouts yet.</p>
+            <p className="mt-2 text-sm text-ink-soft" data-reveal>{t.noPayouts}</p>
           ) : (
             <ul className="mt-3 space-y-2" data-reveal>
               {ledger.map((p) => (
@@ -157,10 +168,10 @@ export default async function CollectionPage({ params, searchParams }: PageProps
                     {p.method === "paypal" ? "💳" : p.method === "bank" ? "🏦" : "📱"}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <strong className="block truncate">{p.recipientName ?? "Recipient"}</strong>
+                    <strong className="block truncate">{p.recipientName ?? t.recipient}</strong>
                     <span className="block truncate text-xs text-ink-soft">
                       {p.note ?? (p.method === "bank" ? "bank" : p.method === "paypal" ? "card" : "mobile money")}
-                      {p.status === "processing" ? <span className="ml-2 text-marigold">processing</span> : null}
+                      {p.status === "processing" ? <span className="ml-2 text-marigold">{t.processing}</span> : null}
                     </span>
                   </span>
                   <span className="font-mono text-sm font-semibold">{money(p.amountCents, p.currency)}</span>
@@ -171,15 +182,15 @@ export default async function CollectionPage({ params, searchParams }: PageProps
 
           {stats.paidCount > 0 ? (
             <section id="supporters" className="mt-10 scroll-mt-4" data-reveal>
-              <h2 className="font-display text-2xl font-semibold">Supporters</h2>
+              <h2 className="font-display text-2xl font-semibold">{t.supporters}</h2>
               <div className="mt-3">
                 <Suspense fallback={null}>
-                  <SupporterSearch initial={q} />
+                  <SupporterSearch initial={q} placeholder={t.search} />
                 </Suspense>
               </div>
-              <SupporterList items={supporters.items} q={q} byEmail={supporters.byEmail} />
+              <SupporterList items={supporters.items} q={q} byEmail={supporters.byEmail} t={t} lang={v.lang} />
               {supporters.pages > 1 ? (
-                <Pager code={col.code} q={q} page={supporters.page} pages={supporters.pages} total={supporters.total} />
+                <Pager code={col.code} q={q} page={supporters.page} pages={supporters.pages} total={supporters.total} t={t} />
               ) : null}
             </section>
           ) : null}
@@ -199,9 +210,9 @@ function compact(cents: number, currency: string): string {
 
 const AVATAR_TONES = ["bg-marigold/30", "bg-forest/15", "bg-terracotta/20", "bg-paper-2"];
 
-function ago(d: Date): string {
+function ago(d: Date, lang: "sw" | "en"): string {
   const s = Math.round((d.getTime() - Date.now()) / 1000);
-  const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+  const rtf = new Intl.RelativeTimeFormat(lang, { numeric: "auto" });
   const steps: [Intl.RelativeTimeFormatUnit, number][] = [["second", 60], ["minute", 60], ["hour", 24], ["day", 7], ["week", 4.35], ["month", 12], ["year", Infinity]];
   let v = s;
   for (const [unit, size] of steps) {
@@ -211,14 +222,14 @@ function ago(d: Date): string {
   return "";
 }
 
-function SupporterList({ items, q, byEmail }: { items: Supporter[]; q: string; byEmail: boolean }) {
+function SupporterList({ items, q, byEmail, t, lang }: { items: Supporter[]; q: string; byEmail: boolean; t: Copy["col"]; lang: "sw" | "en" }) {
   if (items.length === 0) {
     return (
       <p className="mt-4 rounded-2xl border border-dashed border-line px-4 py-6 text-center text-sm text-ink-soft">
         {byEmail ? (
-          <>No contribution found for that email. Check it&apos;s the email you used on PayPal.</>
+          <>{t.noEmail}</>
         ) : (
-          <>No supporters named &ldquo;{q}&rdquo; yet.</>
+          <>{t.noName(q)}</>
         )}
       </p>
     );
@@ -237,7 +248,7 @@ function SupporterList({ items, q, byEmail }: { items: Supporter[]; q: string; b
             <div className="flex items-baseline justify-between gap-3">
               <p className="truncate font-semibold">{s.name}</p>
               <time dateTime={s.paidAt.toISOString()} className="shrink-0 text-xs text-ink-soft">
-                {ago(s.paidAt)}
+                {ago(s.paidAt, lang)}
               </time>
             </div>
             {s.message ? <p className="mt-0.5 break-words text-sm text-ink-soft">&ldquo;{s.message}&rdquo;</p> : null}
@@ -248,7 +259,7 @@ function SupporterList({ items, q, byEmail }: { items: Supporter[]; q: string; b
   );
 }
 
-function Pager({ code, q, page, pages, total }: { code: string; q: string; page: number; pages: number; total: number }) {
+function Pager({ code, q, page, pages, total, t }: { code: string; q: string; page: number; pages: number; total: number; t: Copy["col"] }) {
   const href = (n: number) => {
     const sp = new URLSearchParams();
     if (q) sp.set("q", q);
@@ -267,7 +278,7 @@ function Pager({ code, q, page, pages, total }: { code: string; q: string; page:
   return (
     <nav aria-label="Supporters pages" className="mt-4 flex items-center justify-between gap-3">
       <p className="text-xs text-ink-soft">
-        Page {page} of {pages} · {total} supporters
+        {t.page(page, pages, total)}
       </p>
       <div className="flex items-center gap-1">
         {page > 1 ? (

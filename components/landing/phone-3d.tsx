@@ -152,9 +152,9 @@ export function Phone3D({ v }: { v: Visitor }) {
 
         {/* floating cards, each at its own depth */}
         <div className="float-card -left-24 top-[4.5rem] hidden lg:block" style={{ "--z": "40px", "--d": "0s" } as React.CSSProperties}>
-          <p className="text-[11px] uppercase tracking-wider text-ink-soft">Payment received</p>
+          <p className="text-[11px] uppercase tracking-wider text-ink-soft">{tr(v, "Malipo yamepokelewa", "Payment received")}</p>
           <p className="font-display text-xl font-semibold">{ex(v, 50_000)}</p>
-          <p className="text-xs text-ink-soft">Amina · {v.mobileMoney ? "mobile money" : "card"}</p>
+          <p className="text-xs text-ink-soft">Amina · {v.mobileMoney ? tr(v, "pesa ya simu", "mobile money") : tr(v, "kadi", "card")}</p>
         </div>
         <div className="float-card -right-16 -top-8 hidden lg:block" style={{ "--z": "70px", "--d": "-2s" } as React.CSSProperties}>
           <div className="flex items-center gap-3">
@@ -164,14 +164,14 @@ export function Phone3D({ v }: { v: Visitor }) {
             </svg>
             <div>
               <p className="font-display text-xl font-semibold leading-none">62%</p>
-              <p className="text-xs text-ink-soft">of {ex(v, 3_000_000)}</p>
+              <p className="text-xs text-ink-soft">{tr(v, "kati ya", "of")} {ex(v, 3_000_000)}</p>
             </div>
           </div>
         </div>
         <div className="float-card -left-16 -bottom-12 hidden lg:block" style={{ "--z": "50px", "--d": "-4s" } as React.CSSProperties}>
-          <p className="text-[11px] uppercase tracking-wider text-ink-soft">Transparency update</p>
-          <p className="text-sm font-semibold">Caterer received {v.mobileMoney ? ex(v, 583_500) : ex(v, 576_000)}</p>
-          <p className="text-xs text-ink-soft">Sent to 38 contributors</p>
+          <p className="text-[11px] uppercase tracking-wider text-ink-soft">{tr(v, "Taarifa ya uwazi", "Transparency update")}</p>
+          <p className="text-sm font-semibold">{tr(v, "Mpishi amepokea", "Caterer received")} {v.mobileMoney ? ex(v, 583_500) : ex(v, 576_000)}</p>
+          <p className="text-xs text-ink-soft">{tr(v, "Kwa wachangiaji 38", "Sent to 38 contributors")}</p>
         </div>
       </div>
     </div>

@@ -109,7 +109,7 @@ function initials(label: string) {
   return label.trim().slice(0, 1).toUpperCase();
 }
 
-export function Simulator({ buyer, testMode = true }: { buyer: { email: string; password: string; payee: string }; testMode?: boolean }) {
+export function Simulator({ buyer, testMode = true, lang = "en" }: { buyer: { email: string; password: string; payee: string }; testMode?: boolean; lang?: "sw" | "en" }) {
   const search = useSearchParams();
   const [custom, setCustom] = useState<Persona[]>([]);
   const [active, setActive] = useState("organiser");
@@ -352,8 +352,12 @@ export function Simulator({ buyer, testMode = true }: { buyer: { email: string; 
   const suggestions =
     msgs.length === 0
       ? active === "organiser"
-        ? ["Hi! I want to start a collection for my sister's wedding 💍", "Habari, nataka kuanzisha mchango wa msiba"]
-        : ["Contribute ", "Changia "]
+        ? lang === "sw"
+          ? ["Habari, nataka kuanzisha mchango wa harusi ya dada yangu 💍", "Hi! I want to start a collection for my sister's wedding 💍"]
+          : ["Hi! I want to start a collection for my sister's wedding 💍", "Habari, nataka kuanzisha mchango wa msiba"]
+        : lang === "sw"
+          ? ["Changia ", "Contribute "]
+          : ["Contribute ", "Changia "]
       : active === "organiser"
         ? ["Who has paid so far?", "Who hasn't paid yet?", "Send reminders to pledgers", "Send me the dashboard link"]
         : ["How much is left to reach the goal?", "I'll pay $20 on Friday", "Where did the money go?"];
@@ -526,7 +530,7 @@ export function Simulator({ buyer, testMode = true }: { buyer: { email: string; 
             {msgs.length === 0 ? (
               <div className="sim-empty">
                 <div className="sim-coin" aria-hidden>S</div>
-                <p className="font-display mt-5 text-2xl font-semibold text-ink">Habari! 👋</p>
+                <p className="font-display mt-5 text-2xl font-semibold text-ink">{lang === "sw" ? "Habari! 👋" : "Hello! 👋"}</p>
                 <p className="mt-1 text-sm text-ink-soft">Tap a suggestion to start, or watch the agent work:</p>
                 <button onClick={() => void runTour()} disabled={!ready || Boolean(tour)} className="btn btn-primary mt-4 justify-center disabled:opacity-50">
                   ▶ 60-second tour

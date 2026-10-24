@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { env } from "@/lib/env";
 import { Simulator } from "./simulator";
+import { detectVisitor } from "@/lib/visitor";
 
 export const metadata = { title: "SarafuPay — chat simulator" };
 
@@ -18,7 +19,7 @@ export default async function ChatPage() {
   };
   return (
     <Suspense>
-      <Simulator buyer={buyer} testMode={env.paypalEnv() !== "live"} />
+      <Simulator buyer={buyer} testMode={env.paypalEnv() !== "live"} lang={(await detectVisitor()).lang} />
     </Suspense>
   );
 }

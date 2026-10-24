@@ -1,16 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AmountInput } from "./amount-input";
 import { isTzMobile, PhoneInput } from "./phone-input";
-import { currencyForLocale, PAYPAL_CURRENCIES } from "@/lib/currency";
+import { PAYPAL_CURRENCIES } from "@/lib/currency";
+import type { Copy } from "@/lib/copy";
 
 type Method = "mobile_money" | "card_or_paypal";
 
-const METHODS: { id: Method; title: string; icon: string }[] = [
-  { id: "mobile_money", title: "Mobile money", icon: "📱" },
-  { id: "card_or_paypal", title: "Card", icon: "💳" },
-];
 
 const currencyName = (code: string) => {
   try {
@@ -25,15 +22,14 @@ const currencyName = (code: string) => {
  * card is in the payer's own currency (preselected from their browser), converted by PayPal.
  * Submits `method`, `currency`, `amount`, `phone`, `name`, `message`.
  */
-export function ChipIn({ disabled }: { disabled: boolean }) {
+export function ChipIn({ disabled, t, cardFirst, cardCurrency }: { disabled: boolean; t: Copy["chip"]; cardFirst: boolean; cardCurrency: string }) {
   const [method, setMethod] = useState<Method | null>(null);
   const [phone, setPhone] = useState("");
-  const [cardCur, setCardCur] = useState("USD");
-  useEffect(() => {
-    // After mount, so the server and first client render agree.
-    const t = setTimeout(() => setCardCur(currencyForLocale(navigator.language)), 0);
-    return () => clearTimeout(t);
-  }, []);
+  // The server picks the visitor's own currency (from their country) when PayPal supports it.
+  const [cardCur, setCardCur] = useState(cardCurrency);
+  const mm = { id: "mobile_money" as Method, title: t.mobile, icon: "📱" };
+  const cd = { id: "card_or_paypal" as Method, title: t.card, icon: "💳" };
+  const METHODS = cardFirst ? [cd, mm] : [mm, cd];
 
   const currency = method === "mobile_money" ? "TZS" : cardCur;
   const ready = method !== "mobile_money" || isTzMobile(phone);
@@ -42,7 +38,7 @@ export function ChipIn({ disabled }: { disabled: boolean }) {
     <div className="space-y-4">
       <input type="hidden" name="method" value={method ?? ""} />
       <input type="hidden" name="currency" value={currency} />
-      <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="How would you like to pay?">
+      <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label={t.how}>
         {METHODS.map((x) => {
           const on = x.id === method;
           return (
@@ -58,7 +54,7 @@ export function ChipIn({ disabled }: { disabled: boolean }) {
         <div key={method} className="chip-fields space-y-4">
           {method === "card_or_paypal" ? (
             <label className="block text-sm font-medium">
-              Currency
+              {t.currency}
               <select value={cardCur} onChange={(e) => setCardCur(e.target.value)} className="field mt-1.5">
                 {PAYPAL_CURRENCIES.map((c) => (
                   <option key={c} value={c}>
@@ -70,27 +66,27 @@ export function ChipIn({ disabled }: { disabled: boolean }) {
           ) : null}
 
           {/* Remount on currency change so the symbol and decimals follow it. */}
-          <AmountInput key={currency} currency={currency} />
+          <AmountInput key={currency} currency={currency} label={t.amount} />
 
           {method === "mobile_money" ? (
             <div>
-              <p className="text-sm font-medium">Mobile money number</p>
+              <p className="text-sm font-medium">{t.number}</p>
               <div className="mt-1.5">
-                <PhoneInput name="phone" onChange={setPhone} />
+                <PhoneInput name="phone" onChange={setPhone} label={t.number} />
               </div>
             </div>
           ) : null}
 
           <label className="block text-sm font-medium">
-            Your name
+            {t.name}
             <input name="name" required maxLength={80} autoComplete="given-name" className="field mt-1.5" />
           </label>
           <label className="block text-sm font-medium">
-            Message <span className="font-normal text-ink-soft">(optional)</span>
-            <input name="message" maxLength={280} placeholder="Hongera! 🎉" className="field mt-1.5" />
+            {t.message} <span className="font-normal text-ink-soft">{t.optional}</span>
+            <input name="message" maxLength={280} placeholder={t.msgPh} className="field mt-1.5" />
           </label>
           <button disabled={disabled || !ready} className="btn btn-primary w-full justify-center disabled:opacity-50">
-            {method === "mobile_money" ? "Pay with mobile money →" : "Pay by card →"}
+            {method === "mobile_money" ? t.payMobile : t.payCard}
           </button>
         </div>
       ) : null}

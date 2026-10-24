@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { currencyMeta, formatAmountInput } from "@/lib/format";
 
 /** One amount field: currency symbol in front, thousands grouped as you type. Submits `amount`. */
-export function AmountInput({ currency, initial }: { currency: string; initial?: number }) {
+export function AmountInput({ currency, initial, label = "Amount" }: { currency: string; initial?: number; label?: string }) {
   const meta = currencyMeta(currency);
   const [text, setText] = useState(initial ? formatAmountInput(String(initial), meta.decimals) : "");
   const ref = useRef<HTMLInputElement>(null);
@@ -28,7 +28,7 @@ export function AmountInput({ currency, initial }: { currency: string; initial?:
   return (
     <div>
       <label htmlFor="amount" className="text-sm font-medium">
-        Amount
+        {label}
       </label>
       <div className="amount-field mt-1.5 flex items-center rounded-2xl border border-line bg-white pl-4 pr-3 focus-within:border-forest">
         <span className="font-display text-2xl text-ink-soft" aria-hidden>
