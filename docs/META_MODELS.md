@@ -23,7 +23,9 @@ Muse Voice Transcribe doesn't list Swahili, so Swahili speakers' voice notes go 
 
 Contributors can send their own receipt; it becomes a *claim* and the organiser is asked to confirm or reject it. This money is shown in reports and on the dashboard for transparency, but it's kept apart from the provider-held balance and can never be withdrawn through SarafuPay.
 
-**Treasurer autopilot** (`lib/services/autopilot.ts`, runs with the 15-minute reconcile job). When an organiser switches it on, the agent reminds pledgers on their due date (at most every 3 days), sends a weekly report that Muse Spark writes from the ledger's facts, and sends a note once the deadline passes. It never moves money: payouts still need the organiser's one-time CONFIRM code.
+**Treasurer autopilot** (`lib/services/autopilot.ts`, runs with the 15-minute reconcile job). When an organiser switches it on, the agent reminds pledgers on their due date (at most every 3 days), sends a weekly report that Muse Spark writes from the ledger's facts, and sends a note once the deadline passes. It also sends everyone who gave a weekly progress update (totals only, never other givers' names) when something changed. It never moves money: payouts still need the organiser's one-time CONFIRM code.
+
+**Agent activity log** (`lib/services/agent-log.ts`). Every tool the agent calls is recorded with its outcome and the model that chose it (phone and account numbers masked), and shown on the organiser's dashboard under "Agent activity".
 
 **Share cards**. `make_share_card` asks Muse Image for a poster in the mood of the occasion (wedding, funeral, medical…), stores it, and sends it as a WhatsApp image with the share message as the caption. Amounts, codes and links stay in the caption, so they can't be drawn wrong.
 

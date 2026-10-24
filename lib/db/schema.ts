@@ -34,6 +34,7 @@ export const collections = pgTable("collections", {
   autopilot: text("autopilot").notNull().default("off"),
   autopilotReportAt: timestamp("autopilot_report_at", { withTimezone: true }),
   autopilotDeadlineAt: timestamp("autopilot_deadline_at", { withTimezone: true }),
+  autopilotBroadcastAt: timestamp("autopilot_broadcast_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -144,6 +145,24 @@ export const offlineRecords = pgTable(
   (t) => [index("offline_collection_idx").on(t.collectionId)],
 );
 
+// What the agent did: one row per tool call, for the organiser's dashboard and for debugging.
+// Inputs are stored with long digit runs masked (phone and account numbers).
+export const agentActions = pgTable(
+  "agent_actions",
+  {
+    id: serial("id").primaryKey(),
+    phone: text("phone").notNull(),
+    collectionCode: text("collection_code"),
+    tool: text("tool").notNull(),
+    input: text("input"),
+    ok: text("ok").notNull(), // "yes" | "no"
+    result: text("result"),
+    model: text("model"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("agent_actions_code_idx").on(t.collectionCode, t.id)],
+);
+
 // Small generated images (collection share cards), served at /api/media/<id>.
 export const media = pgTable("media", {
   id: text("id").primaryKey(),
@@ -192,4 +211,5 @@ export type Collection = typeof collections.$inferSelect;
 export type Contribution = typeof contributions.$inferSelect;
 export type Pledge = typeof pledges.$inferSelect;
 export type Payout = typeof payouts.$inferSelect;
+export type AgentAction = typeof agentActions.$inferSelect;
 export type OfflineRecord = typeof offlineRecords.$inferSelect;

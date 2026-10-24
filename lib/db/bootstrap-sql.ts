@@ -156,4 +156,17 @@ CREATE TABLE IF NOT EXISTS media (
   prompt text,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+ALTER TABLE collections ADD COLUMN IF NOT EXISTS autopilot_broadcast_at timestamptz;
+CREATE TABLE IF NOT EXISTS agent_actions (
+  id serial PRIMARY KEY,
+  phone text NOT NULL,
+  collection_code text,
+  tool text NOT NULL,
+  input text,
+  ok text NOT NULL,
+  result text,
+  model text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS agent_actions_code_idx ON agent_actions (collection_code, id);
 `;

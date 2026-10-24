@@ -621,9 +621,28 @@ async function main() {
   assert.ok(autoMsgs.some((m) => m.includes("⏰")), "deadline note sent");
   const run2 = await ap.runAutopilot(new Date());
   assert.deepEqual([run2.reminded, run2.reports, run2.deadlineNotes], [0, 0, 0], "nothing repeats on the next run");
+  // Contributors get a weekly update (totals only) once something has changed.
+  const giver = await core.getOrCreateUser("sim:255700000909", "sim", "Halima");
+  const gc = await core.createContribution({ collection: trustCol, contributorId: giver.id, displayName: "Halima", amountCents: 10_000_00, source: "sim" });
+  await core.applySnippePayment({ contributionId: gc.id, status: "completed", amountTzs: 10_000 });
+  await core.updateCollection(trustCol.id, { autopilot: "on" });
+  const freshCol = (await core.getCollectionById(trustCol.id))!;
+  assert.equal(await ap.broadcastProgress(freshCol), 1, "Halima gets the update");
+  const update = (await inbox("sim:255700000909")).find((m) => m.includes("💚"));
+  assert.ok(update && update.includes(trustCol.title) && !update.includes("Juma"), "update has progress but no other givers' names");
+  assert.equal(await ap.broadcastProgress((await core.getCollectionById(trustCol.id))!), 0, "no update when nothing changed");
   const payoutsAfter = await db.select().from(schema.payouts).where(eq(schema.payouts.collectionId, trustCol.id));
   assert.equal(payoutsAfter.length, 0, "autopilot never creates payouts");
-  console.log("✓ treasurer autopilot: reminds on due date, weekly report, deadline note, no repeats, no money moved");
+  console.log("✓ treasurer autopilot: reminds on due date, weekly report, contributor update, deadline note, no repeats, no money moved");
+
+  // 11d2. Every tool the agent uses is logged for the organiser's dashboard, with numbers masked.
+  const log = await import("../lib/services/agent-log");
+  const acts = await log.actionsFor(trustCol.code);
+  const tools = acts.map((a) => a.tool);
+  assert.ok(tools.includes("record_offline_payment") && tools.includes("autopilot"), "receipt and autopilot actions are in the log");
+  assert.ok(acts.every((a) => a.model === "test"), "the answering model is recorded");
+  assert.equal(log.mask('{"phone":"255712345678","amount":20000}'), '{"phone":"255…78","amount":20000}');
+  console.log("✓ agent activity log: tool, outcome and model per action, numbers masked");
 
   // 11e. Share card drawn by Muse Image, stored, served and sent as an image message.
   process.env.MODEL_API_KEY = "meta_test";

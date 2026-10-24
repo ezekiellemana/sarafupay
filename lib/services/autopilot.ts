@@ -10,13 +10,14 @@ import { withModelFallback } from "../agent/models";
 import { aiConfigured } from "../env";
 import { collectionStats, remindPledgers, statusLine } from "./core";
 import { offlineSummary } from "./trust";
-import { dashboardUrl } from "./links";
+import { collectionUrl, dashboardUrl } from "./links";
 
 /**
  * Treasurer autopilot. When an organiser switches it on, the scheduled job (every 15 min) acts
  * for them, within strict limits:
  * - reminds pledgers whose due date is tomorrow or past (at most every 3 days per pledge);
  * - sends the organiser a weekly report written by the model from the ledger's facts;
+ * - sends everyone who gave a weekly progress update (totals only) when something changed;
  * - once the deadline passes, tells the organiser where things stand and what to do next.
  * It never moves money: a payout still needs the organiser's own CONFIRM code.
  */
@@ -24,7 +25,61 @@ import { dashboardUrl } from "./links";
 const DAY = 24 * 60 * 60_000;
 const { collections, contributions } = schema;
 
-export type AutopilotReport = { collections: number; reminded: number; reports: number; deadlineNotes: number; errors: string[] };
+export type AutopilotReport = {
+  collections: number;
+  reminded: number;
+  reports: number;
+  deadlineNotes: number;
+  /** Contributors who got the weekly progress update. */
+  updated: number;
+  errors: string[];
+};
+
+const BROADCAST_CAP = 60; // per collection per run, keeps the job inside its time limit
+
+/**
+ * Weekly progress update to everyone who gave. Totals only: who gave what stays private to the
+ * organiser. Sent only when something changed since the last update. WhatsApp refuses free text
+ * to people who haven't written in 24h; they're skipped (they still see the public page).
+ */
+export async function broadcastProgress(col: Collection, now = new Date()): Promise<number> {
+  const db = await getDb();
+  const since = col.autopilotBroadcastAt ?? col.createdAt;
+  const fresh = await db
+    .select({ id: contributions.id })
+    .from(contributions)
+    .where(and(eq(contributions.collectionId, col.id), eq(contributions.status, "paid"), gt(contributions.paidAt, since)));
+  const payoutsSince = await db
+    .select({ id: schema.payouts.id })
+    .from(schema.payouts)
+    .where(and(eq(schema.payouts.collectionId, col.id), eq(schema.payouts.status, "success"), gt(schema.payouts.executedAt, since)));
+  if (!fresh.length && !payoutsSince.length) return 0;
+  const givers = await db
+    .selectDistinct({ id: contributions.contributorId })
+    .from(contributions)
+    .where(and(eq(contributions.collectionId, col.id), eq(contributions.status, "paid")));
+  const s = await collectionStats(col);
+  let sent = 0;
+  let spaced = 0;
+  for (const g of givers.slice(0, BROADCAST_CAP)) {
+    if (!g.id || g.id === col.ownerId) continue;
+    const [u] = await db.select().from(schema.users).where(eq(schema.users.id, g.id));
+    if (!u) continue;
+    if (u.channel !== "sim" && spaced++ > 0) await new Promise((r) => setTimeout(r, 1100));
+    const L = await langOf(u.phone);
+    const r = await sendTo(
+      u.phone,
+      t(
+        L,
+        `💚 Habari ${u.name ?? ""}! Taarifa ya *${col.title}*:\n${statusLine(col, s, "sw")}${payoutsSince.length ? `\n📤 Malipo ${payoutsSince.length} yametoka wiki hii, yote yameripotiwa.` : ""}\nAsante kwa mchango wako 🙏 ${collectionUrl(col.code)}`,
+        `💚 Hi ${u.name ?? ""}! Update on *${col.title}*:\n${statusLine(col, s, "en")}${payoutsSince.length ? `\n📤 ${payoutsSince.length} payout${payoutsSince.length === 1 ? "" : "s"} went out this week, all reported.` : ""}\nThank you for giving 🙏 ${collectionUrl(col.code)}`,
+      ).replace(/ {2,}/g, " ").replace(" !", "!"),
+    );
+    if (r.ok) sent++;
+  }
+  await db.update(collections).set({ autopilotBroadcastAt: now }).where(eq(collections.id, col.id));
+  return sent;
+}
 
 /** Facts the weekly report is written from. Everything the model says must come from here. */
 export async function reportFacts(col: Collection, since: Date | null) {
@@ -95,7 +150,7 @@ export async function sendReportNow(col: Collection): Promise<string> {
 
 export async function runAutopilot(now = new Date()): Promise<AutopilotReport> {
   const db = await getDb();
-  const out: AutopilotReport = { collections: 0, reminded: 0, reports: 0, deadlineNotes: 0, errors: [] };
+  const out: AutopilotReport = { collections: 0, reminded: 0, reports: 0, deadlineNotes: 0, updated: 0, errors: [] };
   const list = await db
     .select()
     .from(collections)
@@ -116,6 +171,11 @@ export async function runAutopilot(now = new Date()): Promise<AutopilotReport> {
       if (!col.autopilotReportAt || now.getTime() - col.autopilotReportAt.getTime() >= 7 * DAY) {
         await sendReportNow(col);
         out.reports++;
+      }
+
+      // 2b. Weekly progress update to contributors.
+      if (!col.autopilotBroadcastAt || now.getTime() - col.autopilotBroadcastAt.getTime() >= 7 * DAY) {
+        out.updated += await broadcastProgress(col, now);
       }
 
       // 3. Deadline passed: one note with where things stand.

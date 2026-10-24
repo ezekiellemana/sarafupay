@@ -8,6 +8,7 @@ import { collectionUrl } from "@/lib/services/links";
 import { StudioDashboard, type DashboardData } from "./studio-dashboard";
 import { CopyLink } from "./copy-link";
 import { offlineSummary } from "@/lib/services/trust";
+import { actionsFor } from "@/lib/services/agent-log";
 
 export const metadata = { title: "SarafuPay — treasurer dashboard", robots: { index: false } };
 
@@ -17,12 +18,13 @@ export default async function DashboardPage({ params, searchParams }: PageProps<
   const { key } = await searchParams;
   const col = await ownerCollection(code, typeof key === "string" ? key : null);
   if (!col) notFound();
-  const [stats, paid, pledges, payouts, outside] = await Promise.all([
+  const [stats, paid, pledges, payouts, outside, actions] = await Promise.all([
     collectionStats(col),
     listContributions(col.id, "paid"),
     listPledges(col.id),
     listPayouts(col.id),
     offlineSummary(col.id),
+    actionsFor(col.code),
   ]);
   const data: DashboardData = {
     contributions: paid.map((c) => ({
@@ -115,6 +117,24 @@ export default async function DashboardPage({ params, searchParams }: PageProps<
           <span className="shrink-0 rounded-full bg-marigold/30 px-3 py-1 font-semibold text-ink">📸 {outside.claimsWaiting} waiting for you</span>
         ) : null}
       </div>
+      {actions.length ? (
+        <details className="group border-b border-line bg-paper text-xs">
+          <summary className="flex cursor-pointer list-none items-center gap-2 px-5 py-2 text-ink-soft">
+            <span className="transition-transform group-open:rotate-90" aria-hidden>▸</span>
+            Agent activity · {actions.length} recent action{actions.length === 1 ? "" : "s"}
+          </summary>
+          <ol className="max-h-64 space-y-1.5 overflow-y-auto px-5 pb-3">
+            {actions.map((a) => (
+              <li key={a.id} className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
+                <span className="font-mono text-[11px] text-ink-soft">{a.createdAt.toISOString().slice(5, 16).replace("T", " ")}</span>
+                <span className={`rounded px-1.5 font-mono text-[11px] ${a.ok === "yes" ? "bg-forest/10 text-forest" : "bg-terracotta/10 text-terracotta"}`}>{a.tool}</span>
+                <span className="min-w-0 basis-full break-words text-ink sm:basis-auto sm:flex-1">{a.result}</span>
+                {a.model ? <span className="hidden font-mono text-[10px] text-ink-soft sm:inline">{a.model}</span> : null}
+              </li>
+            ))}
+          </ol>
+        </details>
+      ) : null}
       <p className="border-b border-line bg-paper-2 px-5 py-2 text-xs text-ink-soft md:hidden">
         Tip: the treasurer dashboard is built for bigger screens. Rotate your phone or open it on a laptop for the full view.
       </p>

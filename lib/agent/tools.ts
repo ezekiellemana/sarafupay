@@ -452,7 +452,7 @@ export function buildTools(ctx: AgentContext): Record<string, Tool> {
 
     autopilot: tool({
       description:
-        "Owner only: switch the treasurer autopilot on or off for a collection, or send its report now. When on, SarafuPay reminds pledgers when their due date arrives, sends the owner a weekly report, and tells them when the deadline passes. It never moves money.",
+        "Owner only: switch the treasurer autopilot on or off for a collection, or send its report now. When on, SarafuPay reminds pledgers when their due date arrives, sends the owner a weekly report, sends contributors a weekly progress update (totals only), and tells the owner when the deadline passes. It never moves money.",
       inputSchema: z.object({ code, on: z.boolean().optional(), report_now: z.boolean().optional() }),
       execute: safe(async (i) => {
         const col = await mustFind(i.code);

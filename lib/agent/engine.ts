@@ -10,6 +10,7 @@ import { buildTools } from "./tools";
 import { systemPrompt } from "./prompt";
 import { withModelFallback, type ModelPick } from "./models";
 import { transcribeVoice } from "./meta-media";
+import { logToolSteps } from "../services/agent-log";
 import { langOf, t } from "../i18n";
 import { takeAiCall } from "../limits";
 
@@ -173,9 +174,22 @@ async function process(msg: Incoming): Promise<unknown> {
         throw e;
       }
     };
+    let usedModel: string | null = modelOverride ? "test" : null;
     const result = modelOverride
       ? await run({ model: modelOverride, fast: {} })
-      : await withModelFallback((pick) => run(pick), audio ? (p) => p.audioIn : undefined);
+      : await withModelFallback(
+          async (pick) => {
+            const r = await run(pick);
+            usedModel = `${pick.provider}:${pick.id}`;
+            return r;
+          },
+          audio ? (p) => p.audioIn : undefined,
+        );
+    // Audit trail: every tool the agent used this turn, with its outcome and the model that chose it.
+    const toolSteps = result.steps.flatMap((st) =>
+      st.toolCalls.map((c) => ({ toolName: c.toolName, input: c.input, output: st.toolResults.find((r) => r.toolCallId === c.toolCallId)?.output })),
+    );
+    await logToolSteps(msg.phone, usedModel, toolSteps).catch((e) => console.warn("[agent] action log failed", e));
     const reply = result.text.trim();
     if (reply) await sendTo(msg.phone, reply);
   } catch (e) {
