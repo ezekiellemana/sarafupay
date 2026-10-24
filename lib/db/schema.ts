@@ -30,6 +30,10 @@ export const collections = pgTable("collections", {
   payoutEmail: text("payout_email"),
   status: text("status").notNull().default("active"), // active | closed
   ownerKey: text("owner_key").notNull(),
+  // Treasurer autopilot (lib/services/autopilot.ts): "on" | "off", and when it last spoke.
+  autopilot: text("autopilot").notNull().default("off"),
+  autopilotReportAt: timestamp("autopilot_report_at", { withTimezone: true }),
+  autopilotDeadlineAt: timestamp("autopilot_deadline_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -112,6 +116,44 @@ export const payouts = pgTable("payouts", {
   executedAt: timestamp("executed_at", { withTimezone: true }),
 });
 
+// Money the organiser received outside SarafuPay (cash, someone's own M-Pesa, a bank deposit),
+// usually logged from a receipt photo or a voice note. Kept apart from `contributions`: SarafuPay
+// never held this money, so it is reported for transparency but never counts towards a payout.
+export const offlineRecords = pgTable(
+  "offline_records",
+  {
+    id: text("id").primaryKey(),
+    collectionId: text("collection_id").notNull(),
+    recordedBy: text("recorded_by").notNull(), // user id (owner, or a contributor's claim)
+    displayName: text("display_name").notNull(),
+    amountCents: cents("amount_cents").notNull(),
+    currency: text("currency").notNull(),
+    method: text("method").notNull(), // cash | mobile_money | bank | other
+    reference: text("reference"), // transaction id printed on the receipt
+    receivedOn: text("received_on"), // YYYY-MM-DD
+    evidence: text("evidence").notNull(), // photo | voice | text
+    imageHash: text("image_hash"), // sha256 of the receipt photo, to catch the same photo twice
+    // confirmed (owner) | claimed (contributor, awaiting owner) | rejected
+    status: text("status").notNull().default("confirmed"),
+    // Trust checks: ok | duplicate | mismatch | review
+    checkStatus: text("check_status").notNull().default("ok"),
+    checkNote: text("check_note"),
+    pledgeId: text("pledge_id"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("offline_collection_idx").on(t.collectionId)],
+);
+
+// Small generated images (collection share cards), served at /api/media/<id>.
+export const media = pgTable("media", {
+  id: text("id").primaryKey(),
+  collectionId: text("collection_id"),
+  mimeType: text("mime_type").notNull(),
+  dataB64: text("data_b64").notNull(),
+  prompt: text("prompt"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 // Every message in and out of the bot, per phone. Doubles as agent memory and simulator inbox.
 export const chatLog = pgTable(
   "chat_log",
@@ -150,3 +192,4 @@ export type Collection = typeof collections.$inferSelect;
 export type Contribution = typeof contributions.$inferSelect;
 export type Pledge = typeof pledges.$inferSelect;
 export type Payout = typeof payouts.$inferSelect;
+export type OfflineRecord = typeof offlineRecords.$inferSelect;

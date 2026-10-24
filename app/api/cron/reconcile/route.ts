@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import { reconcile } from "@/lib/services/reconcile";
+import { runAutopilot } from "@/lib/services/autopilot";
 
 // Called every 15 minutes by the scheduled reconcile job (see .do/app.yaml).
 // Protected by CRON_SECRET, an app-level secret shared by the web service and the job,
@@ -21,7 +22,9 @@ export async function POST(req: Request) {
   if (!authorized(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const started = Date.now();
   const report = await reconcile();
-  const body = { ok: report.errors.length === 0, ms: Date.now() - started, ...report };
+  // Treasurer autopilot rides on the same schedule; its problems never fail the money job.
+  const autopilot = await runAutopilot().catch((e) => ({ errors: [e instanceof Error ? e.message : String(e)] }));
+  const body = { ok: report.errors.length === 0, ms: Date.now() - started, ...report, autopilot };
   console.log("[cron] reconcile", JSON.stringify(body));
   return NextResponse.json(body);
 }

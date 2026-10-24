@@ -44,8 +44,15 @@ const snippeCalls: { url: string; body: Record<string, unknown> | undefined }[] 
 let snippeSendFailsOnce = false;
 let templateApproved = false; // flips mid-test to simulate Meta approving the reminder template
 const templateCalls: { to: string; template: { name: string; language: { code: string }; components: { type: string; parameters: { text: string }[] }[] } }[] = [];
+// Meta Model API stub; each Meta test sets its own handler.
+const metaCalls: { url: string; init?: RequestInit }[] = [];
+let metaHandler: (url: string, init?: RequestInit) => Response | Promise<Response> = () => new Response("no meta handler", { status: 500 });
 globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   const url = String(input instanceof Request ? input.url : input);
+  if (url.startsWith("https://api.meta.ai/")) {
+    metaCalls.push({ url, init });
+    return metaHandler(url, init);
+  }
   if (url.includes("api-m.sandbox.paypal.com")) {
     if (url.endsWith("/v1/oauth2/token")) return Response.json({ access_token: "tok", expires_in: 3600 });
     if (url.endsWith("/v1/payments/payouts") && init?.method === "POST") {
@@ -465,6 +472,145 @@ async function main() {
   assert.equal(bigStats.raisedCents, 30_000_000_00, "TZS 30M raised");
   assert.equal(bigStats.availableCents, 28_500_000_00, "TZS 28.5M after 5%");
   console.log("✓ TZS 30,000,000 collection: totals correct (no 32-bit overflow)");
+
+  // 11. Meta Model API: Muse Spark is the primary brain, with fallback between models and providers.
+  process.env.MODEL_API_KEY = "meta_test";
+  const models = await import("../lib/agent/models");
+  const { generateText } = await import("ai");
+  assert.equal(models.primaryModel(), "meta:muse-spark-1.3");
+  const chatBodies: Record<string, unknown>[] = [];
+  metaHandler = (url, init) => {
+    const body = JSON.parse(String(init?.body ?? "{}"));
+    chatBodies.push(body);
+    if (body.model === "muse-spark-1.3") return Response.json({ error: { message: "overloaded" } }, { status: 503 });
+    return Response.json({
+      id: "c1", object: "chat.completion", created: 1, model: body.model,
+      choices: [{ index: 0, message: { role: "assistant", content: "Habari kutoka Muse" }, finish_reason: "stop" }],
+      usage: { prompt_tokens: 3, completion_tokens: 3, total_tokens: 6 },
+    });
+  };
+  const viaMeta = await models.withModelFallback((m) => generateText({ model: m.model, prompt: "hi", maxRetries: 0, providerOptions: m.fast }));
+  assert.equal(viaMeta.text, "Habari kutoka Muse");
+  assert.deepEqual(chatBodies.map((b) => b.model), ["muse-spark-1.3", "muse-spark-1.2"], "503 on the primary falls back to the next Muse model");
+  assert.equal(chatBodies[1].reasoning_effort, "low", "fast replies ask Muse Spark for low reasoning effort");
+  assert.ok(metaCalls.every((c) => c.url === "https://api.meta.ai/v1/chat/completions" || !c.url.includes("chat")), "OpenAI-compatible endpoint");
+  console.log("✓ Muse Spark via Meta Model API, falls back across models");
+
+  // 11b. Voice notes: WhatsApp Ogg/Opus → WAV → Muse Voice Transcribe → the agent reads the transcript.
+  const { readFileSync } = await import("node:fs");
+  const media = await import("../lib/agent/meta-media");
+  const ogg = new Uint8Array(readFileSync(new URL("./fixtures/tone.ogg", import.meta.url)));
+  const wav = await media.voiceToWav({ data: ogg, mimeType: "audio/ogg; codecs=opus" });
+  const wv = new DataView(wav.buffer);
+  assert.equal(String.fromCharCode(...wav.slice(0, 4)), "RIFF");
+  assert.equal(wv.getUint16(22, true), 1, "mono");
+  assert.equal(wv.getUint32(24, true), 24000, "24 kHz");
+  assert.ok(Math.abs((wav.length - 44) / 2 - 24000) < 2400, "≈1 s of audio");
+  let asrRequest: Record<string, unknown> | undefined;
+  metaHandler = async (url, init) => {
+    assert.ok(url.endsWith("/v1/asr/transcribe"));
+    const form = init?.body as FormData;
+    asrRequest = JSON.parse(await (form.get("request") as Blob).text());
+    assert.equal((form.get("audio") as Blob).type, "audio/wav");
+    return Response.json({ sessionId: "s1", transcript: "I received twenty thousand shillings from Juma in cash", turns: [] });
+  };
+  const VOICE = "sim:447700900404";
+  await logInbound(VOICE, "Hello there, I'm organising a fundraiser");
+  script.push({ text: "Got it — shall I record TZS 20,000 cash from Juma?" });
+  await handleIncoming({ phone: VOICE, channel: "sim", audio: { data: ogg, mimeType: "audio/ogg; codecs=opus" } });
+  assert.equal(asrRequest?.model, "muse-voice-transcribe-1.0");
+  assert.equal(asrRequest?.audioEncoding, "WAV");
+  const voiceLog = (await db.select().from(schema.chatLog).where(eq(schema.chatLog.phone, VOICE)).orderBy(asc(schema.chatLog.id))).map((r) => r.text);
+  assert.ok(voiceLog.includes("🎤 I received twenty thousand shillings from Juma in cash"), "transcript is what the agent sees and remembers");
+  console.log("✓ voice note transcribed by Muse Voice Transcribe (Ogg/Opus decoded to WAV)");
+
+  // 11c. Trust Copilot: a receipt photo is recorded once, checked against pledges, never counted twice.
+  const trustCol = await core.createCollection({ ownerId: owner.id, title: "Harusi ya Neema & Baraka", category: "wedding", targetCents: 1_000_000_00 });
+  const jumaUser = await core.getOrCreateUser("sim:255700000707", "sim", "Juma");
+  await core.createPledge({ collection: trustCol, user: jumaUser, displayName: "Juma", amountCents: 20_000_00, dueDate: "2026-11-01" });
+  const statsBefore = await core.collectionStats(trustCol);
+  const photo = { data: new Uint8Array([0xff, 0xd8, 1, 2, 3, 4]), mimeType: "image/jpeg" };
+  script.push(
+    { tool: ["record_offline_payment", { code: trustCol.code, name: "Juma", amount: 20000, method: "mobile_money", reference: "QJ47XK2P1L", received_on: "2026-10-24" }] },
+    { text: "Recorded Juma's TZS 20,000 ✅" },
+  );
+  await handleIncoming({ phone: OWNER, channel: "sim", text: "Juma paid me directly", image: photo });
+  const trust = await import("../lib/services/trust");
+  let off = await trust.offlineSummary(trustCol.id);
+  assert.equal(off.records.length, 1);
+  assert.equal(off.records[0].evidence, "photo");
+  assert.equal(off.records[0].checkStatus, "ok");
+  assert.equal((await core.listPledges(trustCol.id))[0].status, "fulfilled", "an exact match closes the pledge");
+  const statsAfter = await core.collectionStats(trustCol);
+  assert.equal(statsAfter.availableCents, statsBefore.availableCents, "outside money never enters the withdrawable balance");
+
+  script.push(
+    { tool: ["record_offline_payment", { code: trustCol.code, name: "Rehema", amount: 15000, method: "mobile_money", reference: "ZZ11" }] },
+    { text: "That photo was already used." },
+  );
+  await handleIncoming({ phone: OWNER, channel: "sim", text: "and this one", image: photo });
+  off = await trust.offlineSummary(trustCol.id);
+  assert.equal(off.records[1].checkStatus, "duplicate", "the same photo can't back two payments");
+  assert.match(off.records[1].checkNote ?? "", /exact photo/);
+  const dupRef = await trust.recordOffline({ collection: trustCol, by: owner, displayName: "Juma", amountCents: 20_000_00, currency: "TZS", method: "mobile_money", reference: "qj47-xk2p-1l", evidence: "text" });
+  assert.equal(dupRef.record.checkStatus, "duplicate", "same reference, written differently, is caught");
+  assert.deepEqual(off.confirmed, [{ currency: "TZS", totalCents: 20_000_00, count: 1 }], "duplicates don't count in totals");
+
+  const claim = await trust.recordOffline({ collection: trustCol, by: jumaUser, displayName: "Juma's sister", amountCents: 5_000_00, currency: "TZS", method: "cash", evidence: "text" });
+  assert.equal(claim.record.status, "claimed");
+  assert.ok((await inbox(OWNER)).some((m) => m.includes(`confirm ${claim.record.id}`) || m.includes(`thibitisha ${claim.record.id}`)), "the organiser is asked to confirm a contributor's claim");
+  assert.match(await trust.resolveOffline(jumaUser, claim.record.id, "confirm"), /Only the collection owner/);
+  assert.match(await trust.resolveOffline(owner, claim.record.id, "confirm"), /Confirmed/);
+  assert.equal((await trust.offlineSummary(trustCol.id)).confirmed[0].totalCents, 25_000_00);
+  console.log("✓ Trust Copilot: receipt photo recorded, pledge matched, duplicates flagged, claims need the organiser");
+
+  // 11d. Treasurer autopilot: due-date reminders, weekly report, one deadline note. Never moves money.
+  const ap = await import("../lib/services/autopilot");
+  const rehema = await core.getOrCreateUser("sim:255700000808", "sim", "Rehema");
+  await core.createPledge({ collection: trustCol, user: rehema, displayName: "Rehema", amountCents: 30_000_00, dueDate: "2020-01-01" });
+  script.push({ tool: ["autopilot", { code: trustCol.code, on: true }] }, { text: "Autopilot is on 🤖" });
+  await say(OWNER, "Turn on autopilot for the wedding");
+  delete process.env.MODEL_API_KEY; // the weekly report falls back to a plain summary without a model
+  await core.updateCollection(trustCol.id, { deadline: "2020-01-02" });
+  const run1 = await ap.runAutopilot(new Date());
+  assert.equal(run1.reminded, 1, "only the due pledge is reminded");
+  assert.equal(run1.reports, 1);
+  assert.equal(run1.deadlineNotes, 1);
+  assert.ok((await inbox("sim:255700000808")).some((m) => m.includes("reminder") || m.includes("kumbusho")), "Rehema got her reminder");
+  const autoMsgs = await inbox(OWNER);
+  assert.ok(autoMsgs.some((m) => m.startsWith("📊")), "weekly report sent");
+  assert.ok(autoMsgs.some((m) => m.includes("⏰")), "deadline note sent");
+  const run2 = await ap.runAutopilot(new Date());
+  assert.deepEqual([run2.reminded, run2.reports, run2.deadlineNotes], [0, 0, 0], "nothing repeats on the next run");
+  const payoutsAfter = await db.select().from(schema.payouts).where(eq(schema.payouts.collectionId, trustCol.id));
+  assert.equal(payoutsAfter.length, 0, "autopilot never creates payouts");
+  console.log("✓ treasurer autopilot: reminds on due date, weekly report, deadline note, no repeats, no money moved");
+
+  // 11e. Share card drawn by Muse Image, stored, served and sent as an image message.
+  process.env.MODEL_API_KEY = "meta_test";
+  let imgPrompt = "";
+  metaHandler = (url, init) => {
+    assert.ok(url.endsWith("/v1/images/generations"));
+    const body = JSON.parse(String(init?.body));
+    imgPrompt = body.prompt;
+    assert.equal(body.model, "muse-image-1.0");
+    return Response.json({ created: 1, data: [{ b64_json: Buffer.from("PNGDATA").toString("base64") }], output_format: "png" });
+  };
+  script.push({ tool: ["make_share_card", { code: trustCol.code }] }, { text: "Your card is ready to forward 🎉" });
+  await say(OWNER, "Make a poster for the wedding");
+  assert.match(imgPrompt, /Harusi ya Neema & Baraka/);
+  assert.doesNotMatch(imgPrompt, /TZS|sarafupay\.test/, "facts stay in the caption, not the drawing");
+  const card = (await inbox(OWNER)).find((m) => m.startsWith("🖼️ https://sarafupay.test/api/media/img_"));
+  assert.ok(card, "card sent as an image message");
+  const mediaId = /img_[a-f0-9]{16}/.exec(card!)![0];
+  const { GET: getMediaRoute } = await import("../app/api/media/[id]/route");
+  const served = await getMediaRoute(new Request("https://x/api/media/" + mediaId), { params: Promise.resolve({ id: mediaId }) });
+  assert.equal(served.status, 200);
+  assert.equal(served.headers.get("content-type"), "image/png");
+  assert.equal(await served.text(), "PNGDATA");
+  assert.equal((await getMediaRoute(new Request("https://x"), { params: Promise.resolve({ id: "../etc" }) })).status, 404);
+  delete process.env.MODEL_API_KEY;
+  console.log("✓ share card drawn by Muse Image, stored, served and sent");
 
   // 10. Cost guard without Key Value falls back to memory and still limits.
   const limits = await import("../lib/limits");

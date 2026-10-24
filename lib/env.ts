@@ -25,6 +25,20 @@ export const env = {
   /** Owner-only admin pages (/admin?key=...). Empty disables the admin. */
   adminKey: () => get("ADMIN_KEY"),
 
+  /** Meta Model API (Muse models). OpenAI-compatible; the agent prefers it when a key is set. */
+  metaApiKey: () => get("MODEL_API_KEY", get("META_MODEL_API_KEY")),
+  metaBaseUrl: () => get("META_MODEL_BASE_URL", "https://api.meta.ai/v1").replace(/\/$/, ""),
+  /** Chat models tried in order (first is primary). */
+  metaModels: () =>
+    get("META_MODELS", "muse-spark-1.3,muse-spark-1.2")
+      .split(",")
+      .map((m) => m.trim())
+      .filter(Boolean),
+  /** low | medium | high … ("minimal" for fastest replies). Muse Spark rejects "none". */
+  metaReasoningEffort: () => get("META_REASONING_EFFORT", "low"),
+  metaImageModel: () => get("META_IMAGE_MODEL", "muse-image-1.0"),
+  metaTranscribeModel: () => get("META_TRANSCRIBE_MODEL", "muse-voice-transcribe-1.0"),
+
   geminiApiKey: () => get("GOOGLE_GENERATIVE_AI_API_KEY", get("GEMINI_API_KEY")),
   geminiModel: () => get("GEMINI_MODEL", "gemini-3.8-flash"),
   /** Tried in order when the primary model is overloaded (503), rate-limited (429) or retired (404). */
@@ -37,9 +51,9 @@ export const env = {
   waPhoneNumberId: () => get("WHATSAPP_PHONE_NUMBER_ID"),
   waVerifyToken: () => get("WHATSAPP_VERIFY_TOKEN"),
   waAppSecret: () => get("WHATSAPP_APP_SECRET"),
-  /** Six-digit two-step PIN used to register the number with the Cloud API (chosen by the owner). */
   /** WhatsApp Business Account that owns the number (WhatsApp Manager → account ID); used for templates. */
   waBusinessAccountId: () => get("WHATSAPP_BUSINESS_ACCOUNT_ID").replace(/[^0-9]/g, ""),
+  /** Six-digit two-step PIN used to register the number with the Cloud API (chosen by the owner). */
   waPin: () => get("WHATSAPP_PIN").replace(/[^0-9]/g, ""),
   waDisplayNumber: () => get("WHATSAPP_DISPLAY_NUMBER").replace(/[^0-9]/g, ""),
   waGraphVersion: () => get("WHATSAPP_GRAPH_VERSION", "v23.0"),
@@ -55,6 +69,13 @@ export function paypalConfigured() {
 }
 export function snippeConfigured() {
   return Boolean(env.snippeApiKey());
+}
+export function metaConfigured() {
+  return Boolean(env.metaApiKey());
+}
+/** Some model the agent can talk to. */
+export function aiConfigured() {
+  return Boolean(env.metaApiKey() || env.geminiApiKey());
 }
 export function whatsappConfigured() {
   return Boolean(env.waToken() && env.waPhoneNumberId());

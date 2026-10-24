@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { sql } from "drizzle-orm";
 import { aiUsageToday } from "@/lib/limits";
 import { kvConfigured } from "@/lib/kv";
+import { primaryModel } from "@/lib/agent/models";
 
 export async function GET() {
   let db = false;
@@ -20,6 +21,8 @@ export async function GET() {
       snippe: snippeConfigured(),
       paypal: paypalConfigured() ? env.paypalEnv() : false,
       gemini: Boolean(env.geminiApiKey()),
+      meta: Boolean(env.metaApiKey()),
+      ai_model: primaryModel(),
       whatsapp: whatsappConfigured(),
       simulator: env.simulatorEnabled(),
       keyvalue: kvConfigured(),

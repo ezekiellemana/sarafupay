@@ -126,4 +126,34 @@ ALTER TABLE payouts ADD COLUMN IF NOT EXISTS sarafu_fee_cents bigint;
 ALTER TABLE payouts ADD COLUMN IF NOT EXISTS net_cents bigint;
 ALTER TABLE payouts ADD COLUMN IF NOT EXISTS rate_json text;
 ALTER TABLE payouts ADD COLUMN IF NOT EXISTS provider_ref text;
+ALTER TABLE collections ADD COLUMN IF NOT EXISTS autopilot text NOT NULL DEFAULT 'off';
+ALTER TABLE collections ADD COLUMN IF NOT EXISTS autopilot_report_at timestamptz;
+ALTER TABLE collections ADD COLUMN IF NOT EXISTS autopilot_deadline_at timestamptz;
+CREATE TABLE IF NOT EXISTS offline_records (
+  id text PRIMARY KEY,
+  collection_id text NOT NULL,
+  recorded_by text NOT NULL,
+  display_name text NOT NULL,
+  amount_cents bigint NOT NULL,
+  currency text NOT NULL,
+  method text NOT NULL,
+  reference text,
+  received_on text,
+  evidence text NOT NULL,
+  image_hash text,
+  status text NOT NULL DEFAULT 'confirmed',
+  check_status text NOT NULL DEFAULT 'ok',
+  check_note text,
+  pledge_id text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS offline_collection_idx ON offline_records (collection_id);
+CREATE TABLE IF NOT EXISTS media (
+  id text PRIMARY KEY,
+  collection_id text,
+  mime_type text NOT NULL,
+  data_b64 text NOT NULL,
+  prompt text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
 `;

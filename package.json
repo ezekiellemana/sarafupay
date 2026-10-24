@@ -14,7 +14,8 @@
     "test:pricing": "node --import tsx --test tests/pricing.test.ts"
   },
   "dependencies": {
-    "@ai-sdk/google": "^4.0.87",
+    "@ai-sdk/google": "^4.0.104",
+    "@ai-sdk/openai-compatible": "^3.0.77",
     "@electric-sql/pglite": "^0.5.8",
     "@fontsource-variable/fraunces": "^5.3.0",
     "@fontsource-variable/jetbrains-mono": "^5.3.0",
@@ -22,9 +23,10 @@
     "@paypal/agent-toolkit": "^1.11.0",
     "@paypal/paypal-server-sdk": "2.5.0",
     "ag-studio-react": "^3.0.0",
-    "ai": "^7.0.127",
+    "ai": "^7.0.152",
     "drizzle-orm": "^0.45.3",
     "next": "16.3.6",
+    "ogg-opus-decoder": "^1.7.5",
     "postgres": "^3.4.9",
     "react": "19.2.8",
     "react-dom": "19.2.8",

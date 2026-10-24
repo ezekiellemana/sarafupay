@@ -1,13 +1,15 @@
 import "server-only";
 import { generateText, isStepCount, type ModelMessage } from "ai";
 import { desc, eq } from "drizzle-orm";
-import { env } from "../env";
+import { createHash } from "node:crypto";
+import { aiConfigured, env, metaConfigured } from "../env";
 import { getDb, schema } from "../db";
 import { logInbound, sendTo } from "../channels/messaging";
 import * as core from "../services/core";
 import { buildTools } from "./tools";
 import { systemPrompt } from "./prompt";
-import { withGeminiFallback } from "./models";
+import { withModelFallback, type ModelPick } from "./models";
+import { transcribeVoice } from "./meta-media";
 import { langOf, t } from "../i18n";
 import { takeAiCall } from "../limits";
 
@@ -17,6 +19,8 @@ export type Incoming = {
   profileName?: string;
   text?: string;
   audio?: { data: Uint8Array; mimeType: string };
+  /** A photo (receipt, M-Pesa SMS screenshot…); `text` holds its caption. */
+  image?: { data: Uint8Array; mimeType: string };
 };
 
 // Serialise messages per phone so replies stay in order.
@@ -53,10 +57,36 @@ async function history(phone: string, limit = 16): Promise<ModelMessage[]> {
   );
 }
 
+/**
+ * Voice notes: Muse Voice Transcribe turns them into text first (it doesn't list Swahili, so
+ * Swahili speakers' notes go straight to a model that listens to audio, when one is configured).
+ */
+async function hearVoice(msg: Incoming, lang: "sw" | "en"): Promise<string | null> {
+  if (!msg.audio || !metaConfigured()) return null;
+  if (lang === "sw" && env.geminiApiKey()) return null;
+  try {
+    return await transcribeVoice(msg.audio, lang === "en" ? ["English"] : undefined);
+  } catch (e) {
+    console.warn("[agent] transcription failed", e instanceof Error ? e.message : e);
+    return null;
+  }
+}
+
 async function process(msg: Incoming): Promise<unknown> {
   const user = await core.getOrCreateUser(msg.phone, msg.channel, msg.profileName);
-  const text = (msg.text ?? "").trim();
-  await logInbound(msg.phone, text || (msg.audio ? "🎤 [voice note]" : "[unsupported message]"));
+  let text = (msg.text ?? "").trim();
+  const lang = await langOf(msg.phone);
+  const transcript = await hearVoice(msg, lang);
+  if (transcript) text = [text, transcript].filter(Boolean).join("\n");
+  const audio = transcript ? undefined : msg.audio;
+  await logInbound(
+    msg.phone,
+    msg.image
+      ? `📷 [photo]${text ? ` ${text}` : ""}`
+      : transcript
+        ? `🎤 ${transcript}`
+        : text || (msg.audio ? "🎤 [voice note]" : "[unsupported message]"),
+  );
 
   // Deterministic money paths: never routed through the LLM.
   const confirm = /^\s*(confirm|thibitisha)\s+(\d{6})\s*$/i.exec(text);
@@ -64,22 +94,21 @@ async function process(msg: Incoming): Promise<unknown> {
   const cancel = /^\s*(cancel|ghairi)\s+(\d{6})\s*$/i.exec(text);
   if (cancel) return sendTo(msg.phone, await core.cancelPayoutByCode(user, cancel[2]));
 
-  if (!text && !msg.audio) {
-    return sendTo(msg.phone, t(await langOf(msg.phone), "Ninasoma maandishi na kusikiliza voice notes 🙂 Tafadhali tuma mojawapo.", "I can read text and listen to voice notes 🙂 Please send one of those."));
+  if (!text && !audio && !msg.image) {
+    return sendTo(msg.phone, t(lang, "Ninasoma maandishi, picha za risiti na kusikiliza voice notes 🙂 Tafadhali tuma mojawapo.", "I can read text and receipt photos, and listen to voice notes 🙂 Please send one of those."));
   }
-  if (!env.geminiApiKey() && !modelOverride) {
-    return sendTo(msg.phone, "⚙️ The AI brain isn't configured yet (missing GEMINI_API_KEY).");
+  if (!aiConfigured() && !modelOverride) {
+    return sendTo(msg.phone, "⚙️ The AI brain isn't configured yet (missing MODEL_API_KEY / GEMINI_API_KEY).");
   }
 
   const gate = modelOverride ? { ok: true as const } : await takeAiCall(msg.phone);
   if (!gate.ok) {
     if (!gate.notify) return;
-    const L = await langOf(msg.phone);
     return sendTo(
       msg.phone,
       gate.reason === "sender"
-        ? t(L, "⏳ Ujumbe ni mwingi kwa muda mfupi. Tafadhali subiri dakika chache kisha uendelee.", "⏳ That's a lot of messages in a short time. Please wait a few minutes and continue.")
-        : t(L, "⏳ SarafuPay ina shughuli nyingi leo. Tafadhali jaribu tena baadaye.", "⏳ SarafuPay is very busy today. Please try again later."),
+        ? t(lang, "⏳ Ujumbe ni mwingi kwa muda mfupi. Tafadhali subiri dakika chache kisha uendelee.", "⏳ That's a lot of messages in a short time. Please wait a few minutes and continue.")
+        : t(lang, "⏳ SarafuPay ina shughuli nyingi leo. Tafadhali jaribu tena baadaye.", "⏳ SarafuPay is very busy today. Please try again later."),
     );
   }
 
@@ -88,17 +117,30 @@ async function process(msg: Incoming): Promise<unknown> {
     owned.slice(0, 5).map(async (c) => ({ code: c.code, title: c.title, progress: core.statusLine(c, await core.collectionStats(c)) })),
   );
   const active = user.activeCollectionId ? await core.getCollectionById(user.activeCollectionId) : null;
-  const ctx = { user, channel: msg.channel };
+  const ctx = {
+    user,
+    channel: msg.channel,
+    inputKind: msg.image ? ("photo" as const) : msg.audio ? ("voice" as const) : ("text" as const),
+    imageHash: msg.image ? createHash("sha256").update(msg.image.data).digest("hex") : undefined,
+  };
 
-  const current: ModelMessage = msg.audio
+  const current: ModelMessage = msg.image
     ? {
         role: "user",
         content: [
-          { type: "text", text: text || "(voice note — listen, transcribe mentally, and respond to what they asked)" },
-          { type: "file", data: msg.audio.data, mediaType: msg.audio.mimeType },
+          { type: "text", text: text || "(photo with no caption — look at it; if it's a payment receipt or M-Pesa message, read it and handle it)" },
+          { type: "file", data: msg.image.data, mediaType: msg.image.mimeType },
         ],
       }
-    : { role: "user", content: text };
+    : audio
+      ? {
+          role: "user",
+          content: [
+            { type: "text", text: text || "(voice note — listen, transcribe mentally, and respond to what they asked)" },
+            { type: "file", data: audio.data, mediaType: audio.mimeType },
+          ],
+        }
+      : { role: "user", content: text + (transcript ? "\n(This came from a voice note, transcribed.)" : "") };
 
   try {
     const system = systemPrompt({
@@ -107,19 +149,10 @@ async function process(msg: Incoming): Promise<unknown> {
       active,
       channel: msg.channel,
       today: new Date().toISOString().slice(0, 10),
-      lang: await langOf(msg.phone),
+      lang,
     });
     const messages = [...(await history(msg.phone)), current];
-    const run = async (model: Parameters<typeof generateText>[0]["model"]) => {
-      try {
-        return await runOnce(model, true);
-      } catch (e) {
-        // A model that rejects the thinking setting still gets to answer, just without it.
-        if (/thinking/i.test(e instanceof Error ? e.message : String(e))) return runOnce(model, false);
-        throw e;
-      }
-    };
-    const runOnce = (model: Parameters<typeof generateText>[0]["model"], lowThinking: boolean) =>
+    const runOnce = (model: Parameters<typeof generateText>[0]["model"], fast: ModelPick["fast"] | undefined) =>
       generateText({
         model,
         system,
@@ -128,15 +161,25 @@ async function process(msg: Incoming): Promise<unknown> {
         stopWhen: isStepCount(8),
         maxOutputTokens: 1200, // WhatsApp replies are short; caps cost per step
         maxRetries: 1,
-        // Chat replies should feel instant. Gemini 3 thinks at a higher level by default,
-        // and multi-tool turns (open collection -> pay link) took 15-20 s in a judge-style run.
-        ...(lowThinking ? { providerOptions: { google: { thinkingConfig: { thinkingLevel: "low" as const } } } } : {}),
+        // Chat replies should feel instant: low reasoning effort (Muse Spark) / thinking level (Gemini).
+        ...(fast ? { providerOptions: fast } : {}),
       });
-    const result = modelOverride ? await run(modelOverride) : await withGeminiFallback((m) => run(m));
+    const run = async (pick: Pick<ModelPick, "model" | "fast">) => {
+      try {
+        return await runOnce(pick.model, pick.fast);
+      } catch (e) {
+        // A model that rejects the reasoning setting still gets to answer, just without it.
+        if (/thinking|reasoning/i.test(e instanceof Error ? e.message : String(e))) return runOnce(pick.model, undefined);
+        throw e;
+      }
+    };
+    const result = modelOverride
+      ? await run({ model: modelOverride, fast: {} })
+      : await withModelFallback((pick) => run(pick), audio ? (p) => p.audioIn : undefined);
     const reply = result.text.trim();
     if (reply) await sendTo(msg.phone, reply);
   } catch (e) {
     console.error("[agent] generation failed", e);
-    await sendTo(msg.phone, t(await langOf(msg.phone), "😕 Samahani, nimepata hitilafu kidogo. Tafadhali jaribu tena baada ya muda mfupi.", "😕 Sorry, I hit a problem just now. Please try again in a moment."));
+    await sendTo(msg.phone, t(lang, "😕 Samahani, nimepata hitilafu kidogo. Tafadhali jaribu tena baada ya muda mfupi.", "😕 Sorry, I hit a problem just now. Please try again in a moment."));
   }
 }

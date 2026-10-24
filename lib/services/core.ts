@@ -116,7 +116,7 @@ export async function createCollection(input: {
 
 export async function updateCollection(
   id: string,
-  patch: Partial<Pick<Collection, "title" | "purpose" | "targetCents" | "deadline" | "payoutEmail" | "status">>,
+  patch: Partial<Pick<Collection, "title" | "purpose" | "targetCents" | "deadline" | "payoutEmail" | "status" | "autopilot">>,
 ) {
   const db = await getDb();
   const [c] = await db.update(collections).set(patch).where(eq(collections.id, id)).returning();
@@ -702,7 +702,7 @@ export async function createPledge(input: {
  * come back in `unreachable` with their pay link, for the organiser to forward.
  * Sends are spaced ~1s apart to stay inside per-number throughput limits.
  */
-export async function remindPledgers(col: Collection): Promise<{
+export async function remindPledgers(col: Collection, only?: (p: typeof pledges.$inferSelect) => boolean): Promise<{
   reminded: string[];
   skipped: string[];
   unreachable: { name: string; reason: string; pay_link: string }[];
@@ -716,7 +716,7 @@ export async function remindPledgers(col: Collection): Promise<{
   const skipped: string[] = [];
   const unreachable: { name: string; reason: string; pay_link: string }[] = [];
   let sentToWhatsApp = 0;
-  for (const p of open) {
+  for (const p of only ? open.filter(only) : open) {
     const u = p.userId ? await getUser(p.userId) : undefined;
     if (!u) {
       skipped.push(p.displayName);

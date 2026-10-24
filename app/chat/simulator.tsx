@@ -37,6 +37,17 @@ function write(k: string, v: unknown) {
   }
 }
 
+/** Shrinks a photo to ≤1600px JPEG in the browser, so receipts upload fast on mobile data. */
+async function photoToDataUrl(file: File): Promise<string> {
+  const bmp = await createImageBitmap(file);
+  const scale = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bmp.width * scale);
+  canvas.height = Math.round(bmp.height * scale);
+  canvas.getContext("2d")!.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL("image/jpeg", 0.85);
+}
+
 /** Renders WhatsApp-style *bold*, _italic_ and clickable links. */
 function Rich({ text }: { text: string }) {
   const parts = text.split(/(https?:\/\/[^\s)]+|\*[^*\n]+\*|_[^_\n]+_)/g);
@@ -183,18 +194,18 @@ export function Simulator({ buyer, testMode = true }: { buyer: { email: string; 
     return () => window.removeEventListener("keydown", onKey);
   }, [menu, adding, sheet]);
 
-  async function send(text: string) {
+  async function send(text: string, image?: string) {
     const body = text.trim();
-    if (!body || busy || !ready) return;
+    if ((!body && !image) || busy || !ready) return;
     setDraft("");
     setBusy(true);
     lastSend.current = Date.now();
-    setMsgs((m) => [...m, { id: -Date.now(), direction: "in", text: body, at: new Date().toISOString(), pending: true, fresh: true }]);
+    setMsgs((m) => [...m, { id: -Date.now(), direction: "in", text: image ? `📷 ${body}`.trim() : body, at: new Date().toISOString(), pending: true, fresh: true }]);
     try {
       const res = await fetch("/api/sim/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ persona: active, text: body }),
+        body: JSON.stringify({ persona: active, text: body, ...(image ? { image } : {}) }),
       });
       if (res.status === 429) {
         setMsgs((m) => [
@@ -437,7 +448,17 @@ export function Simulator({ buyer, testMode = true }: { buyer: { email: string; 
                   } ${m.pending ? "opacity-70" : ""}`}
                   style={{ background: m.direction === "in" ? "var(--bubble-out)" : "var(--bubble-in)" }}
                 >
-                  <Rich text={m.text} />
+                  {(() => {
+                    const img = /^🖼️ (https?:\/\/\S+)\n?([\s\S]*)$/u.exec(m.text);
+                    if (!img) return <Rich text={m.text} />;
+                    return (
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={img[1]} alt="Share card" className="mb-2 w-64 max-w-full rounded-xl" loading="lazy" />
+                        <Rich text={img[2]} />
+                      </>
+                    );
+                  })()}
                   <span className="mt-1 block text-right text-[10px] text-ink-soft">
                     {new Date(m.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                   </span>
@@ -478,6 +499,23 @@ export function Simulator({ buyer, testMode = true }: { buyer: { email: string; 
             }}
             className="flex items-center gap-2 bg-paper-2 px-3 pt-3 [padding-bottom:max(0.75rem,env(safe-area-inset-bottom))]"
           >
+            <label
+              className={`grid h-11 w-11 shrink-0 cursor-pointer place-items-center rounded-full text-xl text-ink-soft transition-colors hover:bg-paper ${busy || !ready ? "pointer-events-none opacity-40" : ""}`}
+              aria-label="Send a photo (receipt or M-Pesa message)"
+              title="Send a photo"
+            >
+              📎
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="sr-only"
+                onChange={async (e) => {
+                  const f = e.target.files?.[0];
+                  e.target.value = "";
+                  if (f) void send(draft, await photoToDataUrl(f));
+                }}
+              />
+            </label>
             <input
               ref={input}
               value={draft}

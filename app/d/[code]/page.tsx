@@ -7,6 +7,7 @@ import { money } from "@/lib/format";
 import { collectionUrl } from "@/lib/services/links";
 import { StudioDashboard, type DashboardData } from "./studio-dashboard";
 import { CopyLink } from "./copy-link";
+import { offlineSummary } from "@/lib/services/trust";
 
 export const metadata = { title: "SarafuPay — treasurer dashboard", robots: { index: false } };
 
@@ -16,11 +17,12 @@ export default async function DashboardPage({ params, searchParams }: PageProps<
   const { key } = await searchParams;
   const col = await ownerCollection(code, typeof key === "string" ? key : null);
   if (!col) notFound();
-  const [stats, paid, pledges, payouts] = await Promise.all([
+  const [stats, paid, pledges, payouts, outside] = await Promise.all([
     collectionStats(col),
     listContributions(col.id, "paid"),
     listPledges(col.id),
     listPayouts(col.id),
+    offlineSummary(col.id),
   ]);
   const data: DashboardData = {
     contributions: paid.map((c) => ({
@@ -94,6 +96,25 @@ export default async function DashboardPage({ params, searchParams }: PageProps<
           </div>
         </div>
       </header>
+      {/* Trust Copilot + autopilot at a glance */}
+      <div className="no-scrollbar flex gap-2 overflow-x-auto border-b border-line bg-paper px-5 py-2 text-xs">
+        <span className={`shrink-0 rounded-full px-3 py-1 ${col.autopilot === "on" ? "bg-forest text-paper" : "bg-paper-2 text-ink-soft"}`}>
+          🤖 Autopilot {col.autopilot === "on" ? "on" : "off"}
+        </span>
+        <span className="shrink-0 rounded-full bg-paper-2 px-3 py-1 text-ink-soft" title="Money you recorded yourself (cash, your own mobile money). Shown for transparency; not in the balance.">
+          💵 Outside SarafuPay: {outside.confirmed.length ? outside.confirmed.map((c) => money(c.totalCents, c.currency)).join(" + ") : "none"}
+        </span>
+        {outside.flagged.length ? (
+          <span className="shrink-0 rounded-full bg-terracotta/10 px-3 py-1 font-semibold text-terracotta" title={outside.flagged.map((f) => `${f.name} ${f.amount}: ${f.check}${f.note ? ` – ${f.note}` : ""}`).join("\n")}>
+            🔎 {outside.flagged.length} to review
+          </span>
+        ) : (
+          <span className="shrink-0 rounded-full bg-forest/10 px-3 py-1 text-forest">🔎 All records check out</span>
+        )}
+        {outside.claimsWaiting ? (
+          <span className="shrink-0 rounded-full bg-marigold/30 px-3 py-1 font-semibold text-ink">📸 {outside.claimsWaiting} waiting for you</span>
+        ) : null}
+      </div>
       <p className="border-b border-line bg-paper-2 px-5 py-2 text-xs text-ink-soft md:hidden">
         Tip: the treasurer dashboard is built for bigger screens. Rotate your phone or open it on a laptop for the full view.
       </p>

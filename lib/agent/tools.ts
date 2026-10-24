@@ -13,8 +13,20 @@ import { and, eq, ilike } from "drizzle-orm";
 import { langOf, t } from "../i18n";
 import { RATE_LABELS, RATE_KEYS, rateSummary } from "../pricing";
 import { getRates } from "../services/settings";
+import { offlineSummary, recordOffline, resolveOffline } from "../services/trust";
+import { sendReportNow } from "../services/autopilot";
+import { makeShareCard } from "../services/sharecard";
+import { metaConfigured } from "../env";
+import { sendImageTo } from "../channels/messaging";
 
-export type AgentContext = { user: User; channel: "whatsapp" | "sim" };
+export type AgentContext = {
+  user: User;
+  channel: "whatsapp" | "sim";
+  /** sha256 of a receipt photo in the current message, so the same photo can't be used twice. */
+  imageHash?: string;
+  /** How the current message arrived, recorded as evidence on offline payments. */
+  inputKind?: "text" | "voice" | "photo";
+};
 
 const code = z.string().describe("Collection code, e.g. NEEMA24");
 const amount = z.number().positive().describe("Amount, e.g. 20000 (TZS) or 25 (USD)");
@@ -143,6 +155,7 @@ export function buildTools(ctx: AgentContext): Record<string, Tool> {
       execute: safe(async ({ code: c }) => {
         const col = await mustFind(c);
         const s = await core.collectionStats(col);
+        const off = await offlineSummary(col.id);
         const base = {
           code: col.code,
           title: col.title,
@@ -159,6 +172,8 @@ export function buildTools(ctx: AgentContext): Record<string, Tool> {
             rail: b.currency === "TZS" ? "mobile money via Snippe" : "card/PayPal via PayPal",
           })),
           open_pledges_total: money(s.openPledgeCents, col.currency),
+          recorded_outside_sarafupay: off.confirmed.map((c) => money(c.totalCents, c.currency)).join(" + ") || "none",
+          note_on_outside_money: "Cash and other money the organiser recorded themselves. SarafuPay never held it, so it is not in the balance and can't be withdrawn here.",
         };
         if (col.ownerId !== ctx.user.id) return base;
         const [paid, plg, pays] = await Promise.all([
@@ -178,6 +193,13 @@ export function buildTools(ctx: AgentContext): Record<string, Tool> {
           })),
           open_pledges: plg.filter((p) => p.status === "open").map((p) => ({ name: p.displayName, amount: money(p.amountCents, col.currency), due: p.dueDate, reminded: Boolean(p.remindedAt), invoice: p.invoiceId })),
           payouts: pays.map((p) => ({ to: core.destinationLabel(p), withdrawn: money(p.amountCents, p.currency), received: money(p.netCents ?? p.amountCents, p.currency), status: p.status, note: p.note })),
+          outside_records: off.records
+            .filter((r) => r.status !== "rejected")
+            .slice(0, 50)
+            .map((r) => ({ id: r.id, name: r.displayName, amount: money(r.amountCents, r.currency), method: r.method, ref: r.reference, status: r.status, check: r.checkStatus, note: r.checkNote })),
+          trust_flags: off.flagged,
+          claims_waiting_for_owner: off.claimsWaiting,
+          autopilot: col.autopilot,
         };
       }),
     }),
@@ -392,6 +414,70 @@ export function buildTools(ctx: AgentContext): Record<string, Tool> {
       }),
     }),
 
+    record_offline_payment: tool({
+      description:
+        "Log money paid OUTSIDE SarafuPay (cash, someone's own mobile money, a bank deposit), usually read from a receipt photo, an M-Pesa SMS screenshot or a voice note. The owner's records are confirmed at once; anyone else's become a claim the owner must confirm. Runs trust checks (duplicate reference or photo, already paid through SarafuPay, pledge mismatch). Read amounts and references exactly as printed; if anything is unreadable, ask instead of guessing. Never use this for money paid through a SarafuPay link.",
+      inputSchema: z.object({
+        code,
+        name: z.string().min(1).max(80).describe("Who paid, as on the receipt or as the owner says"),
+        amount,
+        currency: z.string().length(3).optional().describe("Defaults to the collection currency"),
+        method: z.enum(["cash", "mobile_money", "bank", "other"]),
+        reference: z.string().max(60).optional().describe("Transaction ID exactly as printed, e.g. QJ47XK2P1L"),
+        received_on: date.optional(),
+      }),
+      execute: safe(async (i) => {
+        const col = await mustFind(i.code);
+        const r = await recordOffline({
+          collection: col,
+          by: ctx.user,
+          displayName: i.name,
+          amountCents: toCents(i.amount),
+          currency: (i.currency ?? col.currency).toUpperCase(),
+          method: i.method,
+          reference: i.reference,
+          receivedOn: i.received_on,
+          evidence: ctx.inputKind === "photo" ? "photo" : ctx.inputKind === "voice" ? "voice" : "text",
+          imageHash: ctx.inputKind === "photo" ? ctx.imageHash : undefined,
+        });
+        return { ok: true, record_id: r.record.id, status: r.record.status, check: r.record.checkStatus, note: r.record.checkNote, summary: r.summary };
+      }),
+    }),
+
+    resolve_offline_record: tool({
+      description: "Owner only: confirm or reject a payment someone claimed to have made outside SarafuPay (record ids look like off_…).",
+      inputSchema: z.object({ record_id: z.string().regex(/^off_[a-f0-9]{16}$/), action: z.enum(["confirm", "reject"]) }),
+      execute: safe(async (i) => ({ result: await resolveOffline(ctx.user, i.record_id, i.action) })),
+    }),
+
+    autopilot: tool({
+      description:
+        "Owner only: switch the treasurer autopilot on or off for a collection, or send its report now. When on, SarafuPay reminds pledgers when their due date arrives, sends the owner a weekly report, and tells them when the deadline passes. It never moves money.",
+      inputSchema: z.object({ code, on: z.boolean().optional(), report_now: z.boolean().optional() }),
+      execute: safe(async (i) => {
+        const col = await mustFind(i.code);
+        mustOwn(col, ctx);
+        let current = col;
+        if (i.on !== undefined) current = (await core.updateCollection(col.id, { autopilot: i.on ? "on" : "off" })) ?? col;
+        const report = i.report_now ? await sendReportNow(current) : undefined;
+        return { ok: true, autopilot: current.autopilot, report_sent: Boolean(report), note: report ? "The report was sent as its own message; don't repeat it." : undefined };
+      }),
+    }),
+
+    make_share_card: tool({
+      description:
+        "Owner only: draw a poster for the collection with Muse Image and send it to the owner, captioned with the share message, ready to forward into WhatsApp groups. Takes ~10-20 s.",
+      inputSchema: z.object({ code }),
+      execute: safe(async ({ code: c }) => {
+        if (!metaConfigured()) throw new ToolError("Share cards need the Meta Model API, which isn't configured. Offer the text share message instead.");
+        const col = await mustFind(c);
+        mustOwn(col, ctx);
+        const card = await makeShareCard(col);
+        const L = await langOf(ctx.user.phone);
+        await sendImageTo(ctx.user.phone, card.url, shareMessage(col, ctx.user.name, L));
+        return { ok: true, sent: true, url: card.url, note: "The card and its caption were sent as their own message; just say it's ready to forward." };
+      }),
+    }),
     update_collection: tool({
       description: "Owner only: change title, purpose, target, deadline, payout email, or close/reopen a collection.",
       inputSchema: z.object({

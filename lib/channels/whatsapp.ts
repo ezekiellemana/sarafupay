@@ -39,6 +39,28 @@ export async function sendWhatsAppText(toDigits: string, body: string): Promise<
   return { ok: true };
 }
 
+/** Sends an image by public URL with an optional caption (≤1024 chars). */
+export async function sendWhatsAppImage(toDigits: string, link: string, caption?: string): Promise<SendResult> {
+  if (!whatsappConfigured()) return { ok: false, reason: "not_configured" };
+  const res = await fetch(`${graph()}/${env.waPhoneNumberId()}/messages`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${env.waToken()}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      to: toDigits,
+      type: "image",
+      image: { link, ...(caption ? { caption: caption.slice(0, 1024) } : {}) },
+    }),
+  });
+  if (!res.ok) {
+    const detail = await res.text();
+    console.error("[whatsapp] image send failed", res.status, detail);
+    return { ok: false, reason: /131047|re-engagement/i.test(detail) ? "outside_24h" : "error", detail: detail.slice(0, 300) };
+  }
+  return { ok: true };
+}
+
 /**
  * Sends an approved message template. Templates are the only messages WhatsApp delivers
  * outside the 24-hour window (e.g. pledge reminders to people who haven't written lately).
@@ -76,7 +98,7 @@ export async function markRead(messageId: string): Promise<void> {
   }).catch(() => {});
 }
 
-/** Downloads inbound media (voice notes) so the model can listen to them. */
+/** Downloads inbound media (voice notes, receipt photos) so the model can hear or see them. */
 export async function downloadWhatsAppMedia(mediaId: string): Promise<{ data: Uint8Array; mimeType: string }> {
   const meta = await fetch(`${graph()}/${mediaId}`, { headers: { Authorization: `Bearer ${env.waToken()}` } });
   if (!meta.ok) throw new Error(`media lookup failed ${meta.status}`);

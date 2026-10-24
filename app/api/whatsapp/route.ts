@@ -40,6 +40,7 @@ type WaMessage = {
   type: string;
   text?: { body: string };
   audio?: { id: string; mime_type?: string };
+  image?: { id: string; mime_type?: string; caption?: string };
   button?: { text: string };
   interactive?: { button_reply?: { title: string }; list_reply?: { title: string } };
 };
@@ -62,8 +63,17 @@ export async function POST(req: Request) {
         after(async () => {
           if (!(await claimMessage(m.id))) return;
           void markRead(m.id);
-          let text = m.text?.body ?? m.button?.text ?? m.interactive?.button_reply?.title ?? m.interactive?.list_reply?.title;
+          let text = m.text?.body ?? m.button?.text ?? m.interactive?.button_reply?.title ?? m.interactive?.list_reply?.title ?? m.image?.caption;
           let audio: { data: Uint8Array; mimeType: string } | undefined;
+          let image: { data: Uint8Array; mimeType: string } | undefined;
+          if (m.type === "image" && m.image?.id) {
+            try {
+              image = await downloadWhatsAppMedia(m.image.id);
+            } catch (e) {
+              console.error("[whatsapp] image download failed", e);
+              text = text ?? "(photo could not be downloaded)";
+            }
+          }
           if (m.type === "audio" && m.audio?.id) {
             try {
               audio = await downloadWhatsAppMedia(m.audio.id);
@@ -72,7 +82,7 @@ export async function POST(req: Request) {
               text = text ?? "(voice note could not be downloaded)";
             }
           }
-          await handleIncoming({ phone: m.from, channel: "whatsapp", profileName, text, audio });
+          await handleIncoming({ phone: m.from, channel: "whatsapp", profileName, text, audio, image });
         });
       }
     }
