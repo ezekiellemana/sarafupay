@@ -17,6 +17,20 @@ SarafuPay is the technology and record-keeping layer. Licensed providers hold an
 
 The two balances are kept separately and never converted automatically.
 
+## The agent (Meta's Muse models)
+
+The WhatsApp agent runs on **Muse Spark** through the Meta Model API, with Muse Spark Open on a
+partner host and Gemini as backups. It plans, calls SarafuPay's tools, and never moves money on its own.
+
+- **Chat in Swahili or English:** create a collection, contribute, pledge, ask "who hasn't paid?".
+- **Voice notes:** transcribed by Muse Voice Transcribe, then handled like text.
+- **Trust Copilot:** forward a receipt photo or M-Pesa SMS screenshot; the agent reads it, records
+  the money paid outside SarafuPay, and flags duplicates, double counting and pledge mismatches.
+- **Treasurer autopilot:** reminders on due dates, a weekly report, a deadline note.
+- **Share cards:** a poster for the occasion from Muse Image, sent ready to forward.
+
+Details: [docs/META_MODELS.md](docs/META_MODELS.md).
+
 ## Pricing
 
 Contributors pay exactly what they give; the organiser carries the fees. No monthly fee, no
@@ -36,7 +50,7 @@ The math lives in `lib/pricing.ts` and is covered by `tests/pricing.test.ts`.
 ## Stack
 
 Next.js 16 (App Router), TypeScript, Drizzle + Postgres (PGlite locally), Vercel AI SDK with
-Gemini, WhatsApp Cloud API, Snippe REST API, PayPal Server SDK + Payouts, AG Studio treasurer
+Meta's Muse models (Meta Model API; Muse Spark Open on a partner host) and Gemini as fallback, WhatsApp Cloud API, Snippe REST API, PayPal Server SDK + Payouts, AG Studio treasurer
 dashboard. Hosted on DigitalOcean App Platform (`.do/app.yaml`).
 
 ```
@@ -53,7 +67,9 @@ lib/
   snippe/client.ts      Snippe sessions, payouts, webhook verification
   paypal/               orders, payouts, toolkit
   services/core.ts      collections, contributions, balances, payouts
-  agent/                prompt + tools for the WhatsApp agent
+  agent/                prompt, tools, model routing, Meta voice + image calls
+  services/trust.ts     Trust Copilot: money recorded outside SarafuPay, with checks
+  services/autopilot.ts treasurer autopilot (runs with the reconcile job)
 ```
 
 ## Run locally
