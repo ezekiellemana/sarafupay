@@ -265,6 +265,9 @@ export function Simulator({ buyer, testMode = true }: { buyer: { email: string; 
     // A clean session, so the tour's people have no history.
     await fetch("/api/sim/session?reset=1", { method: "POST" });
     setPhones({});
+    setMsgs([]);
+    lastId.current = 0;
+    firstLoad.current = true;
     const photo = await fetch("/tour/demo-receipt.png")
       .then((r) => r.blob())
       .then((b) => new Promise<string>((res) => {
