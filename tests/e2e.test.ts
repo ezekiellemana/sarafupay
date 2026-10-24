@@ -512,6 +512,29 @@ async function main() {
   delete process.env.GEMINI_API_KEY;
   console.log("✓ Meta billing/auth error falls back to Gemini instead of failing the reply");
 
+  // 11a2. Muse Spark Open on a partner host (Fireworks by default) sits between the Meta API and Gemini.
+  process.env.META_OPEN_API_KEY = "fw_test";
+  process.env.GEMINI_API_KEY = "g_test";
+  assert.deepEqual(models.modelChain().map((m) => m.provider), ["meta", "meta", "meta-open", "gemini", "gemini", "gemini", "gemini"].slice(0, models.modelChain().length));
+  const openBodies: Record<string, unknown>[] = [];
+  const realFetch2 = globalThis.fetch;
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input instanceof Request ? input.url : input);
+    if (url.startsWith("https://api.fireworks.ai/inference/v1/chat/completions")) {
+      const body = JSON.parse(String(init?.body));
+      openBodies.push(body);
+      return Response.json({ id: "f1", object: "chat.completion", created: 1, model: body.model, choices: [{ index: 0, message: { role: "assistant", content: "Habari kutoka Muse Spark Open" }, finish_reason: "stop" }], usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 } });
+    }
+    return realFetch2(input, init);
+  }) as typeof fetch;
+  const viaOpen = await models.withModelFallback((m) => (m.provider === "gemini" ? Promise.resolve({ text: "gemini" }) : generateText({ model: m.model, prompt: "hi", maxRetries: 0, providerOptions: m.fast })));
+  assert.equal(viaOpen.text, "Habari kutoka Muse Spark Open", "Meta API billing error → Muse Spark Open answers");
+  assert.equal(openBodies[0].model, "accounts/fireworks/models/muse-spark-open");
+  globalThis.fetch = realFetch2;
+  delete process.env.META_OPEN_API_KEY;
+  delete process.env.GEMINI_API_KEY;
+  console.log("✓ Muse Spark Open on Fireworks answers when the Meta Model API refuses");
+
   // 11b. Voice notes: WhatsApp Ogg/Opus → WAV → Muse Voice Transcribe → the agent reads the transcript.
   const { readFileSync } = await import("node:fs");
   const media = await import("../lib/agent/meta-media");

@@ -36,6 +36,13 @@ export const env = {
       .filter(Boolean),
   /** low | medium | high … ("minimal" for fastest replies). Muse Spark rejects "none". */
   metaReasoningEffort: () => get("META_REASONING_EFFORT", "low"),
+  /**
+   * Muse Spark Open (Meta's open-weights model) on any OpenAI-compatible host: Fireworks, Together,
+   * Baseten, Groq, Nebius… Used after the Meta Model API and before Gemini.
+   */
+  metaOpenApiKey: () => get("META_OPEN_API_KEY"),
+  metaOpenBaseUrl: () => get("META_OPEN_BASE_URL", "https://api.fireworks.ai/inference/v1").replace(/\/$/, ""),
+  metaOpenModel: () => get("META_OPEN_MODEL", "accounts/fireworks/models/muse-spark-open"),
   metaImageModel: () => get("META_IMAGE_MODEL", "muse-image-1.0"),
   metaTranscribeModel: () => get("META_TRANSCRIBE_MODEL", "muse-voice-transcribe-1.0"),
 
@@ -75,7 +82,7 @@ export function metaConfigured() {
 }
 /** Some model the agent can talk to. */
 export function aiConfigured() {
-  return Boolean(env.metaApiKey() || env.geminiApiKey());
+  return Boolean(env.metaApiKey() || env.metaOpenApiKey() || env.geminiApiKey());
 }
 export function whatsappConfigured() {
   return Boolean(env.waToken() && env.waPhoneNumberId());

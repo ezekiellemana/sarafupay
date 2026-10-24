@@ -22,6 +22,7 @@ export async function GET() {
       paypal: paypalConfigured() ? env.paypalEnv() : false,
       gemini: Boolean(env.geminiApiKey()),
       meta: Boolean(env.metaApiKey()),
+      meta_open: Boolean(env.metaOpenApiKey()),
       ai_model: primaryModel(),
       whatsapp: whatsappConfigured(),
       simulator: env.simulatorEnabled(),

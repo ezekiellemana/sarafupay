@@ -11,7 +11,7 @@ export function isRetryableModelError(e: unknown): boolean {
 }
 
 export type ModelPick = {
-  provider: "meta" | "gemini";
+  provider: "meta" | "meta-open" | "gemini";
   id: string;
   model: LanguageModel;
   /** Provider options for a fast, low-reasoning chat turn. */
@@ -31,8 +31,8 @@ export function metaProvider() {
 }
 
 /**
- * Every configured chat model, best first: Meta's Muse Spark models, then Gemini as a fallback
- * so the bot keeps answering if the Meta API is down or the key is missing.
+ * Every configured chat model, best first: Muse Spark on the Meta Model API, then Muse Spark Open
+ * (Meta's open weights on a partner host), then Gemini, so the bot keeps answering whatever fails.
  */
 export function modelChain(): ModelPick[] {
   const out: ModelPick[] = [];
@@ -41,6 +41,10 @@ export function modelChain(): ModelPick[] {
     for (const id of env.metaModels()) {
       out.push({ provider: "meta", id, model: meta.chatModel(id), fast: { meta: { reasoningEffort: env.metaReasoningEffort() } }, audioIn: false });
     }
+  }
+  if (env.metaOpenApiKey()) {
+    const open = createOpenAICompatible({ name: "metaOpen", baseURL: env.metaOpenBaseUrl(), apiKey: env.metaOpenApiKey() });
+    out.push({ provider: "meta-open", id: env.metaOpenModel(), model: open.chatModel(env.metaOpenModel()), fast: { metaOpen: { reasoningEffort: env.metaReasoningEffort() } }, audioIn: false });
   }
   if (env.geminiApiKey()) {
     const google = createGoogleGenerativeAI({ apiKey: env.geminiApiKey() });
