@@ -37,6 +37,8 @@ export const env = {
   waPhoneNumberId: () => get("WHATSAPP_PHONE_NUMBER_ID"),
   waVerifyToken: () => get("WHATSAPP_VERIFY_TOKEN"),
   waAppSecret: () => get("WHATSAPP_APP_SECRET"),
+  /** Six-digit two-step PIN used to register the number with the Cloud API (chosen by the owner). */
+  waPin: () => get("WHATSAPP_PIN").replace(/[^0-9]/g, ""),
   waDisplayNumber: () => get("WHATSAPP_DISPLAY_NUMBER").replace(/[^0-9]/g, ""),
   waGraphVersion: () => get("WHATSAPP_GRAPH_VERSION", "v23.0"),
   /** Approved UTILITY template used for pledge reminders outside the 24h window ("off" disables). */

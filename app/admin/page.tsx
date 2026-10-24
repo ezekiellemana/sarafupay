@@ -7,7 +7,7 @@ import { RATE_KEYS, RATE_LABELS, quotePayment, quotePayout, rateSummary, type Ra
 import { getRates, saveRates } from "@/lib/services/settings";
 import { isAdmin, recentActivity, revenue } from "@/lib/services/admin";
 import { snippeConfigured, paypalConfigured, env } from "@/lib/env";
-import { ourWebhookUrl, pointNumberHere, webhookStatus } from "@/lib/channels/whatsapp-webhook";
+import { ourWebhookUrl, pointNumberHere, registerNumber, webhookStatus } from "@/lib/channels/whatsapp-webhook";
 
 export const metadata = { title: "Admin · SarafuPay", robots: { index: false } };
 
@@ -35,6 +35,12 @@ async function connectWhatsAppAction(form: FormData) {
   "use server";
   const key = String(form.get("key") ?? "");
   if (!isAdmin(key)) notFound();
+  // Register first if Meta still shows the number as not connected, then route its webhooks here.
+  const st = await webhookStatus();
+  if (st.configured && st.numberStatus && st.numberStatus !== "CONNECTED") {
+    const reg = await registerNumber();
+    if (!reg.ok) redirect(`/admin?key=${encodeURIComponent(key)}&wa=${encodeURIComponent(`Register: ${reg.detail ?? "failed"}`)}`);
+  }
   const r = await pointNumberHere();
   redirect(`/admin?key=${encodeURIComponent(key)}&wa=${r.ok ? "ok" : encodeURIComponent(r.detail ?? "failed")}`);
 }
@@ -93,6 +99,8 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
               <dl className="mt-3 grid gap-x-6 gap-y-1 font-mono text-xs sm:grid-cols-[10rem_1fr]">
                 <dt className="text-ink-soft">This number</dt>
                 <dd>{env.waDisplayNumber() ? `+${env.waDisplayNumber()}` : env.waPhoneNumberId()}</dd>
+                <dt className="text-ink-soft">Meta status</dt>
+                <dd>{[wa.numberStatus, wa.nameStatus && `name ${wa.nameStatus}`].filter(Boolean).join(" · ") || "unknown"}</dd>
                 <dt className="text-ink-soft">Number override</dt>
                 <dd>{wa.phoneOverride || "none"}</dd>
                 <dt className="text-ink-soft">App default</dt>
@@ -107,11 +115,11 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
                   {waMsg === "ok" ? "Done. This number now sends its messages to sarafupay.app." : waMsg}
                 </p>
               ) : null}
-              {!wa.pointsHere ? (
+              {!wa.pointsHere || (wa.numberStatus && wa.numberStatus !== "CONNECTED") ? (
                 <form action={connectWhatsAppAction} className="mt-4">
                   <input type="hidden" name="key" value={key} />
-                  <button className="btn btn-primary">Send this number&apos;s messages to {ourWebhookUrl()}</button>
-                  <p className="mt-2 text-xs text-ink-soft">Only this number changes. Other numbers in the Meta app keep their own website.</p>
+                  <button className="btn btn-primary">Connect this number to {ourWebhookUrl()}</button>
+                  <p className="mt-2 text-xs text-ink-soft">Registers the number if needed, then routes only its messages here. Other numbers keep their own website.</p>
                 </form>
               ) : null}
             </>

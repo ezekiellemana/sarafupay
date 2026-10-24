@@ -35,6 +35,7 @@ If you deploy on a free Render instance (which sleeps), wake the app first (open
 | `WHATSAPP_ACCESS_TOKEN` | System-user token |
 | `WHATSAPP_PHONE_NUMBER_ID` | From WhatsApp Manager → Phone numbers |
 | `WHATSAPP_APP_SECRET` | App settings → Basic (used to verify `X-Hub-Signature-256`) |
+| `WHATSAPP_PIN` | Six digits you choose. The admin **Connect** button registers the number with the Cloud API using it (status Pending → Connected). |
 | `WHATSAPP_VERIFY_TOKEN` | Same string as in the webhook config |
 | `WHATSAPP_DISPLAY_NUMBER` | Number in international format without `+`, e.g. `255650972587`. Share cards then use `wa.me` links |
 
