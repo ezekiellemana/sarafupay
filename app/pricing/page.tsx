@@ -8,6 +8,8 @@ import { money } from "@/lib/format";
 import { quotePayment, quotePayout, rateSummary, type Rates } from "@/lib/pricing";
 import { getRates } from "@/lib/services/settings";
 import { BANKS, CARDS, LogoChip, MOBILE_MONEY } from "@/components/provider";
+import { detectVisitor } from "@/lib/visitor";
+import { fmt, friendly, perUsd, type Visitor } from "@/lib/locale";
 
 export const metadata = {
   title: "Pricing · SarafuPay",
@@ -24,17 +26,13 @@ function split(r: Rate, cur: "TZS" | "USD") {
   return `Provider ${p}${cap} · SarafuPay ${r.sarafuPct}%`;
 }
 
-function lines(r: Rates): { receive: Line[]; withdraw: Line[] } {
-  return {
-    receive: [
-      { icon: "📱", what: "Mobile money", price: rateSummary(r.snippePayment, "TZS"), rate: r.snippePayment, cur: "TZS" },
-      { icon: "💳", what: "Card, any currency", price: rateSummary(r.paypalPayment, "USD"), rate: r.paypalPayment, cur: "USD" },
-    ],
-    withdraw: [
-      { icon: "🏦", what: "Mobile money or bank", price: rateSummary(r.snippePayoutMobile, "TZS"), rate: r.snippePayoutMobile, cur: "TZS" },
-      { icon: "💳", what: "PayPal", price: `up to ${r.paypalPayout.providerPct + r.paypalPayout.sarafuPct}%`, rate: r.paypalPayout, cur: "USD" },
-    ],
-  };
+/** Visitors outside Tanzania see the card rows first: that's how they'd pay. */
+function lines(r: Rates, v: Visitor): { receive: Line[]; withdraw: Line[] } {
+  const mm: Line = { icon: "📱", what: "Mobile money · Tanzania", price: rateSummary(r.snippePayment, "TZS"), rate: r.snippePayment, cur: "TZS" };
+  const card: Line = { icon: "💳", what: "Card, any currency", price: rateSummary(r.paypalPayment, "USD"), rate: r.paypalPayment, cur: "USD" };
+  const mmOut: Line = { icon: "🏦", what: "Mobile money or bank · Tanzania", price: rateSummary(r.snippePayoutMobile, "TZS"), rate: r.snippePayoutMobile, cur: "TZS" };
+  const ppOut: Line = { icon: "💳", what: "PayPal", price: `up to ${r.paypalPayout.providerPct + r.paypalPayout.sarafuPct}%`, rate: r.paypalPayout, cur: "USD" };
+  return v.mobileMoney ? { receive: [mm, card], withdraw: [mmOut, ppOut] } : { receive: [card, mm], withdraw: [ppOut, mmOut] };
 }
 
 function PriceList({ title, items }: { title: string; items: Line[] }) {
@@ -58,13 +56,17 @@ function PriceList({ title, items }: { title: string; items: Line[] }) {
   );
 }
 
-export default async function PricingPage() {
+export default async function PricingPage({ searchParams }: PageProps<"/pricing">) {
   await connection();
+  const v = await detectVisitor((await searchParams).country);
   const r = await getRates();
-  const { receive, withdraw } = lines(r);
-  const pay = quotePayment(r, "snippe", 100_000_00);
-  const out = quotePayout(r, "mobile_money", pay.netCents);
-  const tz = (c: number) => money(c, "TZS");
+  const { receive, withdraw } = lines(r, v);
+  // Worked example on the rail this visitor would use: TZS 100,000 by mobile money in Tanzania, $100 by card elsewhere.
+  const card = !v.mobileMoney;
+  const pay = card ? quotePayment(r, "paypal", 100_00) : quotePayment(r, "snippe", 100_000_00);
+  const out = card ? quotePayout(r, "paypal", pay.netCents) : quotePayout(r, "mobile_money", pay.netCents);
+  const tz = (c: number) => money(c, card ? "USD" : "TZS");
+  const approx = card && v.cur !== "USD" ? `≈ ${fmt(v.cur, friendly((out.netCents / 100) * perUsd(v.cur)))}` : null;
 
   const receipt: [string, string, boolean?][] = [
     ["Friends pay", tz(pay.grossCents), true],
@@ -79,7 +81,7 @@ export default async function PricingPage() {
     <div className="min-h-screen overflow-x-clip">
       <ScrollFX />
       <div className="kanga" />
-      <SiteHeader />
+      <SiteHeader lang={v.lang} />
       <main>
         <section className="relative">
           <CoinField className="absolute inset-0 -top-24 opacity-50 [mask-image:radial-gradient(50%_70%_at_85%_40%,black_20%,transparent)]" />
@@ -107,7 +109,7 @@ export default async function PricingPage() {
         <section className="mx-auto grid max-w-5xl items-center gap-8 px-5 pb-20 sm:px-6 lg:grid-cols-[0.8fr_1.2fr]">
           <div data-reveal>
             <p className="font-mono text-xs uppercase tracking-[0.2em] text-ink-soft">Example</p>
-            <h2 className="font-display mt-3 text-4xl font-semibold leading-tight sm:text-5xl">TZS 100,000 raised.</h2>
+            <h2 className="font-display mt-3 text-4xl font-semibold leading-tight sm:text-5xl">{card ? "$100 raised by card." : "TZS 100,000 raised."}</h2>
           </div>
           <div data-reveal style={{ "--rd": ".1s" } as React.CSSProperties}>
             <TiltCard className="receipt">
@@ -121,7 +123,10 @@ export default async function PricingPage() {
               </dl>
               <div className="mt-5 flex items-end justify-between border-t-2 border-dashed border-line pt-4">
                 <p className="font-semibold text-forest">You receive</p>
-                <p className="font-display text-3xl font-semibold text-forest sm:text-4xl">{tz(out.netCents)}</p>
+                <div className="text-right">
+                  <p className="font-display text-3xl font-semibold text-forest sm:text-4xl">{tz(out.netCents)}</p>
+                  {approx ? <p className="text-sm text-ink-soft">{approx}</p> : null}
+                </div>
               </div>
             </TiltCard>
           </div>

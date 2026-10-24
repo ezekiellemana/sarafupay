@@ -13,6 +13,8 @@ import { Mark, MarkTile, PAY_WITH, PAYOUT_TO } from "@/components/provider";
 import { waLink } from "@/lib/channels/whatsapp";
 import { getRates } from "@/lib/services/settings";
 import { rateSummary } from "@/lib/pricing";
+import { detectVisitor } from "@/lib/visitor";
+import { perUsd, tr } from "@/lib/locale";
 
 const occasions: { sw: string; en: string; shot: Shot }[] = [
   { sw: "Harusi", en: "Weddings", shot: { name: "harusi", alt: "A bride and groom walk out of church as guests cheer", focus: "50% 45%" } },
@@ -38,16 +40,17 @@ const faqs: [string, string][] = [
   ["Do friends need an app?", "No. A link or the chat is enough."],
 ];
 
-export default async function Home() {
+export default async function Home({ searchParams }: PageProps<"/">) {
   await connection();
-  const wa = waLink("Habari SarafuPay 👋");
+  const v = await detectVisitor((await searchParams).country);
+  const wa = waLink(tr(v, "Habari SarafuPay 👋", "Hi SarafuPay 👋"));
   const rates = await getRates();
 
   return (
     <div className="flex min-h-screen flex-col overflow-x-clip">
       <ScrollFX />
       <div className="kanga" />
-      <SiteHeader />
+      <SiteHeader lang={v.lang} />
 
       {/* ---------- Hero ---------- */}
       <section className="relative">
@@ -69,7 +72,7 @@ export default async function Home() {
               notebook.
             </h1>
             <p className="rise d2 mt-6 max-w-md text-lg leading-relaxed text-ink-soft">
-              Group collections in one chat. Every shilling reported.
+              Group collections in one chat. {["TZS", "KES", "UGX"].includes(v.cur) ? "Every shilling reported." : "Every cent reported."}
             </p>
             <div className="rise d3 mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               {wa ? (
@@ -84,7 +87,7 @@ export default async function Home() {
             <dl className="rise d4 mt-10 grid max-w-lg grid-cols-3 gap-4 border-t border-line pt-6 sm:gap-6">
               {[
                 ["0", "apps"],
-                [rateSummary(rates.snippePayment, "TZS"), "all-in fee"],
+                [v.mobileMoney ? rateSummary(rates.snippePayment, "TZS") : rateSummary(rates.paypalPayment, "USD"), "all-in fee"],
                 ["100%", "reported"],
               ].map(([k, v]) => (
                 <div key={v}>
@@ -95,7 +98,7 @@ export default async function Home() {
             </dl>
           </div>
           <div className="rise d3 hidden sm:block">
-            <Phone3D />
+            <Phone3D v={v} />
           </div>
         </div>
       </section>
@@ -125,7 +128,7 @@ export default async function Home() {
             <h2 className="font-display mt-3 max-w-2xl text-4xl font-semibold leading-tight sm:text-5xl">Three steps. One chat.</h2>
           </div>
           <div className="mt-10 sm:mt-14" data-reveal style={{ "--rd": ".1s" } as React.CSSProperties}>
-            <HowShow />
+            <HowShow v={v} />
           </div>
         </div>
       </section>
@@ -133,7 +136,7 @@ export default async function Home() {
       {/* ---------- Occasions ---------- */}
       <section className="mx-auto w-full max-w-6xl py-20 sm:px-6 sm:py-24">
         <div className="px-5 sm:px-0" data-reveal>
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-ink-soft">Kwa kila mchango</p>
+          <p className="font-mono text-xs uppercase tracking-[0.2em] text-ink-soft">{tr(v, "Kwa kila mchango", "Michango · group giving")}</p>
           <h2 className="font-display mt-3 max-w-2xl text-4xl font-semibold leading-tight sm:text-5xl">For every occasion.</h2>
         </div>
         <div className="mt-8 sm:mt-10" data-reveal style={{ "--rd": ".1s" } as React.CSSProperties}>
@@ -144,8 +147,8 @@ export default async function Home() {
                   <Photo shot={o.shot} className="photo-img" />
                   <div className="photo-shade" aria-hidden />
                   <div className="photo-title">
-                    <p className="font-display text-3xl font-semibold text-paper">{o.sw}</p>
-                    <p className="text-sm text-paper/80">{o.en}</p>
+                    <p className="font-display text-3xl font-semibold text-paper">{v.lang === "sw" ? o.sw : o.en}</p>
+                    <p className="text-sm text-paper/80">{v.lang === "sw" ? o.en : o.sw}</p>
                   </div>
                 </div>
               </TiltCard>
@@ -166,7 +169,7 @@ export default async function Home() {
               Pricing →
             </Link>
           </div>
-          <FeeCalculator rates={rates} />
+          <FeeCalculator rates={rates} v={v} perUsd={perUsd(v.cur)} />
         </div>
       </section>
 

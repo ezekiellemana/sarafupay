@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ex, tr, type Visitor } from "@/lib/locale";
 
 const DURATION = 5600;
 
@@ -12,23 +13,23 @@ const STEPS = [
 
 /* ---------- the three scenes (pure CSS 3D; animations restart when the scene remounts) ---------- */
 
-function SceneStart() {
+function SceneStart({ v }: { v: Visitor }) {
   return (
     <div className="hs-scene">
       <div className="hs-phone" style={{ "--z": "0px" } as React.CSSProperties}>
         <div className="hs-phone-top" />
         <div className="hs-chat">
-          <p className="hs-bubble hs-out" style={{ "--d": "0.2s" } as React.CSSProperties}>Nataka kuchangisha harusi 💍</p>
-          <p className="hs-bubble hs-in" style={{ "--d": "1.0s" } as React.CSSProperties}>Hongera! Lengo ni kiasi gani?</p>
-          <p className="hs-bubble hs-out" style={{ "--d": "1.8s" } as React.CSSProperties}>TZS 3,000,000</p>
-          <p className="hs-bubble hs-in" style={{ "--d": "2.6s" } as React.CSSProperties}>Tayari ✅</p>
+          <p className="hs-bubble hs-out" style={{ "--d": "0.2s" } as React.CSSProperties}>{tr(v, "Nataka kuchangisha harusi 💍", "Collecting for a wedding 💍")}</p>
+          <p className="hs-bubble hs-in" style={{ "--d": "1.0s" } as React.CSSProperties}>{tr(v, "Hongera! Lengo ni kiasi gani?", "Congrats! What's the target?")}</p>
+          <p className="hs-bubble hs-out" style={{ "--d": "1.8s" } as React.CSSProperties}>{ex(v, 3_000_000)}</p>
+          <p className="hs-bubble hs-in" style={{ "--d": "2.6s" } as React.CSSProperties}>{tr(v, "Tayari ✅", "Done ✅")}</p>
         </div>
       </div>
       <div className="hs-card hs-pop" style={{ "--d": "3.1s" } as React.CSSProperties}>
-        <p className="hs-k">Harusi ya Neema</p>
+        <p className="hs-k">{tr(v, "Harusi ya Neema", "Neema's wedding")}</p>
         <p className="hs-big">NEEMA24</p>
         <div className="hs-bar"><span style={{ width: "0%" }} /></div>
-        <p className="hs-k">TZS 0 / 3,000,000</p>
+        <p className="hs-k">0 / {ex(v, 3_000_000)}</p>
       </div>
       <span className="hs-spark" style={{ "--d": "3.2s", "--x": "-120px", "--y": "-90px" } as React.CSSProperties} />
       <span className="hs-spark" style={{ "--d": "3.3s", "--x": "130px", "--y": "-70px" } as React.CSSProperties} />
@@ -44,7 +45,7 @@ const FRIENDS = [
   { x: 150, y: 105, z: 30, e: "🧑🏾", d: 2.3 },
 ];
 
-function SceneShare() {
+function SceneShare({ v }: { v: Visitor }) {
   return (
     <div className="hs-scene">
       <div className="hs-card hs-center hs-pop" style={{ "--d": "0s" } as React.CSSProperties}>
@@ -56,7 +57,7 @@ function SceneShare() {
           </svg>
           <span className="hs-ring-label">68%</span>
         </div>
-        <p className="hs-k">TZS 2,040,000</p>
+        <p className="hs-k">{ex(v, 2_040_000)}</p>
       </div>
       {FRIENDS.map((f, i) => (
         <div key={i}>
@@ -76,7 +77,7 @@ function SceneShare() {
             className="hs-tick"
             style={{ "--d": `${f.d + 0.9}s`, transform: `translate3d(${f.x}px, ${f.y + (f.y < 0 ? -46 : 46)}px, ${f.z + 20}px)` } as React.CSSProperties}
           >
-            +TZS 50,000
+            +{ex(v, 50_000)}
           </span>
         </div>
       ))}
@@ -84,7 +85,7 @@ function SceneShare() {
   );
 }
 
-function SceneOut() {
+function SceneOut({ v }: { v: Visitor }) {
   const digits = "482913".split("");
   return (
     <div className="hs-scene">
@@ -100,8 +101,8 @@ function SceneOut() {
       </div>
       <span className="hs-coin hs-send" style={{ "--d": "1.7s" } as React.CSSProperties}>S</span>
       <div className="hs-card hs-payee hs-pop" style={{ "--d": "2.4s" } as React.CSSProperties}>
-        <p className="hs-k">Mpishi</p>
-        <p className="hs-big">TZS 583,500</p>
+        <p className="hs-k">{tr(v, "Mpishi", "Caterer")}</p>
+        <p className="hs-big">{v.mobileMoney ? ex(v, 583_500) : ex(v, 576_000)}</p>
         <p className="hs-ok">✓</p>
       </div>
       {[-1, 0, 1, 2].map((k, i) => (
@@ -110,7 +111,7 @@ function SceneOut() {
           className="hs-note"
           style={{ "--d": `${3.1 + i * 0.22}s`, "--x": `${[-175, -58, 58, 175][i]}px`, "--y": `${[-100, -140, -140, -100][i]}px` } as React.CSSProperties}
         >
-          ✓ Imeripotiwa
+          {tr(v, "✓ Imeripotiwa", "✓ Reported")}
         </span>
       ))}
     </div>
@@ -124,7 +125,7 @@ const SCENES = [SceneStart, SceneShare, SceneOut];
  * screen, with tabs that fill as each scene plays. Tap a tab to jump. Pauses off screen and in
  * background tabs; reduced motion shows each scene's final frame.
  */
-export function HowShow() {
+export function HowShow({ v }: { v: Visitor }) {
   const [i, setI] = useState(0);
   const [on, setOn] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -187,7 +188,7 @@ export function HowShow() {
           <p className="sr-only">{`${STEPS[i].title}. ${STEPS[i].line}`}</p>
           <div className="hs-floor" aria-hidden />
           <div ref={rig} className="hs-rig" aria-hidden>
-            <Scene key={i} />
+            <Scene key={i} v={v} />
           </div>
         </div>
         <p className="mt-3 text-center text-sm text-paper/70 lg:hidden">{STEPS[i].line}</p>

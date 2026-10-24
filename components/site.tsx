@@ -3,8 +3,8 @@ import { Logo, SandboxBadge } from "@/components/brand";
 import { waLink } from "@/lib/channels/whatsapp";
 
 /** Shared public header: logo, a few links, and the one action that matters. */
-export function SiteHeader({ cta = true }: { cta?: boolean }) {
-  const wa = waLink("Habari SarafuPay 👋");
+export function SiteHeader({ cta = true, lang = "en" }: { cta?: boolean; lang?: "sw" | "en" }) {
+  const wa = waLink(lang === "sw" ? "Habari SarafuPay 👋" : "Hi SarafuPay 👋");
   return (
     <header className="relative z-20 mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-5 py-4 sm:px-6 sm:py-5">
       <div className="flex items-center gap-3">

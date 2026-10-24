@@ -5,6 +5,7 @@ import { sql } from "drizzle-orm";
 import { aiUsageToday } from "@/lib/limits";
 import { kvConfigured } from "@/lib/kv";
 import { primaryModel } from "@/lib/agent/models";
+import { detectVisitor } from "@/lib/visitor";
 
 export async function GET() {
   let db = false;
@@ -28,6 +29,8 @@ export async function GET() {
       simulator: env.simulatorEnabled(),
       keyvalue: kvConfigured(),
       ai_today: await aiUsageToday(),
+      // Where this request seems to come from (drives example currency/language on public pages).
+      visitor: await detectVisitor().then((v) => ({ country: v.country, lang: v.lang, cur: v.cur })),
     },
     { status: db ? 200 : 503 },
   );
