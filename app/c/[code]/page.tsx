@@ -14,6 +14,7 @@ import { Photo } from "@/components/landing/photo";
 import { contributeAction } from "./actions";
 import { ChipIn } from "./chip-in";
 import { SupporterSearch } from "./supporter-search";
+import { offlineSummary } from "@/lib/services/trust";
 
 
 export default async function CollectionPage({ params, searchParams }: PageProps<"/c/[code]">) {
@@ -24,12 +25,14 @@ export default async function CollectionPage({ params, searchParams }: PageProps
   if (!col) notFound();
   const q = typeof sp.q === "string" ? sp.q : "";
   const pageNo = Number(typeof sp.page === "string" ? sp.page : 1) || 1;
-  const [stats, owner, supporters, pays] = await Promise.all([
+  const [stats, owner, supporters, pays, outside] = await Promise.all([
     collectionStats(col),
     getUser(col.ownerId),
     searchSupporters(col.id, { q, page: pageNo, pageSize: 8 }),
     listPayouts(col.id),
+    offlineSummary(col.id),
   ]);
+  const dups = outside.flagged.filter((f) => f.check === "duplicate").length;
   const ledger = pays.filter((p) => p.status === "success" || p.status === "processing");
   const chat = waLink(`Contribute ${col.code}`) ?? simulatorUrl(`Contribute ${col.code}`);
   const err = typeof sp.err === "string" ? sp.err : null;
@@ -98,6 +101,30 @@ export default async function CollectionPage({ params, searchParams }: PageProps
               </p>
             ))}
           </TiltCard>
+
+          {/* Transparency: every shilling accounted for, in three lines */}
+          <ul className="trust-list mt-4 space-y-2 text-sm" aria-label="Transparency">
+            <li className="flex items-center gap-3 rounded-2xl border border-line bg-paper/70 px-4 py-3">
+              <span aria-hidden>🔒</span>
+              <span className="min-w-0 flex-1">Paid via SarafuPay</span>
+              <strong className="shrink-0 font-mono">{stats.balances.map((b) => money(b.raisedCents, b.currency)).join(" + ")}</strong>
+            </li>
+            <li className="flex items-center gap-3 rounded-2xl border border-line bg-paper/70 px-4 py-3">
+              <span aria-hidden>📤</span>
+              <span className="min-w-0 flex-1">Paid out, code-confirmed</span>
+              <strong className="shrink-0 font-mono">{ledger.length ? stats.balances.map((b) => money(b.paidOutCents, b.currency)).join(" + ") : "—"}</strong>
+            </li>
+            {outside.confirmed.length || dups ? (
+              <li className="flex items-center gap-3 rounded-2xl border border-line bg-paper/70 px-4 py-3">
+                <span aria-hidden>🔎</span>
+                <span className="min-w-0 flex-1">
+                  Paid outside, AI-checked
+                  {dups ? <span className="block text-xs text-terracotta">{dups} duplicate{dups === 1 ? "" : "s"} caught, not counted</span> : null}
+                </span>
+                <strong className="shrink-0 font-mono">{outside.confirmed.length ? outside.confirmed.map((c) => money(c.totalCents, c.currency)).join(" + ") : "—"}</strong>
+              </li>
+            ) : null}
+          </ul>
         </section>
 
         {/* Chip in: right after the numbers on phones, a sticky column on desktop */}
