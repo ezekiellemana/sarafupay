@@ -13,6 +13,43 @@ const BUILT_IN: Persona[] = [
   { id: "amina", label: "Amina", hint: "Friend in Tanzania" },
   { id: "john", label: "John", hint: "Friend in the UK" },
 ];
+/** The one-click tour: real messages to the real agent, as three people. No money moves. */
+type TourStep = { persona: string; caption: string; text: (code: string) => string; photo?: boolean };
+const TOUR: TourStep[] = [
+  { persona: "organiser", caption: "An organiser starts a collection in one message", text: () => "Hi! I'm Enzo. Create a collection for my sister Neema's wedding, target TZS 2,000,000 by 20 December. Go ahead and create it." },
+  { persona: "amina", caption: "A friend opens it from the share link, in Swahili", text: (c) => `Changia ${c}` },
+  { persona: "amina", caption: "She pledges; the agent records the promise", text: () => "Jina langu ni Amina. Naahidi TZS 50,000, nitalipa tarehe 1 Novemba." },
+  { persona: "organiser", caption: "Trust Copilot reads a receipt photo and matches her pledge", text: () => "Amina paid me directly on mobile money, here's the SMS.", photo: true },
+  { persona: "organiser", caption: "The same photo again is flagged as a duplicate", text: () => "And this one is from her brother.", photo: true },
+  { persona: "organiser", caption: "Treasurer autopilot takes over", text: () => "Turn on autopilot, send me the report now, and give me my dashboard link." },
+];
+const TOUR_REPLY_MS = 60_000;
+
+/** Wall clock, outside render (the tour runs from a click handler). */
+const clockNow = () => Date.now();
+
+async function inboxOf(persona: string, after = 0): Promise<Msg[]> {
+  const res = await fetch(`/api/sim/inbox?persona=${persona}&after=${after}`, { cache: "no-store" });
+  return res.ok ? ((await res.json()) as { messages: Msg[] }).messages : [];
+}
+
+/** Sends as `persona` and waits for the agent's reply (or a minute). Returns the reply texts. */
+async function tourSay(persona: string, text: string, image?: string): Promise<string[]> {
+  const before = await inboxOf(persona);
+  const lastIdBefore = before.length ? before[before.length - 1].id : 0;
+  await fetch("/api/sim/send", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ persona, text, ...(image ? { image } : {}) }),
+  });
+  for (let waited = 0; waited < TOUR_REPLY_MS; waited += 1500) {
+    const out = (await inboxOf(persona, lastIdBefore)).filter((m) => m.direction === "out");
+    if (out.length) return out.map((m) => m.text);
+    await new Promise((r) => setTimeout(r, 1500));
+  }
+  return [];
+}
+
 const CUSTOM_KEY = "sarafupay.sim.people.v2";
 const ACTIVE_KEY = "sarafupay.sim.active.v2";
 
@@ -87,6 +124,7 @@ export function Simulator({ buyer, testMode = true }: { buyer: { email: string; 
   const [adding, setAdding] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const [tour, setTour] = useState<{ step: number; caption: string } | null>(null);
 
   const lastId = useRef(0);
   const lastSend = useRef(0);
@@ -220,6 +258,52 @@ export function Simulator({ buyer, testMode = true }: { buyer: { email: string; 
     }
   }
 
+  async function runTour() {
+    if (tour || !ready) return;
+    setSheet(false);
+    setMenu(false);
+    // A clean session, so the tour's people have no history.
+    await fetch("/api/sim/session?reset=1", { method: "POST" });
+    setPhones({});
+    const photo = await fetch("/tour/demo-receipt.png")
+      .then((r) => r.blob())
+      .then((b) => new Promise<string>((res) => {
+        const fr = new FileReader();
+        fr.onload = () => res(String(fr.result));
+        fr.readAsDataURL(b);
+      }));
+    let code = "";
+    try {
+      for (let i = 0; i < TOUR.length; i++) {
+        const st = TOUR[i];
+        setTour({ step: i + 1, caption: st.caption });
+        choose(st.persona);
+        setBusy(true);
+        lastSend.current = clockNow();
+        await new Promise((r) => setTimeout(r, 900));
+        let replies = await tourSay(st.persona, st.text(code), st.photo ? photo : undefined);
+        if (i === 0) {
+          // If the agent asked to confirm first, confirm once.
+          const find = (rs: string[]) => rs.join(" ").match(/\b[A-Z]{4,}\d{2}\b/)?.[0] ?? "";
+          code = find(replies);
+          if (!code) {
+            replies = await tourSay(st.persona, "Yes, create it.");
+            code = find(replies);
+          }
+          if (!code) throw new Error("no collection code");
+        }
+        setBusy(false);
+        await new Promise((r) => setTimeout(r, 2500)); // time to read the reply
+      }
+      setTour({ step: TOUR.length + 1, caption: "Done. Open the dashboard link above to see the agent's activity log." });
+    } catch {
+      setTour({ step: 0, caption: "The tour stopped. Tap ▶ Tour to try again." });
+    } finally {
+      setBusy(false);
+      setTimeout(() => setTour((t) => (t && (t.step === 0 || t.step > TOUR.length) ? null : t)), 12_000);
+    }
+  }
+
   function choose(id: string) {
     setActive(id);
     write(ACTIVE_KEY, id);
@@ -313,7 +397,10 @@ export function Simulator({ buyer, testMode = true }: { buyer: { email: string; 
   const helpPanel = (
     <>
       <div className="text-sm leading-relaxed text-ink-soft">
-        <p className="font-semibold text-ink">Try it in 4 taps</p>
+        <button onClick={() => void runTour()} disabled={!ready || Boolean(tour)} className="btn btn-primary mb-5 w-full justify-center disabled:opacity-50">
+          ▶ Watch a 60-second tour
+        </button>
+        <p className="font-semibold text-ink">Or try it in 4 taps</p>
         <ol className="sim-steps mt-3 space-y-2">
           <li><span><b>Organiser</b>: start a collection</span></li>
           <li><span><b>Amina</b>: send “Contribute CODE”</span></li>
@@ -434,10 +521,13 @@ export function Simulator({ buyer, testMode = true }: { buyer: { email: string; 
               {testMode ? " · test mode" : ""}
             </p>
             {msgs.length === 0 ? (
-              <div className="sim-empty" aria-hidden>
-                <div className="sim-coin">S</div>
+              <div className="sim-empty">
+                <div className="sim-coin" aria-hidden>S</div>
                 <p className="font-display mt-5 text-2xl font-semibold text-ink">Habari! 👋</p>
-                <p className="mt-1 text-sm text-ink-soft">Tap a suggestion to start.</p>
+                <p className="mt-1 text-sm text-ink-soft">Tap a suggestion to start, or watch the agent work:</p>
+                <button onClick={() => void runTour()} disabled={!ready || Boolean(tour)} className="btn btn-primary mt-4 justify-center disabled:opacity-50">
+                  ▶ 60-second tour
+                </button>
               </div>
             ) : null}
             {msgs.map((m) => (
@@ -478,7 +568,18 @@ export function Simulator({ buyer, testMode = true }: { buyer: { email: string; 
             ) : null}
           </div>
 
-          <div className="no-scrollbar flex gap-2 overflow-x-auto px-3 pb-2 sm:px-6">
+          {tour ? (
+            <div className="mx-3 mb-2 flex items-center gap-3 rounded-2xl bg-forest px-4 py-2.5 text-sm text-paper shadow-lg sm:mx-6" role="status" aria-live="polite">
+              {tour.step >= 1 && tour.step <= TOUR.length ? (
+                <span className="shrink-0 rounded-full bg-marigold px-2 py-0.5 font-mono text-xs font-semibold text-ink">
+                  {tour.step}/{TOUR.length}
+                </span>
+              ) : null}
+              <span className="min-w-0 flex-1">{tour.caption}</span>
+              <span className="shrink-0 text-xs opacity-75">{me.label}</span>
+            </div>
+          ) : null}
+          <div className={`no-scrollbar flex gap-2 overflow-x-auto px-3 pb-2 sm:px-6 ${tour ? "hidden" : ""}`}>
             {suggestions.map((s) => (
               <button
                 key={s}
