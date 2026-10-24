@@ -38,6 +38,8 @@ export const env = {
   waVerifyToken: () => get("WHATSAPP_VERIFY_TOKEN"),
   waAppSecret: () => get("WHATSAPP_APP_SECRET"),
   /** Six-digit two-step PIN used to register the number with the Cloud API (chosen by the owner). */
+  /** WhatsApp Business Account that owns the number (WhatsApp Manager → account ID); used for templates. */
+  waBusinessAccountId: () => get("WHATSAPP_BUSINESS_ACCOUNT_ID").replace(/[^0-9]/g, ""),
   waPin: () => get("WHATSAPP_PIN").replace(/[^0-9]/g, ""),
   waDisplayNumber: () => get("WHATSAPP_DISPLAY_NUMBER").replace(/[^0-9]/g, ""),
   waGraphVersion: () => get("WHATSAPP_GRAPH_VERSION", "v23.0"),

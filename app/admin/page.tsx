@@ -7,6 +7,7 @@ import { RATE_KEYS, RATE_LABELS, quotePayment, quotePayout, rateSummary, type Ra
 import { getRates, saveRates } from "@/lib/services/settings";
 import { isAdmin, recentActivity, revenue } from "@/lib/services/admin";
 import { snippeConfigured, paypalConfigured, env } from "@/lib/env";
+import { createReminderTemplates, reminderTemplateStatus } from "@/lib/channels/whatsapp-templates";
 import { ourWebhookUrl, pointNumberHere, registerNumber, webhookStatus } from "@/lib/channels/whatsapp-webhook";
 
 export const metadata = { title: "Admin · SarafuPay", robots: { index: false } };
@@ -45,6 +46,15 @@ async function connectWhatsAppAction(form: FormData) {
   redirect(`/admin?key=${encodeURIComponent(key)}&wa=${r.ok ? "ok" : encodeURIComponent(r.detail ?? "failed")}`);
 }
 
+async function createTemplatesAction(form: FormData) {
+  "use server";
+  const key = String(form.get("key") ?? "");
+  if (!isAdmin(key)) notFound();
+  const waba = String(form.get("waba") ?? "").replace(/[^0-9]/g, "");
+  const r = await createReminderTemplates(waba);
+  redirect(`/admin?key=${encodeURIComponent(key)}&waba=${waba}&tpl=${encodeURIComponent((r.ok ? "ok:" : "") + r.detail)}`);
+}
+
 /** Worked example for one row, so a typo in a rate is visible before anyone pays it. */
 function example(rates: Rates, k: RateKey): string {
   const L = RATE_LABELS[k];
@@ -64,6 +74,9 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
   if (!isAdmin(key)) notFound();
   const [rates, rev, act, wa] = await Promise.all([getRates(), revenue(), recentActivity(12), webhookStatus()]);
   const waMsg = typeof sp.wa === "string" ? sp.wa : null;
+  const tplMsg = typeof sp.tpl === "string" ? sp.tpl : null;
+  const wabaId = env.waBusinessAccountId() || (typeof sp.waba === "string" ? sp.waba.replace(/[^0-9]/g, "") : "");
+  const tpl = wa.configured && wabaId ? await reminderTemplateStatus(wabaId) : null;
   const earned = new Map<string, number>();
   for (const r of rev) earned.set(r.currency, (earned.get(r.currency) ?? 0) + r.sarafuCents);
 
@@ -122,6 +135,33 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
                   <p className="mt-2 text-xs text-ink-soft">Registers the number if needed, then routes only its messages here. Other numbers keep their own website.</p>
                 </form>
               ) : null}
+              <div className="mt-6 border-t border-line pt-4">
+                <h3 className="font-semibold">Reminder template</h3>
+                {tpl?.ok ? (
+                  <p className="mt-1 font-mono text-xs">
+                    {tpl.items.length
+                      ? tpl.items.map((i) => `${i.language}: ${i.status}${i.reason ? ` (${i.reason})` : ""}`).join(" · ")
+                      : "not created yet"}
+                  </p>
+                ) : tpl?.error ? (
+                  <p className="mt-1 font-mono text-xs text-terracotta">error: {tpl.error}</p>
+                ) : null}
+                {tplMsg ? (
+                  <p className={`mt-3 rounded-lg p-3 text-sm ${tplMsg.startsWith("ok:") ? "bg-forest/10 text-forest" : "bg-terracotta/10 text-terracotta"}`}>
+                    {tplMsg.replace(/^ok:/, "Submitted to Meta. ")}
+                  </p>
+                ) : null}
+                {!tpl?.ok || tpl.items.length < 2 ? (
+                  <form action={createTemplatesAction} className="mt-3 flex flex-wrap items-end gap-2">
+                    <input type="hidden" name="key" value={key} />
+                    <label className="text-xs text-ink-soft">
+                      WhatsApp Business Account ID
+                      <input name="waba" defaultValue={wabaId} required inputMode="numeric" className="field mt-1 font-mono" />
+                    </label>
+                    <button className="btn btn-primary">Create reminder template (English + Swahili)</button>
+                  </form>
+                ) : null}
+              </div>
             </>
           )}
         </section>
