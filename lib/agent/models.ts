@@ -58,8 +58,10 @@ export function primaryModel(): string | null {
 }
 
 /**
- * Runs `fn` with each configured model in turn until one succeeds. Non-retryable errors (bad
- * request, auth) stop the chain, except that a Meta failure always falls through to Gemini.
+ * Runs `fn` with each configured model in turn until one succeeds.
+ * - Retryable errors (overload, rate limit, unknown model) try the next model.
+ * - Anything else (bad key, billing not set up, bad request) skips the rest of that provider's
+ *   models and goes straight to the next provider, so a Meta account problem falls back to Gemini.
  */
 export async function withModelFallback<T>(fn: (pick: ModelPick) => Promise<T>, filter?: (p: ModelPick) => boolean): Promise<T> {
   const chain = modelChain().filter((p) => (filter ? filter(p) : true));
@@ -71,9 +73,15 @@ export async function withModelFallback<T>(fn: (pick: ModelPick) => Promise<T>, 
       return await fn(pick);
     } catch (e) {
       last = e;
-      const nextIsOtherProvider = chain[i + 1] && chain[i + 1].provider !== pick.provider;
-      if (!isRetryableModelError(e) && !nextIsOtherProvider) throw e;
-      console.warn(`[ai] ${pick.provider}:${pick.id} failed, trying next model`, e instanceof Error ? e.message : e);
+      const msg = e instanceof Error ? e.message : String(e);
+      if (isRetryableModelError(e)) {
+        console.warn(`[ai] ${pick.provider}:${pick.id} unavailable, trying next model:`, msg.slice(0, 200));
+        continue;
+      }
+      const nextProvider = chain.findIndex((p, j) => j > i && p.provider !== pick.provider);
+      if (nextProvider < 0) throw e;
+      console.warn(`[ai] ${pick.provider} refused (${msg.slice(0, 160)}); falling back to ${chain[nextProvider].provider}`);
+      i = nextProvider - 1;
     }
   }
   throw last;

@@ -496,6 +496,22 @@ async function main() {
   assert.ok(metaCalls.every((c) => c.url === "https://api.meta.ai/v1/chat/completions" || !c.url.includes("chat")), "OpenAI-compatible endpoint");
   console.log("✓ Muse Spark via Meta Model API, falls back across models");
 
+  // 11a. A Meta account problem (billing, bad key) skips the other Muse models and falls back to Gemini.
+  process.env.GEMINI_API_KEY = "g_test";
+  const tried: string[] = [];
+  metaHandler = (_url, init) => {
+    tried.push(JSON.parse(String(init?.body ?? "{}")).model);
+    return Response.json({ error: { code: "billing_not_configured", message: "Billing verification failed.", type: "billing_error" } }, { status: 402 });
+  };
+  const fellBack = await models.withModelFallback(async (m) => {
+    if (m.provider === "gemini") return `gemini:${m.id}`;
+    return (await generateText({ model: m.model, prompt: "hi", maxRetries: 0 })).text;
+  });
+  assert.match(fellBack, /^gemini:/, "billing error on Meta falls back to Gemini");
+  assert.deepEqual(tried, ["muse-spark-1.3"], "other Muse models are skipped after an account-level error");
+  delete process.env.GEMINI_API_KEY;
+  console.log("✓ Meta billing/auth error falls back to Gemini instead of failing the reply");
+
   // 11b. Voice notes: WhatsApp Ogg/Opus → WAV → Muse Voice Transcribe → the agent reads the transcript.
   const { readFileSync } = await import("node:fs");
   const media = await import("../lib/agent/meta-media");
