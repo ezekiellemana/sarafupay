@@ -25,6 +25,7 @@
     "ag-studio-react": "^3.0.0",
     "ai": "^7.0.152",
     "drizzle-orm": "^0.45.3",
+    "geoip-country": "5.0.202610070241",
     "next": "16.3.6",
     "ogg-opus-decoder": "^1.7.5",
     "postgres": "^3.4.9",

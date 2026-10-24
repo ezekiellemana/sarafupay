@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // Node-only packages that should not be bundled by Next.
-  serverExternalPackages: ["@electric-sql/pglite", "@paypal/agent-toolkit", "postgres", "ogg-opus-decoder"],
+  serverExternalPackages: ["@electric-sql/pglite", "@paypal/agent-toolkit", "postgres", "ogg-opus-decoder", "geoip-country"],
   // Paths from the old SarafuPay (Express + MongoDB, until Oct 2026). People still have these
   // links and bookmarks; send them to a page that explains the move instead of a 404.
   // (Old collection links, /pay/<slug>, are caught in app/pay/[id]/route.ts.)
