@@ -5,6 +5,7 @@ import { waLink } from "@/lib/channels/whatsapp";
 import { detectVisitor } from "@/lib/visitor";
 import { copy } from "@/lib/copy";
 import { LangSwitch } from "@/components/lang-switch";
+import { WhatsAppGlyph } from "@/components/icons";
 
 /** Shared public header: logo, a few links, the language switch, and the one action that matters. */
 /** `ctaOnPhone={false}` on pages whose hero already shows the same button right below. */
@@ -29,7 +30,8 @@ export async function SiteHeader({ cta = true, ctaOnPhone = true }: { cta?: bool
         </Suspense>
         {cta ? (
           wa ? (
-            <a href={wa} target="_blank" rel="noreferrer" className={`btn btn-primary whitespace-nowrap !px-4 !py-2 text-sm ${ctaOnPhone ? "" : "!hidden sm:!inline-flex"}`}>
+            <a href={wa} target="_blank" rel="noreferrer" className={`btn btn-primary gap-2 whitespace-nowrap !px-4 !py-2 text-sm ${ctaOnPhone ? "" : "!hidden sm:!inline-flex"}`}>
+              <WhatsAppGlyph size={16} />
               <span className="sm:hidden">{c.nav.start}</span>
               <span className="hidden sm:inline">{c.nav.startWa}</span>
             </a>

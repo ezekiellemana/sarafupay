@@ -125,3 +125,12 @@ export function IconBadge({ icon: I, tone = "forest", size = 36, className = "" 
     </span>
   );
 }
+
+/**
+ * WhatsApp's official glyph (white version, from the WhatsApp Brand Resource Center, used
+ * unmodified per its guidelines) for buttons that open a WhatsApp chat. Not a SarafuPay mark.
+ */
+export function WhatsAppGlyph({ size = 18, className = "" }: { size?: number; className?: string }) {
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src="/brand/whatsapp-glyph-white.svg" alt="" width={size} height={size} className={`shrink-0 ${className}`} aria-hidden />;
+}

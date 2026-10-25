@@ -4,6 +4,7 @@ import { CoinMark } from "@/components/coin-mark";
 import { waLink } from "@/lib/channels/whatsapp";
 import { detectVisitor } from "@/lib/visitor";
 import { copy } from "@/lib/copy";
+import { WhatsAppGlyph } from "@/components/icons";
 
 export const metadata = { title: "SarafuPay has moved", robots: { index: false } };
 
@@ -27,7 +28,8 @@ export default async function Moved() {
         </p>
         <div className="rise d3 mt-8 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
           {wa ? (
-            <a href={wa} target="_blank" rel="noreferrer" className="btn btn-primary justify-center">
+            <a href={wa} target="_blank" rel="noreferrer" className="btn btn-primary justify-center gap-2">
+              <WhatsAppGlyph size={20} />
               {t.wa}
             </a>
           ) : (

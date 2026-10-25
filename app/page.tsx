@@ -15,6 +15,7 @@ import { getRates } from "@/lib/services/settings";
 import { detectVisitor } from "@/lib/visitor";
 import { perUsd } from "@/lib/locale";
 import { copy } from "@/lib/copy";
+import { WhatsAppGlyph } from "@/components/icons";
 
 const occasions: { sw: string; en: string; shot: Shot }[] = [
   { sw: "Harusi", en: "Weddings", shot: { name: "harusi", alt: "A bride and groom walk out of church as guests cheer", focus: "50% 45%" } },
@@ -72,7 +73,8 @@ export default async function Home({ searchParams }: PageProps<"/">) {
             </p>
             <div className="rise d3 mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               {wa ? (
-                <a href={wa} className="btn btn-primary justify-center" target="_blank" rel="noreferrer">
+                <a href={wa} className="btn btn-primary justify-center gap-2" target="_blank" rel="noreferrer">
+                  <WhatsAppGlyph size={20} />
                   {c.home.startWa}
                 </a>
               ) : null}
