@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Lock } from "@/components/icons";
 import { useSearchParams } from "next/navigation";
 import { Logo } from "@/components/brand";
 import { CoinMark } from "@/components/coin-mark";
@@ -434,7 +435,7 @@ export function Simulator({ buyer, testMode = true, lang = "en" }: { buyer: { em
 
       <div className="border-t border-line pt-4 text-xs text-ink-soft">
         <p>
-          🔒 Private session.{testMode ? " Test mode, no real money." : " Real payments."}
+          <Lock size={14} className="mr-1 inline align-[-2px]" /> Private session.{testMode ? " Test mode, no real money." : " Real payments."}
         </p>
         <button
           onClick={() => void startFresh()}

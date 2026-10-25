@@ -34,11 +34,12 @@ function SceneStart({ v }: { v: Visitor }) {
   );
 }
 
+/** Four friends chipping in (AI-generated portraits, public/people). */
 const FRIENDS = [
-  { x: -150, y: -95, z: 40, e: "👩🏾", d: 0.5 },
-  { x: 155, y: -80, z: 70, e: "👨🏿", d: 1.1 },
-  { x: -160, y: 95, z: 90, e: "👵🏾", d: 1.7 },
-  { x: 150, y: 105, z: 30, e: "🧑🏾", d: 2.3 },
+  { x: -150, y: -95, z: 40, img: "amina", d: 0.5 },
+  { x: 155, y: -80, z: 70, img: "juma", d: 1.1 },
+  { x: -160, y: 95, z: 90, img: "bibi", d: 1.7 },
+  { x: 150, y: 105, z: 30, img: "baraka", d: 2.3 },
 ];
 
 function SceneShare({ v }: { v: Visitor }) {
@@ -61,7 +62,8 @@ function SceneShare({ v }: { v: Visitor }) {
             className="hs-friend hs-pop"
             style={{ "--d": `${f.d - 0.4}s`, transform: `translate3d(${f.x}px, ${f.y}px, ${f.z}px)` } as React.CSSProperties}
           >
-            {f.e}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`/people/${f.img}.webp`} alt="" width={60} height={60} loading="lazy" decoding="async" />
           </span>
           <span
             className="hs-coin hs-fly"

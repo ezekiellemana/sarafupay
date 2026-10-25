@@ -7,7 +7,8 @@ import { copy } from "@/lib/copy";
 import { LangSwitch } from "@/components/lang-switch";
 
 /** Shared public header: logo, a few links, the language switch, and the one action that matters. */
-export async function SiteHeader({ cta = true }: { cta?: boolean }) {
+/** `ctaOnPhone={false}` on pages whose hero already shows the same button right below. */
+export async function SiteHeader({ cta = true, ctaOnPhone = true }: { cta?: boolean; ctaOnPhone?: boolean }) {
   const v = await detectVisitor();
   const c = copy(v.lang);
   const wa = waLink(c.greet);
@@ -28,12 +29,12 @@ export async function SiteHeader({ cta = true }: { cta?: boolean }) {
         </Suspense>
         {cta ? (
           wa ? (
-            <a href={wa} target="_blank" rel="noreferrer" className="btn btn-primary !px-4 !py-2 text-sm">
+            <a href={wa} target="_blank" rel="noreferrer" className={`btn btn-primary !px-4 !py-2 text-sm ${ctaOnPhone ? "" : "!hidden sm:!inline-flex"}`}>
               <span className="sm:hidden">{c.nav.start}</span>
               <span className="hidden sm:inline">{c.nav.startWa}</span>
             </a>
           ) : (
-            <Link href="/chat" className="btn btn-primary !px-4 !py-2 text-sm">
+            <Link href="/chat" className={`btn btn-primary !px-4 !py-2 text-sm ${ctaOnPhone ? "" : "!hidden sm:!inline-flex"}`}>
               {c.nav.tryIt}
             </Link>
           )

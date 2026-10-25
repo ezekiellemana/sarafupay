@@ -18,6 +18,7 @@ import { offlineSummary } from "@/lib/services/trust";
 import { detectVisitor } from "@/lib/visitor";
 import { copy, type Copy } from "@/lib/copy";
 import { isPaypalCurrency } from "@/lib/currency";
+import { Bank, Card, IconBadge, Lock, PhoneMoney, SearchCheck, SendOut } from "@/components/icons";
 
 
 export default async function CollectionPage({ params, searchParams }: PageProps<"/c/[code]">) {
@@ -58,7 +59,7 @@ export default async function CollectionPage({ params, searchParams }: PageProps
           <div className="col-banner-shade" aria-hidden />
           <div className="relative flex h-full flex-col justify-end p-5 sm:p-8">
             <p className="inline-flex w-fit items-center gap-2 rounded-full bg-paper/90 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.18em] text-ink">
-              {categoryEmoji(col.category)} {col.category} · {col.code}
+              {categoryEmoji(col.category)} {copy(v.lang).category[col.category] ?? col.category} · {col.code}
             </p>
             <h1 className="font-display mt-3 max-w-3xl break-words text-[2.1rem] font-semibold leading-[1.05] text-paper sm:text-6xl">{col.title}</h1>
             <p className="mt-2 text-sm text-paper/85">
@@ -103,7 +104,7 @@ export default async function CollectionPage({ params, searchParams }: PageProps
             </dl>
             {stats.balances.slice(1).map((b) => (
               <p key={b.currency} className="mt-3 flex items-center gap-2 border-t border-line pt-3 text-sm text-ink-soft">
-                💳 <strong className="text-ink">{money(b.raisedCents, b.currency)}</strong> {t.byCard}
+                <Card size={18} className="text-forest" /> <strong className="text-ink">{money(b.raisedCents, b.currency)}</strong> {t.byCard}
               </p>
             ))}
           </TiltCard>
@@ -111,18 +112,18 @@ export default async function CollectionPage({ params, searchParams }: PageProps
           {/* Transparency: every shilling accounted for, in three lines */}
           <ul className="trust-list mt-4 space-y-2 text-sm" aria-label="Transparency">
             <li className="flex items-center gap-3 rounded-2xl border border-line bg-paper/70 px-4 py-3">
-              <span aria-hidden>🔒</span>
+              <IconBadge icon={Lock} size={32} />
               <span className="min-w-0 flex-1">{t.viaSarafu}</span>
               <strong className="shrink-0 font-mono">{stats.balances.map((b) => money(b.raisedCents, b.currency)).join(" + ")}</strong>
             </li>
             <li className="flex items-center gap-3 rounded-2xl border border-line bg-paper/70 px-4 py-3">
-              <span aria-hidden>📤</span>
+              <IconBadge icon={SendOut} size={32} />
               <span className="min-w-0 flex-1">{t.paidOutCode}</span>
               <strong className="shrink-0 font-mono">{ledger.length ? stats.balances.map((b) => money(b.paidOutCents, b.currency)).join(" + ") : "—"}</strong>
             </li>
             {outside.confirmed.length || dups ? (
               <li className="flex items-center gap-3 rounded-2xl border border-line bg-paper/70 px-4 py-3">
-                <span aria-hidden>🔎</span>
+                <IconBadge icon={SearchCheck} size={32} tone="marigold" />
                 <span className="min-w-0 flex-1">
                   {t.outside}
                   {dups ? <span className="block text-xs text-terracotta">{t.dupes(dups)}</span> : null}
@@ -165,7 +166,7 @@ export default async function CollectionPage({ params, searchParams }: PageProps
               {ledger.map((p) => (
                 <li key={p.id} className="ledger-card">
                   <span className="ledger-icon" aria-hidden>
-                    {p.method === "paypal" ? "💳" : p.method === "bank" ? "🏦" : "📱"}
+                    {p.method === "paypal" ? <Card size={20} /> : p.method === "bank" ? <Bank size={20} /> : <PhoneMoney size={20} />}
                   </span>
                   <span className="min-w-0 flex-1">
                     <strong className="block truncate">{p.recipientName ?? t.recipient}</strong>

@@ -455,7 +455,8 @@ body {
   100% { opacity: 0; transform: translate3d(calc(96px + var(--x)), calc(40px + var(--y)), 160px) scale(1); }
 }
 
-.hs-friend { display: grid; place-items: center; width: 60px; height: 60px; border-radius: 99px; font-size: 30px; background: #fffaf0; box-shadow: 0 20px 30px -14px rgba(0, 0, 0, 0.7); }
+.hs-friend { display: grid; place-items: center; width: 60px; height: 60px; border-radius: 99px; overflow: hidden; background: #fffaf0; border: 3px solid #fffaf0; box-shadow: 0 20px 30px -14px rgba(0, 0, 0, 0.7); }
+.hs-friend img { width: 100%; height: 100%; object-fit: cover; border-radius: 99px; }
 .hs-coin {
   display: grid; place-items: center; width: 36px; height: 36px; border-radius: 99px;
   font: 700 17px Georgia, serif; color: #6e4608;
@@ -592,7 +593,7 @@ body {
 .chip-card { box-shadow: 0 40px 60px -40px rgba(18, 38, 30, 0.55); }
 .ledger-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 18px; background: #fffaf0; border: 1.5px solid var(--line); transition: transform 0.2s ease, box-shadow 0.2s ease; }
 .ledger-card:hover { transform: translateY(-2px) rotateX(4deg); box-shadow: 0 16px 24px -18px rgba(18, 38, 30, 0.5); }
-.ledger-icon { display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; border-radius: 12px; background: var(--paper-2); font-size: 18px; }
+.ledger-icon { display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; border-radius: 12px; background: var(--paper-2); color: var(--forest); }
 
 /* Thank-you page: gold coin that spins in with a tick; a phone waiting for the PIN. */
 .paid-coin {

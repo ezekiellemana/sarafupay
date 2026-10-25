@@ -17,6 +17,7 @@ const en = {
     apps: "apps",
     fee: "all-in fee",
     reported: "reported",
+    oneMsg: "message to start",
     howKicker: "How it works",
     howTitle: "Three steps. One chat.",
     occKicker: "Michango · group giving",
@@ -48,8 +49,8 @@ const en = {
     { title: "Pay out in the open", line: "Your code. Everyone's receipt." },
   ],
   calc: {
-    mobile: "📱 Mobile money",
-    card: "💳 Card",
+    mobile: "Mobile money",
+    card: "Card",
     raises: "Your collection raises",
     tz: "Tanzania · TZS",
     anyCard: "Any card currency · settles in USD",
@@ -145,6 +146,7 @@ const en = {
     greet: "Hi, I had a collection on the old SarafuPay",
   },
   lang: { label: "Language", sw: "Kiswahili", en: "English" },
+  category: { wedding: "Wedding", funeral: "Funeral", medical: "Medical", education: "School fees", community: "Community", nonprofit: "Charity", celebration: "Celebration", other: "Collection" } as Record<string, string>,
 };
 
 export type Copy = typeof en;
@@ -162,6 +164,7 @@ const sw: Copy = {
     apps: "programu",
     fee: "ada yote",
     reported: "inaripotiwa",
+    oneMsg: "ujumbe kuanza",
     howKicker: "Jinsi inavyofanya kazi",
     howTitle: "Hatua tatu. Chat moja.",
     occKicker: "Kwa kila mchango",
@@ -193,8 +196,8 @@ const sw: Copy = {
     { title: "Toa pesa kwa uwazi", line: "Msimbo wako. Risiti kwa wote." },
   ],
   calc: {
-    mobile: "📱 Pesa ya simu",
-    card: "💳 Kadi",
+    mobile: "Pesa ya simu",
+    card: "Kadi",
     raises: "Mchango wako unakusanya",
     tz: "Tanzania · TZS",
     anyCard: "Kadi ya sarafu yoyote · inalipwa kwa USD",
@@ -290,6 +293,7 @@ const sw: Copy = {
     greet: "Habari, nilikuwa na mchango kwenye SarafuPay ya zamani",
   },
   lang: { label: "Lugha", sw: "Kiswahili", en: "English" },
+  category: { wedding: "Harusi", funeral: "Msiba", medical: "Matibabu", education: "Ada ya shule", community: "Jamii", nonprofit: "Hisani", celebration: "Sherehe", other: "Mchango" },
 };
 
 export const copy = (lang: Lang): Copy => (lang === "sw" ? sw : en);

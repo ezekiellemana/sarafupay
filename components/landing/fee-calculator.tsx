@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { quotePayment, quotePayout, type Rates } from "@/lib/pricing";
 import { fmt, friendly, type Visitor } from "@/lib/locale";
 import type { Copy } from "@/lib/copy";
+import { Card, PhoneMoney } from "@/components/icons";
 
 type Rail = "mobile" | "card";
 const STEPS: Record<Rail, number[]> = {
@@ -72,8 +73,9 @@ export function FeeCalculator({ rates, v, perUsd, t }: { rates: Rates; v: Visito
               role="radio"
               aria-checked={rail === r}
               onClick={() => setRail(r)}
-              className={`rounded-full px-4 py-1.5 transition-colors ${rail === r ? "bg-paper text-ink" : "text-paper/75 hover:text-paper"}`}
+              className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 transition-colors ${rail === r ? "bg-paper text-ink" : "text-paper/75 hover:text-paper"}`}
             >
+              {r === "mobile" ? <PhoneMoney size={16} /> : <Card size={16} />}
               {r === "mobile" ? t.mobile : t.card}
             </button>
           ))}

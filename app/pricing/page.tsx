@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { connection } from "next/server";
 import { SiteFooter, SiteHeader } from "@/components/site";
 import { CoinField } from "@/components/landing/coin-field";
@@ -11,6 +10,7 @@ import { BANKS, CARDS, LogoChip, MOBILE_MONEY } from "@/components/provider";
 import { detectVisitor } from "@/lib/visitor";
 import { fmt, friendly, perUsd, type Visitor } from "@/lib/locale";
 import { copy, type Copy } from "@/lib/copy";
+import { Bank, Card, IconBadge, PhoneMoney } from "@/components/icons";
 
 export const metadata = {
   title: "Pricing · SarafuPay",
@@ -18,7 +18,7 @@ export const metadata = {
 };
 
 type Rate = { providerPct: number; providerFixedCents: number; providerCapCents: number; sarafuPct: number };
-type Line = { icon: string; what: string; price: string; rate: Rate; cur: "TZS" | "USD" };
+type Line = { icon: typeof Card; what: string; price: string; rate: Rate; cur: "TZS" | "USD" };
 
 function split(r: Rate, cur: "TZS" | "USD", provider: string, free: string) {
   const fixed = (c: number) => (cur === "TZS" ? `TZS ${(c / 100).toLocaleString("en-US")}` : `$${(c / 100).toFixed(2)}`);
@@ -29,10 +29,10 @@ function split(r: Rate, cur: "TZS" | "USD", provider: string, free: string) {
 
 /** Visitors outside Tanzania see the card rows first: that's how they'd pay. */
 function lines(r: Rates, v: Visitor, t: Copy["pricing"]): { receive: Line[]; withdraw: Line[] } {
-  const mm: Line = { icon: "📱", what: t.mm, price: rateSummary(r.snippePayment, "TZS"), rate: r.snippePayment, cur: "TZS" };
-  const card: Line = { icon: "💳", what: t.card, price: rateSummary(r.paypalPayment, "USD"), rate: r.paypalPayment, cur: "USD" };
-  const mmOut: Line = { icon: "🏦", what: t.mmOut, price: rateSummary(r.snippePayoutMobile, "TZS"), rate: r.snippePayoutMobile, cur: "TZS" };
-  const ppOut: Line = { icon: "💳", what: "PayPal", price: r.paypalPayout.sarafuPct ? `${t.upTo} ${r.paypalPayout.providerPct + r.paypalPayout.sarafuPct}%` : rateSummary(r.paypalPayout, "USD"), rate: r.paypalPayout, cur: "USD" };
+  const mm: Line = { icon: PhoneMoney, what: t.mm, price: rateSummary(r.snippePayment, "TZS"), rate: r.snippePayment, cur: "TZS" };
+  const card: Line = { icon: Card, what: t.card, price: rateSummary(r.paypalPayment, "USD"), rate: r.paypalPayment, cur: "USD" };
+  const mmOut: Line = { icon: Bank, what: t.mmOut, price: rateSummary(r.snippePayoutMobile, "TZS"), rate: r.snippePayoutMobile, cur: "TZS" };
+  const ppOut: Line = { icon: Card, what: "PayPal", price: r.paypalPayout.sarafuPct ? `${t.upTo} ${r.paypalPayout.providerPct + r.paypalPayout.sarafuPct}%` : rateSummary(r.paypalPayout, "USD"), rate: r.paypalPayout, cur: "USD" };
   return v.mobileMoney ? { receive: [mm, card], withdraw: [mmOut, ppOut] } : { receive: [card, mm], withdraw: [ppOut, mmOut] };
 }
 
@@ -43,9 +43,9 @@ function PriceList({ title, items, provider, free }: { title: string; items: Lin
       <ul className="mt-3 divide-y divide-line">
         {items.map((l) => (
           <li key={l.what} className="py-4">
-            <div className="flex items-baseline justify-between gap-4">
-              <span className="flex items-center gap-2 font-semibold">
-                <span aria-hidden>{l.icon}</span> {l.what}
+            <div className="flex items-center justify-between gap-4">
+              <span className="flex items-center gap-3 font-semibold">
+                <IconBadge icon={l.icon} size={34} /> {l.what}
               </span>
               <span className="font-display shrink-0 text-2xl font-semibold text-forest sm:text-3xl">{l.price}</span>
             </div>
@@ -135,9 +135,6 @@ export default async function PricingPage({ searchParams }: PageProps<"/pricing"
           </div>
         </section>
 
-        <section className="mx-auto max-w-5xl px-5 pb-20 sm:px-6">
-          <Link href="/" className="btn btn-ghost">← SarafuPay</Link>
-        </section>
       </main>
       <SiteFooter />
     </div>

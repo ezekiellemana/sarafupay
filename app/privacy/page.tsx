@@ -2,6 +2,7 @@ import { Provider } from "@/components/provider";
 import { SiteFooter, SiteHeader } from "@/components/site";
 import { ScrollFX } from "@/components/scroll-fx";
 import { connection } from "next/server";
+import { Ban, EyeOff, IconBadge, Lock, Trash } from "@/components/icons";
 import { detectVisitor } from "@/lib/visitor";
 
 export const metadata = {
@@ -12,19 +13,10 @@ export const metadata = {
 const UPDATED = "24 October 2026";
 const CONTACT = "info@sarafupay.app";
 
-const GLANCE: Record<"sw" | "en", [string, string][]> = {
-  en: [
-    ["🔒", "No PINs or card numbers, ever"],
-    ["🙈", "Only the organiser sees amounts"],
-    ["🚫", "Never sold, no ads"],
-    ["🗑️", "Deleted on request"],
-  ],
-  sw: [
-    ["🔒", "Hatuchukui PIN wala namba za kadi"],
-    ["🙈", "Mwandaaji pekee anaona viasi"],
-    ["🚫", "Haziuzwi, hakuna matangazo"],
-    ["🗑️", "Zinafutwa ukiomba"],
-  ],
+const GLANCE_ICONS = [Lock, EyeOff, Ban, Trash];
+const GLANCE: Record<"sw" | "en", string[]> = {
+  en: ["No PINs or card numbers, ever", "Only the organiser sees amounts", "Never sold, no ads", "Deleted on request"],
+  sw: ["Hatuchukui PIN wala namba za kadi", "Mwandaaji pekee anaona viasi", "Haziuzwi, hakuna matangazo", "Zinafutwa ukiomba"],
 };
 
 const SECTIONS: { id: string; title: string; body: React.ReactNode }[] = [
@@ -125,15 +117,15 @@ export default async function PrivacyPage() {
               <span className="shield-layer" style={{ "--z": "0px" } as React.CSSProperties} />
               <span className="shield-layer" style={{ "--z": "18px" } as React.CSSProperties} />
               <span className="shield-layer" style={{ "--z": "36px" } as React.CSSProperties} />
-              <span className="shield-lock">🔒</span>
+              <span className="shield-lock"><Lock size={40} /></span>
             </div>
           </div>
         </section>
 
         <ul className="grid grid-cols-2 gap-3 md:grid-cols-4" data-reveal>
-          {GLANCE[sw ? "sw" : "en"].map(([icon, t], i) => (
+          {GLANCE[sw ? "sw" : "en"].map((t, i) => (
             <li key={t} className="glance" style={{ "--i": i } as React.CSSProperties}>
-              <span className="text-2xl" aria-hidden>{icon}</span>
+              <IconBadge icon={GLANCE_ICONS[i]} size={40} />
               <span className="mt-2 block text-sm font-semibold leading-snug">{t}</span>
             </li>
           ))}

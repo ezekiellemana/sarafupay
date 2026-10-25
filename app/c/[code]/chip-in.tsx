@@ -5,6 +5,7 @@ import { AmountInput } from "./amount-input";
 import { isTzMobile, PhoneInput } from "./phone-input";
 import { PAYPAL_CURRENCIES } from "@/lib/currency";
 import type { Copy } from "@/lib/copy";
+import { Card, PhoneMoney } from "@/components/icons";
 
 type Method = "mobile_money" | "card_or_paypal";
 
@@ -27,8 +28,8 @@ export function ChipIn({ disabled, t, cardFirst, cardCurrency }: { disabled: boo
   const [phone, setPhone] = useState("");
   // The server picks the visitor's own currency (from their country) when PayPal supports it.
   const [cardCur, setCardCur] = useState(cardCurrency);
-  const mm = { id: "mobile_money" as Method, title: t.mobile, icon: "📱" };
-  const cd = { id: "card_or_paypal" as Method, title: t.card, icon: "💳" };
+  const mm = { id: "mobile_money" as Method, title: t.mobile, icon: PhoneMoney };
+  const cd = { id: "card_or_paypal" as Method, title: t.card, icon: Card };
   const METHODS = cardFirst ? [cd, mm] : [mm, cd];
 
   const currency = method === "mobile_money" ? "TZS" : cardCur;
@@ -43,7 +44,7 @@ export function ChipIn({ disabled, t, cardFirst, cardCurrency }: { disabled: boo
           const on = x.id === method;
           return (
             <button key={x.id} type="button" role="radio" aria-checked={on} onClick={() => setMethod(x.id)} className={`method-pick ${on ? "is-on" : ""}`}>
-              <span className="text-2xl" aria-hidden>{x.icon}</span>
+              <x.icon size={28} />
               <span className="font-semibold">{x.title}</span>
             </button>
           );

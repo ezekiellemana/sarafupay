@@ -44,7 +44,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
     <div className="flex min-h-screen flex-col overflow-x-clip">
       <ScrollFX />
       <div className="kanga" />
-      <SiteHeader />
+      <SiteHeader ctaOnPhone={false} />
 
       {/* ---------- Hero ---------- */}
       <section className="relative">
@@ -92,7 +92,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
               {[
                 ["0", c.home.apps],
                 [v.mobileMoney ? rateSummary(rates.snippePayment, "TZS") : rateSummary(rates.paypalPayment, "USD"), c.home.fee],
-                ["100%", c.home.reported],
+                ["1", c.home.oneMsg],
               ].map(([k, v]) => (
                 <div key={v}>
                   <dt className="font-display text-2xl font-semibold sm:text-3xl">{k}</dt>
@@ -231,8 +231,9 @@ export default async function Home({ searchParams }: PageProps<"/">) {
               <a href={wa} className="btn btn-primary justify-center" target="_blank" rel="noreferrer">
                 {c.home.startWa}
               </a>
-            ) : null}
-            <Link href="/chat" className="btn btn-ghost justify-center">{c.home.tryNow}</Link>
+            ) : (
+              <Link href="/chat" className="btn btn-primary justify-center">{c.home.tryNow}</Link>
+            )}
           </div>
         </div>
       </section>
