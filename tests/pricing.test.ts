@@ -29,25 +29,25 @@ test("actual provider fee from the webhook replaces the estimate", () => {
   assert.equal(q.netCents, TZS(47_750));
 });
 
-test("payout to mobile money: TZS 1,500 + 2.5%", () => {
+test("payout to mobile money: only Snippe's TZS 1,500, no SarafuPay fee", () => {
   const q = quotePayout(DEFAULT_RATES, "mobile_money", TZS(200_000));
   assert.equal(q.providerFeeCents, TZS(1_500));
-  assert.equal(q.sarafuFeeCents, TZS(5_000));
-  assert.equal(q.netCents, TZS(193_500));
+  assert.equal(q.sarafuFeeCents, 0);
+  assert.equal(q.netCents, TZS(198_500));
 });
 
 test("small payout still works (no minimum)", () => {
   const q = quotePayout(DEFAULT_RATES, "bank", TZS(20_000));
-  assert.equal(q.netCents, TZS(18_000));
+  assert.equal(q.netCents, TZS(18_500));
 });
 
 test("whole collection: TZS 1,000,000 in, one mobile payout", () => {
   const p = quotePayment(DEFAULT_RATES, "snippe", TZS(1_000_000));
   const o = quotePayout(DEFAULT_RATES, "mobile_money", p.netCents);
   assert.equal(p.netCents, TZS(950_000));
-  assert.equal(o.netCents, TZS(924_750));
+  assert.equal(o.netCents, TZS(948_500));
   assert.equal(p.providerFeeCents + o.providerFeeCents, TZS(26_500));
-  assert.equal(p.sarafuFeeCents + o.sarafuFeeCents, TZS(48_750));
+  assert.equal(p.sarafuFeeCents + o.sarafuFeeCents, TZS(25_000));
 });
 
 test("PayPal payment: 4.9% + $0.30 + SarafuPay 3%", () => {
@@ -58,20 +58,21 @@ test("PayPal payment: 4.9% + $0.30 + SarafuPay 3%", () => {
   assert.equal(q.netCents, USD(91.8));
 });
 
-test("PayPal payout: 2% capped at $1 + SarafuPay 2%", () => {
+test("PayPal payout: only PayPal's 2% (max $1), no SarafuPay fee", () => {
   const big = quotePayout(DEFAULT_RATES, "paypal", USD(100));
   assert.equal(big.providerFeeCents, USD(1));
-  assert.equal(big.sarafuFeeCents, USD(2));
-  assert.equal(big.netCents, USD(97));
+  assert.equal(big.sarafuFeeCents, 0);
+  assert.equal(big.netCents, USD(99));
   const small = quotePayout(DEFAULT_RATES, "paypal", USD(20));
   assert.equal(small.providerFeeCents, USD(0.4));
 });
 
 test("public summaries", () => {
   assert.equal(rateSummary(DEFAULT_RATES.snippePayment, "TZS"), "5%");
-  assert.equal(rateSummary(DEFAULT_RATES.snippePayoutMobile, "TZS"), "TZS 1,500 + 2.5%");
+  assert.equal(rateSummary(DEFAULT_RATES.snippePayoutMobile, "TZS"), "TZS 1,500");
   assert.equal(rateSummary(DEFAULT_RATES.paypalPayment, "USD"), "7.9% + $0.30");
-  assert.equal(rateSummary(DEFAULT_RATES.paypalPayout, "USD"), "2% + 2% (provider, max $1.00)");
+  assert.equal(rateSummary(DEFAULT_RATES.paypalPayout, "USD"), "2% (max $1.00)");
+  assert.equal(rateSummary({ ...DEFAULT_RATES.snippePayoutMobile, sarafuPct: 2.5 }, "TZS"), "TZS 1,500 + 2.5%", "an admin-set payout fee still shows");
 });
 
 test("normalizeRates keeps defaults for missing or bad values", () => {

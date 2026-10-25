@@ -83,7 +83,7 @@ new template version with `https://sarafupay.app/pay/{{1}}` for the new app.
    link. The thank-you page should turn to "Asante sana!" and the organiser gets the alert. The
    collection balance should show TZS 9,500 (5% fees).
 4. Withdraw TZS 5,000 to your own number and reply with the CONFIRM code. You should receive
-   TZS 3,375 (TZS 1,500 Snippe + TZS 125 SarafuPay). Payouts smaller than the fees are refused.
+   TZS 3,500 (TZS 5,000 minus Snippe's TZS 1,500; SarafuPay takes no payout fee). Payouts smaller than the fee are refused.
 5. `/admin` shows the payment, the payout and SarafuPay's earnings.
 
 ## 7. Move sarafupay.app to the new app

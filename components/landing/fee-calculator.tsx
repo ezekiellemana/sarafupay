@@ -113,7 +113,11 @@ export function FeeCalculator({ rates, v, perUsd, t }: { rates: Rates; v: Visito
                 <span className={`h-2.5 w-2.5 rounded-full ${dot}`} aria-hidden />
                 {label}
               </span>
-              <span className="font-mono">− <Rolling key={rail} value={cents} rail={rail} /></span>
+              {k === "spo" && cents === 0 ? (
+                <span className="rounded-full bg-marigold/20 px-2 py-0.5 font-mono text-xs text-marigold">{t.free}</span>
+              ) : (
+                <span className="font-mono">− <Rolling key={rail} value={cents} rail={rail} /></span>
+              )}
             </li>
           ))}
         </ul>

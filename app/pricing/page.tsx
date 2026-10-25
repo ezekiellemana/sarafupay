@@ -20,11 +20,11 @@ export const metadata = {
 type Rate = { providerPct: number; providerFixedCents: number; providerCapCents: number; sarafuPct: number };
 type Line = { icon: string; what: string; price: string; rate: Rate; cur: "TZS" | "USD" };
 
-function split(r: Rate, cur: "TZS" | "USD", provider: string) {
+function split(r: Rate, cur: "TZS" | "USD", provider: string, free: string) {
   const fixed = (c: number) => (cur === "TZS" ? `TZS ${(c / 100).toLocaleString("en-US")}` : `$${(c / 100).toFixed(2)}`);
   const p = [r.providerPct ? `${r.providerPct}%` : "", r.providerFixedCents ? fixed(r.providerFixedCents) : ""].filter(Boolean).join(" + ");
   const cap = r.providerCapCents ? ` (max ${fixed(r.providerCapCents)})` : "";
-  return `${provider} ${p}${cap} · SarafuPay ${r.sarafuPct}%`;
+  return `${provider} ${p}${cap} · SarafuPay ${r.sarafuPct ? `${r.sarafuPct}%` : free.toLowerCase()}`;
 }
 
 /** Visitors outside Tanzania see the card rows first: that's how they'd pay. */
@@ -32,11 +32,11 @@ function lines(r: Rates, v: Visitor, t: Copy["pricing"]): { receive: Line[]; wit
   const mm: Line = { icon: "📱", what: t.mm, price: rateSummary(r.snippePayment, "TZS"), rate: r.snippePayment, cur: "TZS" };
   const card: Line = { icon: "💳", what: t.card, price: rateSummary(r.paypalPayment, "USD"), rate: r.paypalPayment, cur: "USD" };
   const mmOut: Line = { icon: "🏦", what: t.mmOut, price: rateSummary(r.snippePayoutMobile, "TZS"), rate: r.snippePayoutMobile, cur: "TZS" };
-  const ppOut: Line = { icon: "💳", what: "PayPal", price: `${t.upTo} ${r.paypalPayout.providerPct + r.paypalPayout.sarafuPct}%`, rate: r.paypalPayout, cur: "USD" };
+  const ppOut: Line = { icon: "💳", what: "PayPal", price: r.paypalPayout.sarafuPct ? `${t.upTo} ${r.paypalPayout.providerPct + r.paypalPayout.sarafuPct}%` : rateSummary(r.paypalPayout, "USD"), rate: r.paypalPayout, cur: "USD" };
   return v.mobileMoney ? { receive: [mm, card], withdraw: [mmOut, ppOut] } : { receive: [card, mm], withdraw: [ppOut, mmOut] };
 }
 
-function PriceList({ title, items, provider }: { title: string; items: Line[]; provider: string }) {
+function PriceList({ title, items, provider, free }: { title: string; items: Line[]; provider: string; free: string }) {
   return (
     <TiltCard className="price-panel">
       <p className="font-mono text-xs uppercase tracking-[0.2em] text-ink-soft">{title}</p>
@@ -49,7 +49,7 @@ function PriceList({ title, items, provider }: { title: string; items: Line[]; p
               </span>
               <span className="font-display shrink-0 text-2xl font-semibold text-forest sm:text-3xl">{l.price}</span>
             </div>
-            <p className="mt-1 font-mono text-[11px] text-ink-soft">{split(l.rate, l.cur, provider)}</p>
+            <p className="mt-1 font-mono text-[11px] text-ink-soft">{split(l.rate, l.cur, provider, free)}</p>
           </li>
         ))}
       </ul>
@@ -77,7 +77,7 @@ export default async function PricingPage({ searchParams }: PageProps<"/pricing"
     [c.sarafuFee, `− ${tz(pay.sarafuFeeCents)}`],
     [t.balance, tz(pay.netCents), true],
     [c.transferFee, `− ${tz(out.providerFeeCents)}`],
-    [t.payoutFee, `− ${tz(out.sarafuFeeCents)}`],
+    [t.payoutFee, out.sarafuFeeCents ? `− ${tz(out.sarafuFeeCents)}` : c.free],
   ];
 
   return (
@@ -96,8 +96,8 @@ export default async function PricingPage({ searchParams }: PageProps<"/pricing"
         </section>
 
         <section className="mx-auto grid max-w-5xl gap-4 px-5 py-8 sm:px-6 md:grid-cols-2" data-reveal>
-          <PriceList title={t.receive} items={receive} provider={t.provider} />
-          <PriceList title={t.withdraw} items={withdraw} provider={t.provider} />
+          <PriceList title={t.receive} items={receive} provider={t.provider} free={c.free} />
+          <PriceList title={t.withdraw} items={withdraw} provider={t.provider} free={c.free} />
           <p className="text-xs text-ink-soft md:col-span-2">{t.convert}</p>
         </section>
 

@@ -98,7 +98,7 @@ function SceneOut({ v }: { v: Visitor }) {
       <span className="hs-coin hs-send" style={{ "--d": "1.7s" } as React.CSSProperties}>S</span>
       <div className="hs-card hs-payee hs-pop" style={{ "--d": "2.4s" } as React.CSSProperties}>
         <p className="hs-k">{tr(v, "Mpishi", "Caterer")}</p>
-        <p className="hs-big">{v.mobileMoney ? ex(v, 583_500) : ex(v, 576_000)}</p>
+        <p className="hs-big">{v.mobileMoney ? ex(v, 598_500) : ex(v, 588_000)}</p>
         <p className="hs-ok">✓</p>
       </div>
       {[-1, 0, 1, 2].map((k, i) => (

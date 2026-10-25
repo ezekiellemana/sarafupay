@@ -39,9 +39,9 @@ minimum withdrawal. Defaults (editable at `/admin`):
 | | Provider | SarafuPay | Total |
 |---|---|---|---|
 | Mobile money payment | Snippe 2.5% | 2.5% | 5% |
-| Payout to mobile money or bank | Snippe TZS 1,500 | 2.5% | TZS 1,500 + 2.5% |
+| Payout to mobile money or bank | Snippe TZS 1,500 | free | TZS 1,500 |
 | Card or PayPal payment | PayPal 4.9% + $0.30 | 3% | 7.9% + $0.30 |
-| Payout to PayPal | PayPal 2% (max $1) | 2% | up to 4% |
+| Payout to PayPal | PayPal 2% (max $1) | free | 2% (max $1) |
 
 Provider fees are the providers' published prices (Snippe pricing page; PayPal Tanzania merchant
 fees, 28 Sep 2026). When a provider reports the fee it really charged, that figure is used.

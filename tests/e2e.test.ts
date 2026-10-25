@@ -286,7 +286,7 @@ async function main() {
   await say(OWNER, `CONFIRM ${pending.confirmCode}`);
   assert.equal(payoutCalls.length, 1, "PayPal payout called once");
   const sentItem = (payoutCalls[0] as { items: { amount: { value: string } }[] }).items[0];
-  assert.equal(sentItem.amount.value, "28.80", "organiser receives $30 - PayPal $0.60 - SarafuPay $0.60");
+  assert.equal(sentItem.amount.value, "29.40", "organiser receives $30 - PayPal $0.60 (no SarafuPay payout fee)");
   await say(OWNER, `CONFIRM ${pending.confirmCode}`); // replay
   assert.equal(payoutCalls.length, 1, "no double payout");
   const done = await core.refreshPayout(pending.id);
@@ -404,14 +404,14 @@ async function main() {
   assert.equal((await core.getContribution(mm2.id))?.status, "pending", "amount mismatch is refused");
   const tzStats = await core.collectionStats(tzCol);
   assert.equal(tzStats.availableCents, 95_000_00);
-  // Payout to mobile money: TZS 1,500 + 2.5%, CONFIRM, Snippe gets the net amount.
+  // Payout to mobile money: only Snippe's TZS 1,500, CONFIRM, Snippe gets the net amount.
   const prop = await core.proposePayout({ collection: tzCol, requester: owner, destination: { method: "mobile_money", phone: "0754 000 111", name: "Bibi's family" }, amountCents: 40_000_00, note: "funeral costs" });
   assert.equal(prop.quote.providerFeeCents, 1_500_00);
-  assert.equal(prop.quote.sarafuFeeCents, 1_000_00);
-  assert.equal(prop.quote.netCents, 37_500_00);
+  assert.equal(prop.quote.sarafuFeeCents, 0);
+  assert.equal(prop.quote.netCents, 38_500_00);
   await core.confirmPayoutByCode(owner, prop.confirmCode);
   const send = snippeCalls.find((c) => c.url.endsWith("/v1/payouts/send"))!;
-  assert.equal(send.body?.amount, 37_500, "Snippe sends what the organiser receives");
+  assert.equal(send.body?.amount, 38_500, "Snippe sends what the organiser receives");
   assert.equal(send.body?.recipient_phone, "255754000111");
   assert.equal(send.body?.channel, "mobile");
   const [poRow] = await db.select().from(schema.payouts).where(eq(schema.payouts.id, prop.id));
@@ -669,6 +669,24 @@ async function main() {
   assert.equal((await getMediaRoute(new Request("https://x"), { params: Promise.resolve({ id: "../etc" }) })).status, 404);
   delete process.env.MODEL_API_KEY;
   console.log("✓ share card drawn by Muse Image, stored, served and sent");
+
+  // 12. Rates an admin saved before Oct 25 lose the SarafuPay payout fee once; later edits stand.
+  const settingsMod = await import("../lib/services/settings");
+  const { DEFAULT_RATES } = await import("../lib/pricing");
+  await db.delete(schema.settings);
+  await db.insert(schema.settings).values({
+    key: "pricing.rates",
+    value: JSON.stringify({ ...DEFAULT_RATES, snippePayoutMobile: { ...DEFAULT_RATES.snippePayoutMobile, sarafuPct: 2.5 }, paypalPayout: { ...DEFAULT_RATES.paypalPayout, sarafuPct: 2 } }),
+  });
+  settingsMod.__resetRatesCache();
+  const migrated = await settingsMod.getRates();
+  assert.equal(migrated.snippePayoutMobile.sarafuPct, 0, "old saved payout fee removed");
+  assert.equal(migrated.paypalPayout.sarafuPct, 0);
+  assert.equal(migrated.snippePayment.sarafuPct, 2.5, "payment fees untouched");
+  await settingsMod.saveRates({ ...migrated, snippePayoutBank: { ...migrated.snippePayoutBank, sarafuPct: 1 } });
+  settingsMod.__resetRatesCache();
+  assert.equal((await settingsMod.getRates()).snippePayoutBank.sarafuPct, 1, "an admin's later choice is kept");
+  console.log("✓ payouts carry no SarafuPay fee; old saved rates migrated once");
 
   // 10. Cost guard without Key Value falls back to memory and still limits.
   const limits = await import("../lib/limits");

@@ -45,14 +45,15 @@ export type RateKey = (typeof RATE_KEYS)[number];
  * - Snippe: 2.5% per collection; TZS 1,500 per disbursement (snippe.sh/pricing).
  * - PayPal (Tanzania seller, "All other markets"): receiving international 4.90% + $0.30;
  *   PayPal Payouts 2% with a maximum fee of $1.00 (PayPal merchant fees, Sep 28 2026).
- * SarafuPay percentages are Enzo's: 2.5% / 2.5% on Snippe, 3% / 2% on PayPal.
+ * SarafuPay percentages are Enzo's: 2.5% on Snippe payments, 3% on PayPal payments. Payouts carry
+ * no SarafuPay fee (decided Oct 25 2026): the organiser pays only the provider's transfer fee.
  */
 export const DEFAULT_RATES: Rates = {
   snippePayment: { providerPct: 2.5, providerFixedCents: 0, providerCapCents: 0, sarafuPct: 2.5 },
-  snippePayoutMobile: { providerPct: 0, providerFixedCents: 150000, providerCapCents: 0, sarafuPct: 2.5 },
-  snippePayoutBank: { providerPct: 0, providerFixedCents: 150000, providerCapCents: 0, sarafuPct: 2.5 },
+  snippePayoutMobile: { providerPct: 0, providerFixedCents: 150000, providerCapCents: 0, sarafuPct: 0 },
+  snippePayoutBank: { providerPct: 0, providerFixedCents: 150000, providerCapCents: 0, sarafuPct: 0 },
   paypalPayment: { providerPct: 4.9, providerFixedCents: 30, providerCapCents: 0, sarafuPct: 3 },
-  paypalPayout: { providerPct: 2, providerFixedCents: 0, providerCapCents: 100, sarafuPct: 2 },
+  paypalPayout: { providerPct: 2, providerFixedCents: 0, providerCapCents: 100, sarafuPct: 0 },
 };
 
 export const RATE_LABELS: Record<RateKey, { title: string; provider: string; currency: "TZS" | "USD"; kind: "payment" | "payout" }> = {
@@ -126,13 +127,16 @@ export function quotePayout(rates: Rates, method: PayoutMethod, grossCents: numb
   return quote(rates[payoutRateKey(method)], grossCents, railCurrency(rail));
 }
 
-/** "5%", "TZS 1,500 + 2.5%", "7.9% + $0.30", "2% + PayPal 2% (max $1)" — the totals shown publicly. */
+/** "5%", "TZS 1,500", "7.9% + $0.30", "2% (max $1)" — the totals shown publicly. */
 export function rateSummary(rate: Rate, currency: "TZS" | "USD"): string {
   const fixed = (c: number) => (currency === "TZS" ? `TZS ${(c / 100).toLocaleString("en-US")}` : `$${(c / 100).toFixed(2)}`);
   const pct = (n: number) => `${Number(n.toFixed(2))}%`;
-  if (rate.providerCapCents > 0) return `${pct(rate.sarafuPct)} + ${pct(rate.providerPct)} (provider, max ${fixed(rate.providerCapCents)})`;
+  if (rate.providerCapCents > 0)
+    return rate.sarafuPct
+      ? `${pct(rate.sarafuPct)} + ${pct(rate.providerPct)} (provider, max ${fixed(rate.providerCapCents)})`
+      : `${pct(rate.providerPct)} (max ${fixed(rate.providerCapCents)})`;
   const total = rate.providerPct + rate.sarafuPct;
-  if (rate.providerFixedCents && !rate.providerPct) return `${fixed(rate.providerFixedCents)} + ${pct(rate.sarafuPct)}`;
+  if (rate.providerFixedCents && !rate.providerPct) return rate.sarafuPct ? `${fixed(rate.providerFixedCents)} + ${pct(rate.sarafuPct)}` : fixed(rate.providerFixedCents);
   return rate.providerFixedCents ? `${pct(total)} + ${fixed(rate.providerFixedCents)}` : pct(total);
 }
 

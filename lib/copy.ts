@@ -59,6 +59,7 @@ const en = {
     payoutFee: "SarafuPay payout fee",
     receive: "You receive",
     kept: "kept",
+    free: "Free",
   },
   pricing: {
     kicker: "Pricing",
@@ -203,6 +204,7 @@ const sw: Copy = {
     payoutFee: "Ada ya SarafuPay ya kutoa",
     receive: "Unapokea",
     kept: "inabaki",
+    free: "Bure",
   },
   pricing: {
     kicker: "Bei",

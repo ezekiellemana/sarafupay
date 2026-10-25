@@ -348,7 +348,9 @@ export function buildTools(ctx: AgentContext): Record<string, Tool> {
         const cur = p.currency;
         const via = p.provider === "snippe" ? "Snippe" : "PayPal";
         const amt = money(p.amountCents, cur);
-        const fees = `${money(p.quote.providerFeeCents, cur)} ${via} + ${money(p.quote.sarafuFeeCents, cur)} SarafuPay`;
+        const fees = p.quote.sarafuFeeCents
+          ? `${money(p.quote.providerFeeCents, cur)} ${via} + ${money(p.quote.sarafuFeeCents, cur)} SarafuPay`
+          : `${money(p.quote.providerFeeCents, cur)} ${via}`;
         const net = money(p.quote.netCents, cur);
         const to = core.destinationLabel(p);
         await sendTo(

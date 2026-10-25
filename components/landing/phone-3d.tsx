@@ -11,7 +11,7 @@ function script(v: Visitor): Msg[] {
   const target = ex(v, 3_000_000);
   const gift = ex(v, 50_000);
   const pay = ex(v, 600_000);
-  const net = v.mobileMoney ? ex(v, 583_500) : ex(v, 576_000);
+  const net = v.mobileMoney ? ex(v, 598_500) : ex(v, 588_000);
   return [
     { from: "me", text: tr(v, "Habari! Nataka kuchangisha kwa harusi ya dada yangu Neema 💍", "Hi! I want to collect for my sister Neema's wedding 💍") },
     { from: "bot", text: tr(v, "Hongera! 🎉 Lengo ni kiasi gani, na mwisho lini?", "Congratulations! 🎉 What's the target, and by when?") },
@@ -170,7 +170,7 @@ export function Phone3D({ v }: { v: Visitor }) {
         </div>
         <div className="float-card -left-16 -bottom-12 hidden lg:block" style={{ "--z": "50px", "--d": "-4s" } as React.CSSProperties}>
           <p className="text-[11px] uppercase tracking-wider text-ink-soft">{tr(v, "Taarifa ya uwazi", "Transparency update")}</p>
-          <p className="text-sm font-semibold">{tr(v, "Mpishi amepokea", "Caterer received")} {v.mobileMoney ? ex(v, 583_500) : ex(v, 576_000)}</p>
+          <p className="text-sm font-semibold">{tr(v, "Mpishi amepokea", "Caterer received")} {v.mobileMoney ? ex(v, 598_500) : ex(v, 588_000)}</p>
           <p className="text-xs text-ink-soft">{tr(v, "Kwa wachangiaji 38", "Sent to 38 contributors")}</p>
         </div>
       </div>
