@@ -44,35 +44,21 @@ export async function SiteHeader({ cta = true, ctaOnPhone = true }: { cta?: bool
   );
 }
 
+/** One quiet line: the header already carries the menu, so the footer doesn't repeat it. */
 export async function SiteFooter() {
   const c = copy((await detectVisitor()).lang);
   return (
     <footer className="border-t border-line">
-      <div className="mx-auto grid max-w-6xl gap-8 px-5 py-6 text-sm sm:py-10 text-ink-soft sm:grid-cols-[1.4fr_1fr_1fr] sm:px-6">
-        <div>
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-5 py-6 text-sm text-ink-soft sm:px-6">
+        <div className="flex items-center gap-3">
           <Logo />
-          <p className="mt-3 max-w-xs leading-relaxed">{c.foot.tagline}</p>
+          <span className="hidden text-xs sm:inline">© {new Date().getFullYear()} EPRIZE DIGITAL</span>
         </div>
-        <div className="site-foot-cols space-y-2">
-          <p className="font-semibold text-ink">{c.foot.product}</p>
-          <p><Link href="/#how" className="hover:text-ink">{c.nav.how}</Link></p>
-          <p><Link href="/pricing" className="hover:text-ink">{c.nav.pricing}</Link></p>
-          <p><Link href="/chat" className="hover:text-ink">{c.foot.tryBrowser}</Link></p>
-        </div>
-        <div className="site-foot-cols space-y-2">
-          <p className="font-semibold text-ink">{c.foot.company}</p>
-          <p>EPRIZE DIGITAL</p>
-          <p><Link href="/privacy" className="hover:text-ink">{c.foot.privacy}</Link></p>
-        </div>
-      </div>
-      <div className="border-t border-line">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-4 text-xs text-ink-soft sm:px-6">
-          <p>© {new Date().getFullYear()} EPRIZE DIGITAL</p>
-          <p className="flex gap-4 sm:hidden">
-            <Link href="/pricing">{c.nav.pricing}</Link>
-            <Link href="/privacy">{c.foot.privacy}</Link>
-          </p>
-        </div>
+        <nav className="flex items-center gap-5 text-xs">
+          <Link href="/chat" className="hover:text-ink">{c.foot.tryBrowser}</Link>
+          <Link href="/privacy" className="hover:text-ink">{c.foot.privacy}</Link>
+          <span className="sm:hidden">© {new Date().getFullYear()} EPRIZE DIGITAL</span>
+        </nav>
       </div>
     </footer>
   );

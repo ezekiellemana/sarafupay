@@ -9,10 +9,9 @@ import { TiltCard } from "@/components/landing/tilt-card";
 import { Belt } from "@/components/landing/belt";
 import { Photo, type Shot } from "@/components/landing/photo";
 import { ScrollFX } from "@/components/scroll-fx";
-import { Mark, MarkTile, PAY_WITH, PAYOUT_TO } from "@/components/provider";
+import { MarkTile, PAY_WITH, PAYOUT_TO } from "@/components/provider";
 import { waLink } from "@/lib/channels/whatsapp";
 import { getRates } from "@/lib/services/settings";
-import { rateSummary } from "@/lib/pricing";
 import { detectVisitor } from "@/lib/visitor";
 import { perUsd } from "@/lib/locale";
 import { copy } from "@/lib/copy";
@@ -44,21 +43,14 @@ export default async function Home({ searchParams }: PageProps<"/">) {
     <div className="flex min-h-screen flex-col overflow-x-clip">
       <ScrollFX />
       <div className="kanga" />
-      <SiteHeader ctaOnPhone={false} />
+      <SiteHeader cta={false} />
 
       {/* ---------- Hero ---------- */}
       <section className="relative">
         <CoinField className="absolute inset-0 -top-24 opacity-60 [mask-image:radial-gradient(70%_22%_at_75%_72%,black_20%,transparent)] lg:opacity-70 lg:[mask-image:radial-gradient(55%_75%_at_80%_45%,black_30%,transparent)]" />
         <div className="relative mx-auto grid w-full max-w-6xl items-center gap-12 px-5 pb-16 pt-6 sm:px-6 lg:grid-cols-[1.08fr_0.92fr] lg:pb-24 lg:pt-10">
           <div>
-            <p className="rise inline-flex items-center gap-3 rounded-full border border-line bg-paper/80 py-1.5 pl-3 pr-4 backdrop-blur-sm">
-              <span className="h-1.5 w-1.5 rounded-full bg-forest-2" />
-              <Mark name="Snippe" height={24} />
-              <Mark name="PayPal" height={24} />
-              <Mark name="Visa" height={14} />
-              <Mark name="Mastercard" height={20} />
-            </p>
-            <h1 className="rise d1 font-display mt-6 text-[2.9rem] font-semibold leading-[0.98] tracking-tight sm:text-7xl lg:text-[5.4rem]">
+            <h1 className="rise d1 font-display text-[2.9rem] font-semibold leading-[0.98] tracking-tight sm:text-7xl lg:text-[5.4rem]">
               Michango,
               <br />
               {v.lang === "sw" ? (
@@ -88,18 +80,6 @@ export default async function Home({ searchParams }: PageProps<"/">) {
                 {c.home.tryNow}
               </Link>
             </div>
-            <dl className="rise d4 mt-10 grid max-w-lg grid-cols-3 gap-4 border-t border-line pt-6 sm:gap-6">
-              {[
-                ["0", c.home.apps],
-                [v.mobileMoney ? rateSummary(rates.snippePayment, "TZS") : rateSummary(rates.paypalPayment, "USD"), c.home.fee],
-                ["1", c.home.oneMsg],
-              ].map(([k, v]) => (
-                <div key={v}>
-                  <dt className="font-display text-2xl font-semibold sm:text-3xl">{k}</dt>
-                  <dd className="text-sm text-ink-soft">{v}</dd>
-                </div>
-              ))}
-            </dl>
           </div>
           <div className="rise d3 hidden sm:block">
             <Phone3D v={v} />
@@ -128,8 +108,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
       <section id="how" className="scroll-mt-4 overflow-hidden bg-forest text-paper">
         <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24">
           <div data-reveal>
-            <p className="font-mono text-xs uppercase tracking-[0.2em] text-marigold">{c.home.howKicker}</p>
-            <h2 className="font-display mt-3 max-w-2xl text-4xl font-semibold leading-tight sm:text-5xl">{c.home.howTitle}</h2>
+            <h2 className="font-display max-w-2xl text-4xl font-semibold leading-tight sm:text-5xl">{c.home.howTitle}</h2>
           </div>
           <div className="mt-10 sm:mt-14" data-reveal style={{ "--rd": ".1s" } as React.CSSProperties}>
             <HowShow v={v} steps={c.how} />
@@ -180,8 +159,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
       {/* ---------- Safety ---------- */}
       <section id="trust" className="scroll-mt-4 mx-auto w-full max-w-6xl py-20 sm:px-6 sm:py-24">
         <div className="px-5 sm:px-0" data-reveal>
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-ink-soft">{c.home.safetyKicker}</p>
-          <h2 className="font-display mt-3 max-w-2xl text-4xl font-semibold leading-tight sm:text-5xl">{c.home.safetyTitle}</h2>
+          <h2 className="font-display max-w-2xl text-4xl font-semibold leading-tight sm:text-5xl">{c.home.safetyTitle}</h2>
         </div>
         <div className="mt-8 sm:mt-10" data-reveal style={{ "--rd": ".1s" } as React.CSSProperties}>
           <Belt label={c.home.safetyKicker}>
@@ -201,42 +179,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
         </div>
       </section>
 
-      {/* ---------- FAQ ---------- */}
-      <section className="mx-auto w-full max-w-3xl px-5 pb-20 sm:px-6" data-reveal>
-        <h2 className="font-display text-3xl font-semibold sm:text-4xl">{c.home.questions}</h2>
-        <div className="mt-6 divide-y divide-line border-y border-line">
-          {c.home.faqs.map(([q, a]) => (
-            <details key={q} className="faq group py-4">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold">
-                {q}
-                <span className="faq-plus grid h-7 w-7 shrink-0 place-items-center rounded-full border border-line text-ink-soft" aria-hidden>
-                  +
-                </span>
-              </summary>
-              <p className="mt-3 leading-relaxed text-ink-soft">{a}</p>
-            </details>
-          ))}
-        </div>
-      </section>
 
-      {/* ---------- Final call ---------- */}
-      <section className="px-3 pb-16 sm:px-6">
-        <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] bg-marigold px-6 py-16 text-center sm:py-20" data-reveal>
-          <CoinField className="absolute inset-0 opacity-50 [mask-image:radial-gradient(60%_80%_at_50%_50%,transparent_35%,black)]" />
-          <h2 className="relative font-display mx-auto max-w-2xl text-4xl font-semibold leading-tight text-ink sm:text-5xl">
-            {c.home.finalTitle}
-          </h2>
-          <div className="relative mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            {wa ? (
-              <a href={wa} className="btn btn-primary justify-center" target="_blank" rel="noreferrer">
-                {c.home.startWa}
-              </a>
-            ) : (
-              <Link href="/chat" className="btn btn-primary justify-center">{c.home.tryNow}</Link>
-            )}
-          </div>
-        </div>
-      </section>
 
       <SiteFooter />
     </div>
