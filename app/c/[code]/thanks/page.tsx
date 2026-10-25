@@ -8,6 +8,7 @@ import { CoinField } from "@/components/landing/coin-field";
 import { TiltCard } from "@/components/landing/tilt-card";
 import { detectVisitor } from "@/lib/visitor";
 import { copy } from "@/lib/copy";
+import { Ban } from "@/components/icons";
 
 export default async function Thanks({ params, searchParams }: PageProps<"/c/[code]/thanks">) {
   await connection();
@@ -37,7 +38,9 @@ export default async function Thanks({ params, searchParams }: PageProps<"/c/[co
               <span>✓</span>
             </div>
           ) : failed ? (
-            <p className="text-5xl" aria-hidden>😕</p>
+            <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-terracotta/10 text-terracotta" aria-hidden>
+              <Ban size={32} />
+            </span>
           ) : (
             <div className="wait-phone" aria-hidden>
               <div className="wait-screen">

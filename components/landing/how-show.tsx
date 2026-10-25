@@ -73,7 +73,7 @@ function SceneShare({ v }: { v: Visitor }) {
           </span>
           <span
             className="hs-tick"
-            style={{ "--d": `${f.d + 0.9}s`, transform: `translate3d(${f.x}px, ${f.y + (f.y < 0 ? -46 : 46)}px, ${f.z + 20}px)` } as React.CSSProperties}
+            style={{ "--d": `${f.d + 0.9}s`, transform: `translate3d(${f.x * 0.9}px, ${f.y + (f.y < 0 ? -44 : 44)}px, ${f.z}px)` } as React.CSSProperties}
           >
             +{ex(v, 50_000)}
           </span>
@@ -107,7 +107,7 @@ function SceneOut({ v }: { v: Visitor }) {
         <span
           key={k}
           className="hs-note"
-          style={{ "--d": `${3.1 + i * 0.22}s`, "--x": `${[-175, -58, 58, 175][i]}px`, "--y": `${[-100, -140, -140, -100][i]}px` } as React.CSSProperties}
+          style={{ "--d": `${3.1 + i * 0.22}s`, "--x": `${[-140, -48, 48, 140][i]}px`, "--y": `${[-96, -126, -126, -96][i]}px` } as React.CSSProperties}
         >
           {tr(v, "✓ Imeripotiwa", "✓ Reported")}
         </span>
@@ -129,6 +129,18 @@ export function HowShow({ v, steps }: { v: Visitor; steps: { title: string; line
   const [on, setOn] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const rig = useRef<HTMLDivElement>(null);
+  const stage = useRef<HTMLDivElement>(null);
+
+  // Fit the scenes to the stage: they're laid out for ~540×380; smaller stages scale them down.
+  useEffect(() => {
+    const el = stage.current;
+    if (!el) return;
+    const fit = () => el.style.setProperty("--hs-scale", String(Math.min(1, el.clientWidth / 540, el.clientHeight / 380)));
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     const el = root.current;
@@ -183,7 +195,7 @@ export function HowShow({ v, steps }: { v: Visitor; steps: { title: string; line
       </ol>
 
       <div className="order-1 lg:order-2" onPointerMove={tilt}>
-        <div className="hs-stage" aria-live="polite">
+        <div ref={stage} className="hs-stage" aria-live="polite">
           <p className="sr-only">{`${STEPS[i].title}. ${STEPS[i].line}`}</p>
           <div className="hs-floor" aria-hidden />
           <div ref={rig} className="hs-rig" aria-hidden>

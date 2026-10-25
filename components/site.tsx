@@ -20,7 +20,7 @@ export async function SiteHeader({ cta = true, ctaOnPhone = true }: { cta?: bool
           <SandboxBadge />
         </span>
       </div>
-      <nav className="flex items-center gap-4 text-sm font-medium text-ink-soft sm:gap-5">
+      <nav className="flex items-center gap-3 text-sm font-medium text-ink-soft sm:gap-5">
         <Link href="/#how" className="hidden hover:text-ink lg:inline">{c.nav.how}</Link>
         <Link href="/#trust" className="hidden hover:text-ink sm:inline">{c.nav.safety}</Link>
         <Link href="/pricing" className="hover:text-ink">{c.nav.pricing}</Link>
@@ -29,12 +29,12 @@ export async function SiteHeader({ cta = true, ctaOnPhone = true }: { cta?: bool
         </Suspense>
         {cta ? (
           wa ? (
-            <a href={wa} target="_blank" rel="noreferrer" className={`btn btn-primary !px-4 !py-2 text-sm ${ctaOnPhone ? "" : "!hidden sm:!inline-flex"}`}>
+            <a href={wa} target="_blank" rel="noreferrer" className={`btn btn-primary whitespace-nowrap !px-4 !py-2 text-sm ${ctaOnPhone ? "" : "!hidden sm:!inline-flex"}`}>
               <span className="sm:hidden">{c.nav.start}</span>
               <span className="hidden sm:inline">{c.nav.startWa}</span>
             </a>
           ) : (
-            <Link href="/chat" className={`btn btn-primary !px-4 !py-2 text-sm ${ctaOnPhone ? "" : "!hidden sm:!inline-flex"}`}>
+            <Link href="/chat" className={`btn btn-primary whitespace-nowrap !px-4 !py-2 text-sm ${ctaOnPhone ? "" : "!hidden sm:!inline-flex"}`}>
               {c.nav.tryIt}
             </Link>
           )

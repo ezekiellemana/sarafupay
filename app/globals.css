@@ -402,6 +402,7 @@ body {
   border: 1px solid rgba(247, 240, 227, 0.1);
 }
 @media (min-width: 1024px) { .hs-stage { height: 460px; } }
+@media (max-width: 640px) { .hs-rig { transform: rotateX(8deg) rotateY(-6deg); } }
 .hs-rig {
   position: absolute; inset: 0; transform-style: preserve-3d;
   transform: rotateX(var(--rx, 10deg)) rotateY(var(--ry, -14deg));
@@ -414,8 +415,7 @@ body {
   border-radius: 50%; background: radial-gradient(closest-side, rgba(0, 0, 0, 0.35), transparent);
   filter: blur(8px);
 }
-.hs-scene { position: absolute; left: 50%; top: 50%; width: 0; height: 0; transform-style: preserve-3d; }
-@media (max-width: 640px) { .hs-scene { scale: 0.74; } }
+.hs-scene { position: absolute; left: 50%; top: 50%; width: 0; height: 0; transform-style: preserve-3d; scale: var(--hs-scale, 1); }
 .hs-scene > * { position: absolute; left: 0; top: 0; translate: -50% -50%; }
 .hs-scene > div:not([class]) { translate: none; transform-style: preserve-3d; }
 .hs-scene > div:not([class]) > * { position: absolute; left: 0; top: 0; translate: -50% -50%; }
@@ -490,7 +490,7 @@ body {
 .hs-note { padding: 6px 11px; border-radius: 99px; white-space: nowrap; font-size: 11.5px; font-weight: 600; color: var(--forest); background: #fffaf0; box-shadow: 0 16px 26px -14px rgba(0, 0, 0, 0.7); animation: hs-note 1.5s cubic-bezier(0.2, 0.9, 0.3, 1.1) var(--d) both; }
 @keyframes hs-note {
   0% { opacity: 0; transform: translate3d(104px, 60px, 130px) scale(0.4); }
-  45%, 100% { opacity: 1; transform: translate3d(var(--x), var(--y), 150px) scale(1); }
+  45%, 100% { opacity: 1; transform: translate3d(var(--x), var(--y), 70px) scale(1); }
 }
 
 .hs-tab {
