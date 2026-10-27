@@ -137,3 +137,9 @@ export async function verifyChain(collectionId: string): Promise<{ ok: boolean; 
 }
 
 export const proofUrl = (id: string) => `${env.appUrl()}/proof/${id}`;
+
+/** Every card about one payment record, oldest first: the agent's record, then the organiser's decision. */
+export async function cardsForRecord(recordId: string) {
+  const db = await getDb();
+  return db.select().from(schema.evidenceCards).where(eq(schema.evidenceCards.recordId, recordId)).orderBy(asc(schema.evidenceCards.seq));
+}
