@@ -36,6 +36,17 @@ An organiser asks "nani bado hajalipa?" or "kwa nini malipo ya Juma bado yanasub
 - **Checks its own explanation:** before the organiser sees the reply, a verification layer outside the agent's control checks it against what the investigation found. Code checks that every amount and date in the reply was actually found, and a separate Muse Spark call checks every claim against the facts. A reply that fails is rewritten from the facts and checked again; if it still fails, it goes out with a warning instead of as fact. Each verdict (verified, corrected, flagged) is in the organiser's activity log. Live test: a reply claiming "Juma alishalipa… benki imechelewesha" and "Baraka alikataa kulipa kwa sababu ya ugonjwa" had all three invented claims caught and was rewritten to what the records show.
 - **Drafts, then waits:** where a nudge would help, it drafts a reminder in the payer's own language, worded for what happened ("tuliona ulianza kulipa… lakini bado hatujapokea uthibitisho"). Nothing goes out until the organiser says yes. Each draft is sent once, with a fresh pay link, and expires after 24 hours.
 
+### 4. Personal thank-you videos
+
+An organiser says "watumie asante wote waliolipa" and everyone who paid gets a short video on WhatsApp, with their own name and amount spoken in their own language:
+
+- **Muse Image** draws a thank-you card in the collection's mood (marigolds for a wedding, calm dusk for a funeral).
+- **Muse Wonder** animates it into a short clip. Wonder isn't enabled for our key yet, so until it is, the card itself is used with a slow zoom; the request is already built and tested, so the clips switch on by themselves once Meta turns access on.
+- **Seamless M4T v2** speaks "Asante sana Asha! Esther anakushukuru kwa mchango wako wa shilingi 20,000…" over it, on our voice server, which also puts picture and voice together into a WhatsApp video.
+- **The words come from the records,** not from a model, so names and amounts are always right. Each contribution gets one video; if one fails, it isn't marked as thanked, so asking again retries it. The organiser gets a summary and a copy of the first video.
+
+Live test: two videos (one Swahili, one English) made and delivered in 78 s on CPU.
+
 ### All AI is Meta
 
 Gemini (a backup brain before the hackathon) and the dashboard chat's Gemini route were removed: the agent, the dashboard's AG Studio chat, vision, segmentation, listening and speaking all run on Meta models. Non-AI services stay (PayPal and Snippe payments, AG Studio's charts, hosting).
@@ -48,4 +59,6 @@ Gemini (a backup brain before the hackathon) and the dashboard chat's Gemini rou
 | Muse Spark 1.3 | Agent brain; field location and crop read-back | Agent existed; field location and read-back are new |
 | Muse Spark Open (Baseten) | Fallback agent brain; fallback for field location and read-back; hears Swahili voice notes | Existing route, new host; vision fallback and Swahili listening are new |
 | Muse Voice Transcribe | Voice notes; draft hint for Swahili | Existing; use as a hint is new |
-| Seamless M4T v2 (open weights, self-hosted) | Spoken Swahili and English replies to voice notes | Yes |
+| Seamless M4T v2 (open weights, self-hosted) | Spoken Swahili and English replies to voice notes; the voice in thank-you videos | Yes |
+| Muse Image | Share cards; thank-you video cards | Share cards existed; thank-you cards are new |
+| Muse Wonder | Animates the thank-you card (switches on when enabled for our key) | Yes |

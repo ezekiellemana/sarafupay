@@ -8,7 +8,7 @@ import { saveMedia } from "./media";
  * groups. The picture carries the mood and the title; the facts (code, link, amounts) stay in
  * the caption, where they can't be misdrawn.
  */
-const MOOD: Record<string, string> = {
+export const MOOD: Record<string, string> = {
   wedding: "a joyful East African wedding celebration: kanga fabric patterns, marigold and gold accents, flowers, warm evening light",
   funeral: "a calm, respectful remembrance: soft dusk light over an acacia tree, white lilies, muted deep green and cream, peaceful and dignified",
   medical: "hope and care: a warm sunrise over a Tanzanian village clinic, gentle green and gold tones, caring hands",

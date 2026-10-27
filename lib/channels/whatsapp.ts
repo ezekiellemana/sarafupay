@@ -61,6 +61,28 @@ export async function sendWhatsAppImage(toDigits: string, link: string, caption?
   return { ok: true };
 }
 
+/** Sends a video (MP4, H.264 + AAC, ≤16 MB) by public URL with an optional caption. */
+export async function sendWhatsAppVideo(toDigits: string, link: string, caption?: string): Promise<SendResult> {
+  if (!whatsappConfigured()) return { ok: false, reason: "not_configured" };
+  const res = await fetch(`${graph()}/${env.waPhoneNumberId()}/messages`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${env.waToken()}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      to: toDigits,
+      type: "video",
+      video: { link, ...(caption ? { caption: caption.slice(0, 1024) } : {}) },
+    }),
+  });
+  if (!res.ok) {
+    const detail = await res.text();
+    console.error("[whatsapp] video send failed", res.status, detail);
+    return { ok: false, reason: /131047|re-engagement/i.test(detail) ? "outside_24h" : "error", detail: detail.slice(0, 300) };
+  }
+  return { ok: true };
+}
+
 /** Sends a voice note by public URL (Ogg/Opus shows as a voice message with a play button). */
 export async function sendWhatsAppAudio(toDigits: string, link: string): Promise<SendResult> {
   if (!whatsappConfigured()) return { ok: false, reason: "not_configured" };

@@ -44,6 +44,7 @@ export const env = {
   metaOpenBaseUrl: () => get("META_OPEN_BASE_URL", "https://api.fireworks.ai/inference/v1").replace(/\/$/, ""),
   metaOpenModel: () => get("META_OPEN_MODEL", "accounts/fireworks/models/muse-spark-open"),
   metaImageModel: () => get("META_IMAGE_MODEL", "muse-image-1.0"),
+  metaVideoModel: () => get("META_VIDEO_MODEL", "muse-wonder-1.0"),
   metaTranscribeModel: () => get("META_TRANSCRIBE_MODEL", "muse-voice-transcribe-1.0"),
   // Spoken replies to voice notes: our own server running Meta's open Seamless M4T v2 voice model.
   metaVoiceUrl: () => get("META_VOICE_URL").replace(/\/$/, ""),
