@@ -4,7 +4,9 @@ import { desc, eq } from "drizzle-orm";
 import { createHash } from "node:crypto";
 import { aiConfigured, env, metaConfigured } from "../env";
 import { getDb, schema } from "../db";
-import { logInbound, sendTo } from "../channels/messaging";
+import { logInbound, sendTo, sendVoiceTo } from "../channels/messaging";
+import { replyLang, speak, speechConfigured, spokenText } from "./speech";
+import { saveMedia } from "../services/media";
 import * as core from "../services/core";
 import { buildTools, type AgentContext } from "./tools";
 import { systemPrompt } from "./prompt";
@@ -84,6 +86,17 @@ async function hearVoice(msg: Incoming, lang: "sw" | "en"): Promise<string | nul
   }
   if (lang === "sw" && env.geminiApiKey()) return null; // Gemini listens to the note itself
   return draft;
+}
+
+async function replyByVoice(phone: string, reply: string, lang: "sw" | "en") {
+  try {
+    const audio = await speak(reply, lang);
+    if (!audio) return;
+    const { url } = await saveMedia({ ...audio, prompt: "voice reply" });
+    await sendVoiceTo(phone, url, spokenText(reply, lang));
+  } catch (e) {
+    console.warn("[agent] voice reply failed", e instanceof Error ? e.message : e);
+  }
 }
 
 async function process(msg: Incoming): Promise<unknown> {
@@ -207,6 +220,8 @@ async function process(msg: Incoming): Promise<unknown> {
     );
     await logToolSteps(msg.phone, usedModel, toolSteps).catch((e) => console.warn("[agent] action log failed", e));
     const reply = result.text.trim();
+    // A voice note gets a voice note back (then the text, which keeps links and details).
+    if (reply && msg.audio && speechConfigured()) await replyByVoice(msg.phone, reply, replyLang(reply, lang));
     if (reply) await sendTo(msg.phone, reply);
   } catch (e) {
     console.error("[agent] generation failed", e);

@@ -7,7 +7,7 @@ import { MockLanguageModelV4 } from "ai/test";
 
 process.env.PGLITE_DIR = "memory";
 // Real model keys in the shell (a dev box, a cloud session) must not leak into the offline run.
-for (const k of ["MODEL_API_KEY", "META_MODEL_API_KEY", "META_OPEN_API_KEY", "META_OPEN_BASE_URL", "META_OPEN_MODEL", "GEMINI_API_KEY", "GOOGLE_GENERATIVE_AI_API_KEY", "EVIDENCE_SIGNING_KEY"]) delete process.env[k];
+for (const k of ["MODEL_API_KEY", "META_MODEL_API_KEY", "META_OPEN_API_KEY", "META_OPEN_BASE_URL", "META_OPEN_MODEL", "GEMINI_API_KEY", "GOOGLE_GENERATIVE_AI_API_KEY", "EVIDENCE_SIGNING_KEY", "AZURE_SPEECH_KEY", "AZURE_SPEECH_REGION"]) delete process.env[k];
 process.env.PAYPAL_CLIENT_ID = "test-id";
 process.env.PAYPAL_SECRET = "test-secret";
 process.env.APP_URL = "https://sarafupay.test";
@@ -570,6 +570,8 @@ async function main() {
   process.env.META_OPEN_API_KEY = "bt_test";
   process.env.META_OPEN_BASE_URL = "https://inference.baseten.co/v1";
   process.env.META_OPEN_MODEL = "meta-models/muse-spark-open-1026";
+  process.env.AZURE_SPEECH_KEY = "az_test";
+  const ssmls: { url: string; ssml: string; format: string | null }[] = [];
   metaHandler = () => Response.json({ sessionId: "s2", transcript: "Mamilipa air fushini cash.", turns: [] });
   const listenBodies: { model: string; messages: { content: { type: string; text?: string; input_audio?: { data: string; format: string } }[] }[] }[] = [];
   const realFetch3 = globalThis.fetch;
@@ -581,6 +583,10 @@ async function main() {
         listenBodies.push(body);
         return Response.json({ choices: [{ message: { role: "assistant", content: '{"transcript":"Juma amenilipa elfu ishirini cash"}' } }] });
       }
+    }
+    if (url.endsWith(".tts.speech.microsoft.com/cognitiveservices/v1")) {
+      ssmls.push({ url, ssml: String(init?.body), format: new Headers(init?.headers).get("X-Microsoft-OutputFormat") });
+      return new Response(new Uint8Array(ogg), { headers: { "Content-Type": "audio/ogg" } });
     }
     return realFetch3(input, init);
   }) as typeof fetch;
@@ -597,11 +603,25 @@ async function main() {
   assert.ok(ask.text?.includes("mchango") && ask.text.includes('"Mamilipa air fushini cash."'), "prompt carries SarafuPay context and the Voice Transcribe draft");
   const swLog = (await db.select().from(schema.chatLog).where(eq(schema.chatLog.phone, SW_VOICE)).orderBy(asc(schema.chatLog.id))).map((r) => r.text);
   assert.ok(swLog.includes("🎤 Juma amenilipa elfu ishirini cash"), "the agent reads what Muse Spark Open heard");
+  // …and answers the voice note with a voice note in Swahili, then the text.
+  assert.equal(ssmls.length, 1);
+  assert.equal(ssmls[0].url, "https://westeurope.tts.speech.microsoft.com/cognitiveservices/v1");
+  assert.equal(ssmls[0].format, "ogg-24khz-16bit-mono-opus");
+  assert.match(ssmls[0].ssml, /sw-TZ-RehemaNeural/);
+  assert.match(ssmls[0].ssml, /nirekodi shilingi 20,000 cash kutoka kwa Juma\?/);
+  const voiceIdx = swLog.findIndex((m) => m.startsWith("🔊 https://sarafupay.test/api/media/img_"));
+  assert.ok(voiceIdx > 0 && swLog[voiceIdx + 1] === "Sawa, nirekodi TZS 20,000 cash kutoka kwa Juma?", "voice note first, then the text reply");
+  const voiceMedia = /img_[a-f0-9]{16}/.exec(swLog[voiceIdx])![0];
+  const servedVoice = await (await import("../app/api/media/[id]/route")).GET(new Request("https://x"), { params: Promise.resolve({ id: voiceMedia }) });
+  assert.equal(servedVoice.headers.get("content-type"), "audio/ogg; codecs=opus");
+  const sp = await import("../lib/agent/speech");
+  assert.equal(sp.replyLang("Sorry, I could not find that collection. Please check the code.", "sw"), "en");
+  assert.equal(sp.spokenText("✅ Paid *TZS 5,000*: https://x.test/p/1", "en"), "Paid 5,000 shillings: the link is in the message.");
   const { wer } = await import("../lib/services/voice-eval");
   assert.equal(wer("Juma amenilipa elfu ishirini cash", "Juma amenilipa elfu ishirini cash."), 0);
   assert.equal(wer("Nani bado hajalipa mchango", "Nani ni bado hajalipa mchango"), 0.25);
-  for (const k of ["META_OPEN_API_KEY", "META_OPEN_BASE_URL", "META_OPEN_MODEL"]) delete process.env[k];
-  console.log("✓ Swahili voice note heard by Muse Spark Open on Baseten, with Voice Transcribe's draft as a hint");
+  for (const k of ["META_OPEN_API_KEY", "META_OPEN_BASE_URL", "META_OPEN_MODEL", "AZURE_SPEECH_KEY"]) delete process.env[k];
+  console.log("✓ Swahili voice note heard by Muse Spark Open on Baseten (Voice Transcribe's draft as a hint), answered with a Swahili voice note");
 
   // 11c. Trust Copilot: a receipt photo is recorded once, checked against pledges, never counted twice.
   const trustCol = await core.createCollection({ ownerId: owner.id, title: "Harusi ya Neema & Baraka", category: "wedding", targetCents: 1_000_000_00 });
