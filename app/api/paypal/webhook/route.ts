@@ -1,9 +1,10 @@
 import { after, NextResponse } from "next/server";
+import { getDb, schema } from "@/lib/db";
 import { verifyPaypalWebhook } from "@/lib/paypal/webhooks";
 import { applyCapture, refreshPayout, settleOrder, settlePledgeInvoice } from "@/lib/services/core";
 import { paypalSettlement } from "@/lib/currency";
 
-type Event = { event_type: string; resource: Record<string, any> }; // eslint-disable-line @typescript-eslint/no-explicit-any
+type Event = { id?: string; event_type: string; resource: Record<string, any> }; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 export async function POST(req: Request) {
   const raw = await req.text();
@@ -16,6 +17,22 @@ export async function POST(req: Request) {
   if (!ok) return new Response("unverified", { status: 401 });
   const evt = JSON.parse(raw) as Event;
   const r = evt.resource ?? {};
+  // Keep a short log of the event for the organiser copilot. Handlers below are idempotent, so a
+  // repeated delivery is still processed.
+  if (evt.id) {
+    const db = await getDb();
+    await db
+      .insert(schema.processedEvents)
+      .values({
+        id: `paypal:${evt.id}`,
+        provider: "paypal",
+        kind: evt.event_type,
+        contributionId: r.custom_id ?? r.purchase_units?.[0]?.custom_id ?? null,
+        ref: r.supplementary_data?.related_ids?.order_id ?? (evt.event_type.startsWith("CHECKOUT.ORDER") ? r.id : null) ?? null,
+        status: r.status ?? null,
+      })
+      .onConflictDoNothing();
+  }
   after(async () => {
     try {
       switch (evt.event_type) {

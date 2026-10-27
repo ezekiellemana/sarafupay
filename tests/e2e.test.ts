@@ -97,7 +97,7 @@ async function main() {
   const { handleIncoming, __setModelForTests } = await import("../lib/agent/engine");
   const core = await import("../lib/services/core");
   const { getDb, schema } = await import("../lib/db");
-  const { eq, asc } = await import("drizzle-orm");
+  const { eq, asc, and } = await import("drizzle-orm");
   __setModelForTests(model);
   const db = await getDb();
   const inbox = async (phone: string) =>
@@ -836,6 +836,77 @@ async function main() {
   assert.ok(acts.every((a) => a.model === "test"), "the answering model is recorded");
   assert.equal(log.mask('{"phone":"255712345678","amount":20000}'), '{"phone":"255…78","amount":20000}');
   console.log("✓ agent activity log: tool, outcome and model per action, numbers masked");
+
+  // 11d3. Organiser copilot: "nani bado hajalipa?" walks the ledger, the webhook log and the provider's
+  // live status, names what happened to each person, and drafts reminders that go only after a yes.
+  const inv = await import("../lib/services/investigate");
+  const copCol = await core.createCollection({ ownerId: owner.id, title: "Mchango wa Kikundi", category: "community", targetCents: 1_000_000_00 });
+  const person = async (n: string, phone: string) => {
+    const u = await core.getOrCreateUser(phone, "sim");
+    await core.updateUser(u.id, { name: n });
+    await logInbound(phone, "Habari, nitachangia");
+    return (await core.getUser(u.id))!;
+  };
+  const juma = await person("Juma Hassan", "sim:255700001001");
+  const asha = await person("Asha", "sim:255700001002");
+  const barakaU = await person("Baraka", "sim:255700001003");
+  const zuhura = await person("Zuhura", "sim:255700001004");
+  for (const [u, amt] of [[juma, 50_000], [asha, 20_000], [barakaU, 30_000], [zuhura, 40_000]] as const)
+    await core.createPledge({ collection: copCol, user: u, displayName: u.name!, amountCents: amt * 100, dueDate: "2020-01-01" });
+  const started = async (u: typeof juma, ref: string, amt: number) => {
+    const c = await core.createContribution({ collection: copCol, contributorId: u.id, displayName: u.name!, amountCents: amt * 100, source: "sim" });
+    await db.update(schema.contributions).set({ providerRef: ref }).where(eq(schema.contributions.id, c.id));
+    return c;
+  };
+  await started(juma, "sess_JUMA", 50_000); // pushed to his phone, PIN never entered
+  const ashaCtb = await started(asha, "sess_ASHA", 20_000); // paid, but Snippe's webhook never arrived
+  const zuhuraCtb = await started(zuhura, "sess_ZUH", 40_000); // checkout expired
+  await core.applySnippePayment({ contributionId: zuhuraCtb.id, status: "expired" });
+  await db.insert(schema.processedEvents).values({ id: "snippe:evt_zuh", provider: "snippe", kind: "payment.expired", contributionId: zuhuraCtb.id, ref: "sess_ZUH", status: "expired" });
+  const asked: string[] = [];
+  inv.__setInvestigateDepsForTests({
+    snippeSession: async (ref) => {
+      asked.push(ref);
+      return ref === "sess_ASHA" ? { status: "completed", amountTzs: 20_000 } : { status: "pending" };
+    },
+  });
+  const report = await inv.investigate(copCol, owner);
+  const cases = Object.fromEntries(report.cases.map((c) => [c.name, c]));
+  assert.deepEqual(asked.sort(), ["sess_ASHA", "sess_JUMA"], "only pending checkouts are checked live");
+  assert.equal(cases["Juma Hassan"].diagnosis, "waiting_on_payer");
+  assert.match(cases["Juma Hassan"].why, /not approved it on their phone/);
+  assert.equal(cases["Asha"].diagnosis, "recovered_now", "a lost webhook is recovered during the investigation");
+  assert.equal((await core.getContribution(ashaCtb.id))!.status, "paid");
+  assert.ok((await inbox("sim:255700001002")).some((m) => m.includes("20,000")), "Asha gets her receipt");
+  assert.equal(cases["Baraka"].diagnosis, "pledged_not_started");
+  assert.match(cases["Baraka"].why, /overdue/);
+  assert.equal(cases["Zuhura"].diagnosis, "failed");
+  assert.ok(cases["Zuhura"].timeline.some((x) => x.what === "Snippe webhook: payment.expired (expired)"), "timeline shows the provider event");
+  for (const n of ["Juma Hassan", "Baraka", "Zuhura"]) assert.ok(cases[n].draft, `${n} gets a draft`);
+  assert.equal(cases["Asha"].draft, undefined, "no reminder for someone who paid");
+  assert.match(cases["Juma Hassan"].draft!.preview, /^👋 Habari Juma Hassan, tuliona ulianza kulipa TZS 50,000/);
+  // By name, through the agent: drafts are shown, nothing is sent yet.
+  const jumaBefore = (await inbox("sim:255700001001")).length;
+  script.push({ tool: ["investigate_payments", { code: copCol.code, name: "juma" }] }, { text: "Juma alianza kulipa lakini hakuweka PIN. Nitume kumbusho?" });
+  await say(OWNER, "Kwa nini malipo ya Juma bado yanasubiri?");
+  assert.equal((await inbox("sim:255700001001")).length, jumaBefore, "investigating sends nothing");
+  const [jumaDraft] = await db.select().from(schema.reminderDrafts).where(and(eq(schema.reminderDrafts.userId, juma.id), eq(schema.reminderDrafts.status, "draft")));
+  assert.ok(jumaDraft, "one live draft for Juma (the earlier one was replaced)");
+  // A non-owner can't investigate or send.
+  script.push({ tool: ["send_reminder_drafts", { code: copCol.code, draft_ids: [jumaDraft.id] }] }, { text: "Samahani." });
+  await say(AMINA, "tuma");
+  assert.equal((await inbox("sim:255700001001")).length, jumaBefore, "non-owner can't send drafts");
+  // The organiser says yes: sent once, with a fresh pay link.
+  script.push({ tool: ["send_reminder_drafts", { code: copCol.code, draft_ids: [jumaDraft.id] }] }, { text: "Nimemtumia Juma ✅" });
+  await say(OWNER, "Ndiyo, tuma");
+  const jumaMsgs = (await inbox("sim:255700001001")).slice(jumaBefore);
+  assert.equal(jumaMsgs.length, 1);
+  assert.ok(jumaMsgs[0].startsWith("👋 Habari Juma Hassan") && jumaMsgs[0].includes("https://sarafupay.test/pay/"), "reminder carries a pay link");
+  const again = await inv.sendReminderDrafts(copCol, [jumaDraft.id]);
+  assert.deepEqual(again.sent, [], "a draft is sent only once");
+  assert.ok((await db.select().from(schema.pledges).where(eq(schema.pledges.userId, juma.id)))[0].remindedAt, "pledge marked reminded");
+  assert.ok(inv.nameMatches("mama neema", "Mama Neema Joseph") && !inv.nameMatches("neema", "Juma"));
+  console.log("✓ organiser copilot: diagnoses from ledger + webhooks + live status, recovers a lost webhook, drafts sent only after the organiser's yes");
 
   // 11e. Share card drawn by Muse Image, stored, served and sent as an image message.
   process.env.MODEL_API_KEY = "meta_test";

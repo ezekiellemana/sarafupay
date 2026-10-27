@@ -15,6 +15,7 @@ import { RATE_LABELS, RATE_KEYS, rateSummary } from "../pricing";
 import { getRates } from "../services/settings";
 import { offlineSummary, recordOffline, resolveOffline } from "../services/trust";
 import { sendReportNow } from "../services/autopilot";
+import { investigate, sendReminderDrafts } from "../services/investigate";
 import { makeShareCard } from "../services/sharecard";
 import { metaConfigured } from "../env";
 import { sendImageTo } from "../channels/messaging";
@@ -298,6 +299,28 @@ export function buildTools(ctx: AgentContext): Record<string, Tool> {
         const col = await mustFind(c);
         mustOwn(col, ctx);
         return core.remindPledgers(col);
+      }),
+    }),
+
+    investigate_payments: tool({
+      description:
+        "Owner only: organiser copilot. Use for \"who hasn't paid?\", \"nani bado hajalipa?\", \"why is Juma's payment pending?\", \"kwa nini malipo ya Juma hayajaingia?\". Walks the ledger and the Snippe/PayPal webhook log, asks the provider for the live status of anything pending (recording a payment whose webhook was lost), and returns per person a diagnosis, the plain facts (why), a timeline, and where useful a reminder DRAFT. Drafts are NOT sent: show them and ask the organiser first.",
+      inputSchema: z.object({ code, name: z.string().max(60).optional().describe("A person's name to look into; leave out to check everyone who still owes") }),
+      execute: safe(async (i) => {
+        const col = await mustFind(i.code);
+        mustOwn(col, ctx);
+        return investigate(col, ctx.user, i.name);
+      }),
+    }),
+
+    send_reminder_drafts: tool({
+      description:
+        "Owner only: send reminder drafts made by investigate_payments, each with a fresh pay link. Call ONLY after the organiser has seen the draft text in this chat and clearly said yes (\"ndiyo\", \"tuma\", \"send it\"). If they asked for a change to a single draft, pass the new wording as text.",
+      inputSchema: z.object({ code, draft_ids: z.array(z.string().regex(/^rmd_/)).min(1).max(8), text: z.string().max(500).optional().describe("Organiser's edited wording, for one draft only; the pay link is added automatically") }),
+      execute: safe(async (i) => {
+        const col = await mustFind(i.code);
+        mustOwn(col, ctx);
+        return sendReminderDrafts(col, i.draft_ids, i.text);
       }),
     }),
 
