@@ -6,7 +6,7 @@ import { aiConfigured, env, metaConfigured } from "../env";
 import { getDb, schema } from "../db";
 import { logInbound, sendTo } from "../channels/messaging";
 import * as core from "../services/core";
-import { buildTools } from "./tools";
+import { buildTools, type AgentContext } from "./tools";
 import { systemPrompt } from "./prompt";
 import { withModelFallback, type ModelPick } from "./models";
 import { transcribeVoice } from "./meta-media";
@@ -118,9 +118,10 @@ async function process(msg: Incoming): Promise<unknown> {
     owned.slice(0, 5).map(async (c) => ({ code: c.code, title: c.title, progress: core.statusLine(c, await core.collectionStats(c)) })),
   );
   const active = user.activeCollectionId ? await core.getCollectionById(user.activeCollectionId) : null;
-  const ctx = {
+  const ctx: AgentContext = {
     user,
     channel: msg.channel,
+    image: msg.image ?? undefined,
     inputKind: msg.image ? ("photo" as const) : msg.audio ? ("voice" as const) : ("text" as const),
     imageHash: msg.image ? createHash("sha256").update(msg.image.data).digest("hex") : undefined,
   };
@@ -175,10 +176,12 @@ async function process(msg: Incoming): Promise<unknown> {
       }
     };
     let usedModel: string | null = modelOverride ? "test" : null;
+    if (modelOverride) ctx.model = "test";
     const result = modelOverride
       ? await run({ model: modelOverride, fast: {} })
       : await withModelFallback(
           async (pick) => {
+            ctx.model = `${pick.provider}:${pick.id}`;
             const r = await run(pick);
             usedModel = `${pick.provider}:${pick.id}`;
             return r;

@@ -169,4 +169,16 @@ CREATE TABLE IF NOT EXISTS agent_actions (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS agent_actions_code_idx ON agent_actions (collection_code, id);
+CREATE TABLE IF NOT EXISTS evidence_cards (
+  id text PRIMARY KEY,
+  collection_id text NOT NULL,
+  record_id text NOT NULL,
+  seq integer NOT NULL,
+  body text NOT NULL,
+  hash text NOT NULL,
+  sig text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS evidence_chain_idx ON evidence_cards (collection_id, seq);
+CREATE INDEX IF NOT EXISTS evidence_record_idx ON evidence_cards (record_id);
 `;
