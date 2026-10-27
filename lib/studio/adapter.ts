@@ -2,10 +2,10 @@ import type { AgAiEvent, AgLlmAdapter, AgLlmRequest, AgLlmResponse } from "ag-st
 
 /**
  * AG Studio LLM adapter that proxies each turn to our server (/api/studio/llm),
- * which calls Gemini. The server replies with a complete AgLlmResponse; we replay it
+ * which calls Muse Spark. The server replies with a complete AgLlmResponse; we replay it
  * as AG-UI style events so the chat panel renders text and tool calls.
  */
-export function geminiProxyAdapter(opts: { endpoint: string; headers: Record<string, string> }): AgLlmAdapter {
+export function modelProxyAdapter(opts: { endpoint: string; headers: Record<string, string> }): AgLlmAdapter {
   return {
     executeTurn(request: AgLlmRequest, options) {
       let resolveComplete!: (r: AgLlmResponse) => void;

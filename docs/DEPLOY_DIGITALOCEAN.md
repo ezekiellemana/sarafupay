@@ -30,7 +30,8 @@ paste the value and tick **Encrypt**:
 | `PAYPAL_ENV` | `sandbox` while testing, `live` for real money |
 | `PAYPAL_CLIENT_ID`, `PAYPAL_SECRET` | developer.paypal.com → Apps & Credentials → **Live** (or Sandbox) app |
 | `PAYPAL_WEBHOOK_ID` | Step 4 below |
-| `GEMINI_API_KEY` | aistudio.google.com/apikey |
+| `MODEL_API_KEY` | dev.meta.ai → API keys (Meta Model API) |
+| `META_OPEN_API_KEY`, `META_OPEN_BASE_URL`, `META_OPEN_MODEL` | Baseten (Muse Spark Open): see `env.example` |
 | `WHATSAPP_*` | See step 5 |
 | `ADMIN_KEY` | Make one up: 32+ random characters. Your admin page is `/admin?key=<ADMIN_KEY>` |
 

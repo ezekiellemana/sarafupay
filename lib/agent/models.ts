@@ -1,5 +1,4 @@
 import "server-only";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import type { LanguageModel } from "ai";
 import { env } from "../env";
@@ -11,13 +10,11 @@ export function isRetryableModelError(e: unknown): boolean {
 }
 
 export type ModelPick = {
-  provider: "meta" | "meta-open" | "gemini";
+  provider: "meta" | "meta-open";
   id: string;
   model: LanguageModel;
   /** Provider options for a fast, low-reasoning chat turn. */
   fast: Record<string, Record<string, string | number | boolean | Record<string, string>>>;
-  /** Whether this model accepts audio file parts directly (Gemini). Meta voice goes through transcription. */
-  audioIn: boolean;
 };
 
 /** The Meta Model API, through its OpenAI-compatible Chat Completions endpoint. */
@@ -32,25 +29,19 @@ export function metaProvider() {
 
 /**
  * Every configured chat model, best first: Muse Spark on the Meta Model API, then Muse Spark Open
- * (Meta's open weights on a partner host), then Gemini, so the bot keeps answering whatever fails.
+ * (Meta's open weights on a partner host), so the bot keeps answering whatever fails. All Meta.
  */
 export function modelChain(): ModelPick[] {
   const out: ModelPick[] = [];
   if (env.metaApiKey()) {
     const meta = metaProvider();
     for (const id of env.metaModels()) {
-      out.push({ provider: "meta", id, model: meta.chatModel(id), fast: { meta: { reasoningEffort: env.metaReasoningEffort() } }, audioIn: false });
+      out.push({ provider: "meta", id, model: meta.chatModel(id), fast: { meta: { reasoningEffort: env.metaReasoningEffort() } } });
     }
   }
   if (env.metaOpenApiKey()) {
     const open = createOpenAICompatible({ name: "metaOpen", baseURL: env.metaOpenBaseUrl(), apiKey: env.metaOpenApiKey() });
-    out.push({ provider: "meta-open", id: env.metaOpenModel(), model: open.chatModel(env.metaOpenModel()), fast: { metaOpen: { reasoningEffort: env.metaReasoningEffort() } }, audioIn: false });
-  }
-  if (env.geminiApiKey()) {
-    const google = createGoogleGenerativeAI({ apiKey: env.geminiApiKey() });
-    for (const id of env.geminiModels()) {
-      out.push({ provider: "gemini", id, model: google(id), fast: { google: { thinkingConfig: { thinkingLevel: "low" } } }, audioIn: true });
-    }
+    out.push({ provider: "meta-open", id: env.metaOpenModel(), model: open.chatModel(env.metaOpenModel()), fast: { metaOpen: { reasoningEffort: env.metaReasoningEffort() } } });
   }
   return out;
 }
@@ -65,7 +56,7 @@ export function primaryModel(): string | null {
  * Runs `fn` with each configured model in turn until one succeeds.
  * - Retryable errors (overload, rate limit, unknown model) try the next model.
  * - Anything else (bad key, billing not set up, bad request) skips the rest of that provider's
- *   models and goes straight to the next provider, so a Meta account problem falls back to Gemini.
+ *   models and goes straight to the next provider, so a Meta Model API account problem falls back to Muse Spark Open.
  */
 export async function withModelFallback<T>(fn: (pick: ModelPick) => Promise<T>, filter?: (p: ModelPick) => boolean): Promise<T> {
   const chain = modelChain().filter((p) => (filter ? filter(p) : true));
@@ -89,9 +80,4 @@ export async function withModelFallback<T>(fn: (pick: ModelPick) => Promise<T>, 
     }
   }
   throw last;
-}
-
-/** Back-compat for callers that only ever used Gemini (AG Studio adapter). */
-export async function withGeminiFallback<T>(fn: (model: LanguageModel, id: string) => Promise<T>): Promise<T> {
-  return withModelFallback((p) => fn(p.model, p.id), (p) => p.provider === "gemini");
 }

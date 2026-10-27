@@ -22,11 +22,15 @@ Every Trust Copilot decision now leaves a signed evidence card that anyone can c
 
 - **Muse Spark Open listens to Swahili voice notes:** the WhatsApp voice note is decoded to WAV and sent to Muse Spark Open on Baseten as audio, with a short description of what SarafuPay voice notes are about and Muse Voice Transcribe's draft as a hint.
 - **Measured, not guessed:** on 12 real Swahili voice notes from 4 speakers, Muse Spark Open makes about 40% fewer word errors than Muse Voice Transcribe (29–34% vs 55% word error rate, mean of two runs). Method and results: [docs/SWAHILI_VOICE_EVAL.md](docs/SWAHILI_VOICE_EVAL.md). The recordings stay private; `npm run eval:voice -- <folder>` reruns it.
-- **Falls back safely:** if Muse Spark Open is unavailable, the agent uses Muse Voice Transcribe's draft, or Gemini when configured.
-- **Voice in, voice out:** a voice note now gets a voice note back in the speaker's language (Tanzanian Swahili or English), followed by the text with links and details. Meta's models do the listening and thinking; the speaking uses Azure neural voices (`AZURE_SPEECH_KEY`), because Meta's API has no voice output and its open Swahili voice (MMS) is licensed for non-commercial use only. The web simulator plays voice replies inline.
+- **Falls back safely:** if Muse Spark Open is unavailable, the agent uses Muse Voice Transcribe's draft; if nothing was heard, it asks the person to resend or type.
+- **Voice in, voice out (in progress):** a voice note gets a voice note back in the speaker's language, spoken by Meta's open Seamless M4T v2 model on our own voice server, followed by the text with links and details.
 - **Safer voice payments:** before recording money from a voice note alone, the agent repeats the payer and amount back and records only after the organiser confirms.
 
 ### 3. Kiswahili organiser copilot (planned)
+
+### All AI is Meta
+
+Gemini (a backup brain before the hackathon) and the dashboard chat's Gemini route were removed: the agent, the dashboard's AG Studio chat, vision, segmentation, listening and speaking all run on Meta models. Non-AI services stay (PayPal and Snippe payments, AG Studio's charts, hosting).
 
 ## Meta models used
 

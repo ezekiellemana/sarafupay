@@ -66,11 +66,9 @@ async function history(phone: string, limit = 16): Promise<ModelMessage[]> {
  *   SarafuPay context and Muse Voice Transcribe's draft as a hint. On our Swahili test set this
  *   roughly halves the word error rate of Muse Voice Transcribe alone (see HACKATHON.md).
  * - Everyone else: Muse Voice Transcribe.
- * Without either, Swahili notes go to a model that listens to audio (Gemini) when configured.
  */
 async function hearVoice(msg: Incoming, lang: "sw" | "en"): Promise<string | null> {
   if (!msg.audio) return null;
-  if (lang === "sw" && !env.metaOpenApiKey() && env.geminiApiKey()) return null;
   const draft = metaConfigured()
     ? await transcribeVoice(msg.audio, lang === "en" ? ["English"] : undefined).catch((e) => {
         console.warn("[agent] transcription failed", e instanceof Error ? e.message : e);
@@ -84,13 +82,12 @@ async function hearVoice(msg: Incoming, lang: "sw" | "en"): Promise<string | nul
     });
     if (heard) return heard;
   }
-  if (lang === "sw" && env.geminiApiKey()) return null; // Gemini listens to the note itself
   return draft;
 }
 
 async function replyByVoice(phone: string, reply: string, lang: "sw" | "en") {
   try {
-    const audio = await speak(reply, lang);
+    const audio = await speak(reply, lang, "female");
     if (!audio) return;
     const { url } = await saveMedia({ ...audio, prompt: "voice reply" });
     await sendVoiceTo(phone, url, spokenText(reply, lang));
@@ -105,7 +102,6 @@ async function process(msg: Incoming): Promise<unknown> {
   const lang = await langOf(msg.phone);
   const transcript = await hearVoice(msg, lang);
   if (transcript) text = [text, transcript].filter(Boolean).join("\n");
-  const audio = transcript ? undefined : msg.audio;
   await logInbound(
     msg.phone,
     msg.image
@@ -121,11 +117,17 @@ async function process(msg: Incoming): Promise<unknown> {
   const cancel = /^\s*(cancel|ghairi)\s+(\d{6})\s*$/i.exec(text);
   if (cancel) return sendTo(msg.phone, await core.cancelPayoutByCode(user, cancel[2]));
 
-  if (!text && !audio && !msg.image) {
+  if (!text && msg.audio && !msg.image) {
+    return sendTo(
+      msg.phone,
+      t(lang, "🎤 Samahani, sikuweza kusikia voice note yako vizuri. Tafadhali itume tena au andika ujumbe.", "🎤 Sorry, I couldn't make out your voice note. Please send it again or type your message."),
+    );
+  }
+  if (!text && !msg.image) {
     return sendTo(msg.phone, t(lang, "Ninasoma maandishi, picha za risiti na kusikiliza voice notes 🙂 Tafadhali tuma mojawapo.", "I can read text and receipt photos, and listen to voice notes 🙂 Please send one of those."));
   }
   if (!aiConfigured() && !modelOverride) {
-    return sendTo(msg.phone, "⚙️ The AI brain isn't configured yet (missing MODEL_API_KEY / GEMINI_API_KEY).");
+    return sendTo(msg.phone, "⚙️ The AI brain isn't configured yet (missing MODEL_API_KEY / META_OPEN_API_KEY).");
   }
 
   const gate = modelOverride ? { ok: true as const } : await takeAiCall(msg.phone);
@@ -160,15 +162,7 @@ async function process(msg: Incoming): Promise<unknown> {
           { type: "file", data: msg.image.data, mediaType: msg.image.mimeType },
         ],
       }
-    : audio
-      ? {
-          role: "user",
-          content: [
-            { type: "text", text: text || "(voice note — listen, transcribe mentally, and respond to what they asked)" },
-            { type: "file", data: audio.data, mediaType: audio.mimeType },
-          ],
-        }
-      : { role: "user", content: text + (transcript ? "\n(This came from a voice note, transcribed.)" : "") };
+    : { role: "user", content: text + (transcript ? "\n(This came from a voice note, transcribed.)" : "") };
 
   try {
     const system = systemPrompt({
@@ -189,7 +183,7 @@ async function process(msg: Incoming): Promise<unknown> {
         stopWhen: isStepCount(8),
         maxOutputTokens: 1200, // WhatsApp replies are short; caps cost per step
         maxRetries: 1,
-        // Chat replies should feel instant: low reasoning effort (Muse Spark) / thinking level (Gemini).
+        // Chat replies should feel instant: low reasoning effort.
         ...(fast ? { providerOptions: fast } : {}),
       });
     const run = async (pick: Pick<ModelPick, "model" | "fast">) => {
@@ -212,7 +206,6 @@ async function process(msg: Incoming): Promise<unknown> {
             usedModel = `${pick.provider}:${pick.id}`;
             return r;
           },
-          audio ? (p) => p.audioIn : undefined,
         );
     // Audit trail: every tool the agent used this turn, with its outcome and the model that chose it.
     const toolSteps = result.steps.flatMap((st) =>

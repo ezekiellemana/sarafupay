@@ -33,4 +33,4 @@ What still goes wrong: errors concentrate in two speakers' clips, which every ro
 
 ## What SarafuPay does with this
 
-Swahili speakers' voice notes are now heard by Muse Spark Open with the SarafuPay context and Muse Voice Transcribe's draft (route 4); everyone else's go to Muse Voice Transcribe. If Muse Spark Open is unavailable, the agent falls back to the draft (or to Gemini, when configured). See `hearVoice` in `lib/agent/engine.ts` and `listenOpen` in `lib/agent/meta-media.ts`.
+Swahili speakers' voice notes are now heard by Muse Spark Open with the SarafuPay context and Muse Voice Transcribe's draft (route 4); everyone else's go to Muse Voice Transcribe. If Muse Spark Open is unavailable, the agent falls back to the draft. See `hearVoice` in `lib/agent/engine.ts` and `listenOpen` in `lib/agent/meta-media.ts`.

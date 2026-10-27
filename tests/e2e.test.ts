@@ -7,7 +7,7 @@ import { MockLanguageModelV4 } from "ai/test";
 
 process.env.PGLITE_DIR = "memory";
 // Real model keys in the shell (a dev box, a cloud session) must not leak into the offline run.
-for (const k of ["MODEL_API_KEY", "META_MODEL_API_KEY", "META_OPEN_API_KEY", "META_OPEN_BASE_URL", "META_OPEN_MODEL", "GEMINI_API_KEY", "GOOGLE_GENERATIVE_AI_API_KEY", "EVIDENCE_SIGNING_KEY", "AZURE_SPEECH_KEY", "AZURE_SPEECH_REGION"]) delete process.env[k];
+for (const k of ["MODEL_API_KEY", "META_MODEL_API_KEY", "META_OPEN_API_KEY", "META_OPEN_BASE_URL", "META_OPEN_MODEL", "GEMINI_API_KEY", "GOOGLE_GENERATIVE_AI_API_KEY", "EVIDENCE_SIGNING_KEY", "META_VOICE_URL", "META_VOICE_KEY"]) delete process.env[k];
 process.env.PAYPAL_CLIENT_ID = "test-id";
 process.env.PAYPAL_SECRET = "test-secret";
 process.env.APP_URL = "https://sarafupay.test";
@@ -498,26 +498,15 @@ async function main() {
   assert.ok(metaCalls.every((c) => c.url === "https://api.meta.ai/v1/chat/completions" || !c.url.includes("chat")), "OpenAI-compatible endpoint");
   console.log("✓ Muse Spark via Meta Model API, falls back across models");
 
-  // 11a. A Meta account problem (billing, bad key) skips the other Muse models and falls back to Gemini.
-  process.env.GEMINI_API_KEY = "g_test";
+  // 11a. A Meta Model API account problem (billing, bad key) skips the other Muse models and falls back
+  // to Muse Spark Open, Meta's open weights on a partner host (Fireworks by default). All Meta, no Gemini.
+  process.env.META_OPEN_API_KEY = "fw_test";
+  assert.deepEqual(models.modelChain().map((m) => m.provider), ["meta", "meta", "meta-open"]);
   const tried: string[] = [];
   metaHandler = (_url, init) => {
     tried.push(JSON.parse(String(init?.body ?? "{}")).model);
     return Response.json({ error: { code: "billing_not_configured", message: "Billing verification failed.", type: "billing_error" } }, { status: 402 });
   };
-  const fellBack = await models.withModelFallback(async (m) => {
-    if (m.provider === "gemini") return `gemini:${m.id}`;
-    return (await generateText({ model: m.model, prompt: "hi", maxRetries: 0 })).text;
-  });
-  assert.match(fellBack, /^gemini:/, "billing error on Meta falls back to Gemini");
-  assert.deepEqual(tried, ["muse-spark-1.3"], "other Muse models are skipped after an account-level error");
-  delete process.env.GEMINI_API_KEY;
-  console.log("✓ Meta billing/auth error falls back to Gemini instead of failing the reply");
-
-  // 11a2. Muse Spark Open on a partner host (Fireworks by default) sits between the Meta API and Gemini.
-  process.env.META_OPEN_API_KEY = "fw_test";
-  process.env.GEMINI_API_KEY = "g_test";
-  assert.deepEqual(models.modelChain().map((m) => m.provider), ["meta", "meta", "meta-open", "gemini", "gemini", "gemini", "gemini"].slice(0, models.modelChain().length));
   const openBodies: Record<string, unknown>[] = [];
   const realFetch2 = globalThis.fetch;
   globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -529,13 +518,13 @@ async function main() {
     }
     return realFetch2(input, init);
   }) as typeof fetch;
-  const viaOpen = await models.withModelFallback((m) => (m.provider === "gemini" ? Promise.resolve({ text: "gemini" }) : generateText({ model: m.model, prompt: "hi", maxRetries: 0, providerOptions: m.fast })));
+  const viaOpen = await models.withModelFallback((m) => generateText({ model: m.model, prompt: "hi", maxRetries: 0, providerOptions: m.fast }));
   assert.equal(viaOpen.text, "Habari kutoka Muse Spark Open", "Meta API billing error → Muse Spark Open answers");
+  assert.deepEqual(tried, ["muse-spark-1.3"], "other Muse models are skipped after an account-level error");
   assert.equal(openBodies[0].model, "accounts/fireworks/models/muse-spark-open");
   globalThis.fetch = realFetch2;
   delete process.env.META_OPEN_API_KEY;
-  delete process.env.GEMINI_API_KEY;
-  console.log("✓ Muse Spark Open on Fireworks answers when the Meta Model API refuses");
+  console.log("✓ Meta Model API billing/auth error falls back to Muse Spark Open (no non-Meta models)");
 
   // 11b. Voice notes: WhatsApp Ogg/Opus → WAV → Muse Voice Transcribe → the agent reads the transcript.
   const { readFileSync } = await import("node:fs");
@@ -570,8 +559,9 @@ async function main() {
   process.env.META_OPEN_API_KEY = "bt_test";
   process.env.META_OPEN_BASE_URL = "https://inference.baseten.co/v1";
   process.env.META_OPEN_MODEL = "meta-models/muse-spark-open-1026";
-  process.env.AZURE_SPEECH_KEY = "az_test";
-  const ssmls: { url: string; ssml: string; format: string | null }[] = [];
+  process.env.META_VOICE_URL = "https://voice.sarafupay.test";
+  process.env.META_VOICE_KEY = "vk_test";
+  const spoken: { auth: string | null; body: { text: string; lang: string; voice: string } }[] = [];
   metaHandler = () => Response.json({ sessionId: "s2", transcript: "Mamilipa air fushini cash.", turns: [] });
   const listenBodies: { model: string; messages: { content: { type: string; text?: string; input_audio?: { data: string; format: string } }[] }[] }[] = [];
   const realFetch3 = globalThis.fetch;
@@ -584,8 +574,8 @@ async function main() {
         return Response.json({ choices: [{ message: { role: "assistant", content: '{"transcript":"Juma amenilipa elfu ishirini cash"}' } }] });
       }
     }
-    if (url.endsWith(".tts.speech.microsoft.com/cognitiveservices/v1")) {
-      ssmls.push({ url, ssml: String(init?.body), format: new Headers(init?.headers).get("X-Microsoft-OutputFormat") });
+    if (url === "https://voice.sarafupay.test/speak") {
+      spoken.push({ auth: new Headers(init?.headers).get("Authorization"), body: JSON.parse(String(init?.body)) });
       return new Response(new Uint8Array(ogg), { headers: { "Content-Type": "audio/ogg" } });
     }
     return realFetch3(input, init);
@@ -603,12 +593,11 @@ async function main() {
   assert.ok(ask.text?.includes("mchango") && ask.text.includes('"Mamilipa air fushini cash."'), "prompt carries SarafuPay context and the Voice Transcribe draft");
   const swLog = (await db.select().from(schema.chatLog).where(eq(schema.chatLog.phone, SW_VOICE)).orderBy(asc(schema.chatLog.id))).map((r) => r.text);
   assert.ok(swLog.includes("🎤 Juma amenilipa elfu ishirini cash"), "the agent reads what Muse Spark Open heard");
-  // …and answers the voice note with a voice note in Swahili, then the text.
-  assert.equal(ssmls.length, 1);
-  assert.equal(ssmls[0].url, "https://westeurope.tts.speech.microsoft.com/cognitiveservices/v1");
-  assert.equal(ssmls[0].format, "ogg-24khz-16bit-mono-opus");
-  assert.match(ssmls[0].ssml, /sw-TZ-RehemaNeural/);
-  assert.match(ssmls[0].ssml, /nirekodi shilingi 20,000 cash kutoka kwa Juma\?/);
+  // …and answers the voice note with a voice note in Swahili (Meta's Seamless voice on our server), then the text.
+  assert.equal(spoken.length, 1);
+  assert.equal(spoken[0].auth, "Bearer vk_test");
+  assert.equal(spoken[0].body.lang, "sw");
+  assert.equal(spoken[0].body.text, "Sawa, nirekodi shilingi 20,000 cash kutoka kwa Juma?");
   const voiceIdx = swLog.findIndex((m) => m.startsWith("🔊 https://sarafupay.test/api/media/img_"));
   assert.ok(voiceIdx > 0 && swLog[voiceIdx + 1] === "Sawa, nirekodi TZS 20,000 cash kutoka kwa Juma?", "voice note first, then the text reply");
   const voiceMedia = /img_[a-f0-9]{16}/.exec(swLog[voiceIdx])![0];
@@ -620,7 +609,7 @@ async function main() {
   const { wer } = await import("../lib/services/voice-eval");
   assert.equal(wer("Juma amenilipa elfu ishirini cash", "Juma amenilipa elfu ishirini cash."), 0);
   assert.equal(wer("Nani bado hajalipa mchango", "Nani ni bado hajalipa mchango"), 0.25);
-  for (const k of ["META_OPEN_API_KEY", "META_OPEN_BASE_URL", "META_OPEN_MODEL", "AZURE_SPEECH_KEY"]) delete process.env[k];
+  for (const k of ["META_OPEN_API_KEY", "META_OPEN_BASE_URL", "META_OPEN_MODEL", "META_VOICE_URL", "META_VOICE_KEY"]) delete process.env[k];
   console.log("✓ Swahili voice note heard by Muse Spark Open on Baseten (Voice Transcribe's draft as a hint), answered with a Swahili voice note");
 
   // 11c. Trust Copilot: a receipt photo is recorded once, checked against pledges, never counted twice.

@@ -7,7 +7,7 @@ import { kvRun } from "./kv";
  * - Per sender: at most PER_PHONE_MAX AI replies per PER_PHONE_WINDOW_MS (the dashboard
  *   passes a higher cap, since one Studio question fans out into several model calls).
  * - Global: at most DAILY_AI_LIMIT AI calls per UTC day (env-tunable), so a spammer
- *   or a loop cannot drain the Gemini prepaid credits.
+ *   or a loop cannot drain the model credits.
  * Deterministic paths (CONFIRM/CANCEL payout codes) are never limited.
  *
  * Storage: Render Key Value when REDIS_URL is set, so counters survive deploys and

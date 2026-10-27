@@ -21,7 +21,7 @@ export async function GET() {
       db,
       snippe: snippeConfigured(),
       paypal: paypalConfigured() ? env.paypalEnv() : false,
-      gemini: Boolean(env.geminiApiKey()),
+      voice: Boolean(env.metaVoiceUrl()),
       meta: Boolean(env.metaApiKey()),
       meta_open: Boolean(env.metaOpenApiKey()),
       ai_model: primaryModel(),
