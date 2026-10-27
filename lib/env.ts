@@ -45,6 +45,11 @@ export const env = {
   metaOpenModel: () => get("META_OPEN_MODEL", "accounts/fireworks/models/muse-spark-open"),
   metaImageModel: () => get("META_IMAGE_MODEL", "muse-image-1.0"),
   metaTranscribeModel: () => get("META_TRANSCRIBE_MODEL", "muse-voice-transcribe-1.0"),
+  // Spoken replies to voice notes (Meta's models have no commercial Swahili voice yet).
+  azureSpeechKey: () => get("AZURE_SPEECH_KEY"),
+  azureSpeechRegion: () => get("AZURE_SPEECH_REGION", "westeurope"),
+  voiceSw: () => get("VOICE_SW", "sw-TZ-RehemaNeural"),
+  voiceEn: () => get("VOICE_EN", "en-TZ-ImaniNeural"),
 
   geminiApiKey: () => get("GOOGLE_GENERATIVE_AI_API_KEY", get("GEMINI_API_KEY")),
   geminiModel: () => get("GEMINI_MODEL", "gemini-3.8-flash"),
