@@ -220,9 +220,35 @@ export const settings = pgTable("settings", {
 });
 
 // Provider webhook events already handled (Snippe retries and may deliver twice).
-export const processedEvents = pgTable("processed_events", {
+// Provider webhook events, claimed once by id. The other columns keep a short log of what each
+// event said, so the organiser copilot can walk a payment's history ("why is Juma's payment pending?").
+export const processedEvents = pgTable(
+  "processed_events",
+  {
+    id: text("id").primaryKey(),
+    provider: text("provider"), // snippe | paypal
+    kind: text("kind"), // payment.completed, CHECKOUT.ORDER.APPROVED, ...
+    contributionId: text("contribution_id"),
+    ref: text("ref"), // Snippe session reference or PayPal order id
+    status: text("status"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("processed_events_ctb_idx").on(t.contributionId)],
+);
+
+// Reminders the organiser copilot drafted. Nothing is sent until the organiser approves the draft.
+export const reminderDrafts = pgTable("reminder_drafts", {
   id: text("id").primaryKey(),
+  collectionId: text("collection_id").notNull(),
+  createdBy: text("created_by").notNull(), // organiser's user id
+  userId: text("user_id").notNull(), // who gets the reminder
+  pledgeId: text("pledge_id"),
+  displayName: text("display_name").notNull(),
+  amountCents: cents("amount_cents").notNull(),
+  text: text("text").notNull(),
+  status: text("status").notNull().default("draft"), // draft | sent | unreachable
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  sentAt: timestamp("sent_at", { withTimezone: true }),
 });
 
 export type User = typeof users.$inferSelect;
@@ -233,3 +259,4 @@ export type Payout = typeof payouts.$inferSelect;
 export type AgentAction = typeof agentActions.$inferSelect;
 export type OfflineRecord = typeof offlineRecords.$inferSelect;
 export type EvidenceCard = typeof evidenceCards.$inferSelect;
+export type ReminderDraft = typeof reminderDrafts.$inferSelect;

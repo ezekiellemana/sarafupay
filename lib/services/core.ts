@@ -4,7 +4,7 @@ import { getDb, schema } from "../db";
 import type { Collection, Contribution, Payout, User } from "../db/schema";
 import { money, newId, pct, progressBar, randomDigits, slugCode } from "../format";
 import { sendTo } from "../channels/messaging";
-import { sendWhatsAppTemplate } from "../channels/whatsapp";
+import { sendWhatsAppTemplate, type SendResult } from "../channels/whatsapp";
 import { env } from "../env";
 import { captureOrder, createContributionOrder } from "../paypal/orders";
 import { getPayoutBatch, sendPayout } from "../paypal/payouts";
@@ -740,18 +740,7 @@ export async function remindPledgers(col: Collection, only?: (p: typeof pledges.
         `👋 Hi ${p.displayName}, a friendly reminder about your pledge of ${amt} to *${col.title}*${p.dueDate ? ` (due ${p.dueDate})` : ""}.\nPay securely here: ${payUrl(ctb.id)}`,
       ),
     );
-    let delivered = sent;
-    // Outside WhatsApp's 24h window free text is refused; an approved template still gets through.
-    const tpl = env.waReminderTemplate();
-    if (!sent.ok && sent.reason === "outside_24h" && tpl && tpl !== "off") {
-      delivered = await sendWhatsAppTemplate(
-        u.phone,
-        tpl,
-        L === "sw" ? "sw" : "en",
-        [p.displayName, amt, col.title, p.dueDate ?? t(L, "haijawekwa", "not set")],
-        ctb.id,
-      );
-    }
+    const delivered = await withReminderTemplate(sent, u.phone, L, [p.displayName, amt, col.title, p.dueDate ?? t(L, "haijawekwa", "not set")], ctb.id);
     if (delivered.ok) {
       await db.update(pledges).set({ remindedAt: new Date() }).where(eq(pledges.id, p.id));
       reminded.push(p.displayName);
@@ -764,6 +753,18 @@ export async function remindPledgers(col: Collection, only?: (p: typeof pledges.
     }
   }
   return { reminded, skipped, unreachable };
+}
+
+/**
+ * Outside WhatsApp's 24h window free text is refused; an approved reminder template still gets
+ * through. `params` fill the template: name, amount, collection title, due date.
+ */
+export async function withReminderTemplate(sent: SendResult, phone: string, L: Lang, params: string[], contributionId: string): Promise<SendResult> {
+  const tpl = env.waReminderTemplate();
+  if (!sent.ok && sent.reason === "outside_24h" && tpl && tpl !== "off") {
+    return sendWhatsAppTemplate(phone, tpl, L === "sw" ? "sw" : "en", params, contributionId);
+  }
+  return sent;
 }
 
 // ---------- payouts ----------

@@ -26,7 +26,14 @@ Every Trust Copilot decision now leaves a signed evidence card that anyone can c
 - **Voice in, voice out:** a voice note gets a voice note back in the speaker's language, then the text with links and details. The speaking is Meta's open **Seamless M4T v2** on our own voice server (`voice-server/`, one male and one female voice picked from its 200 built-in speakers). The reply uses the opposite voice of the note's pitch (a higher voice hears the male voice), or the voice the person asked for ("nijibu kwa sauti ya kike"), which is remembered. Only the voice choice is stored. Live run: Muse Spark Open heard a Swahili voice note, Muse Spark answered, and Muse Spark Open listening back to the Seamless reply heard every sentence.
 - **Safer voice payments:** before recording money from a voice note alone, the agent repeats the payer and amount back and records only after the organiser confirms.
 
-### 3. Kiswahili organiser copilot (planned)
+### 3. Kiswahili organiser copilot
+
+An organiser asks "nani bado hajalipa?" or "kwa nini malipo ya Juma bado yanasubiri?" (in text or a voice note) and Muse Spark investigates instead of just listing names:
+
+- **Walks the evidence:** for each person it reads the ledger (pledges, pay links, contributions, money recorded outside SarafuPay and its trust checks) and the Snippe and PayPal webhook log, which now keeps what each event said.
+- **Asks the provider:** anything still pending is checked live with Snippe or PayPal. A payment whose webhook was lost is recorded on the spot, and the payer gets their receipt.
+- **Names what happened:** started paying but never entered the PIN, checkout expired, pay link never opened, pledged but not started (and whether it's overdue), outside payment waiting for the organiser, or a receipt that failed the checks. Each comes with a timeline in East Africa time.
+- **Drafts, then waits:** where a nudge would help, it drafts a reminder in the payer's own language, worded for what happened ("tuliona ulianza kulipa… lakini bado hatujapokea uthibitisho"). Nothing goes out until the organiser says yes. Each draft is sent once, with a fresh pay link, and expires after 24 hours.
 
 ### All AI is Meta
 
