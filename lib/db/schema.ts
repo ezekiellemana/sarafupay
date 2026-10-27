@@ -1,4 +1,4 @@
-import { pgTable, text, bigint, timestamp, serial, index } from "drizzle-orm/pg-core";
+import { pgTable, text, bigint, integer, timestamp, serial, index, uniqueIndex } from "drizzle-orm/pg-core";
 
 // Money is stored as amount × 100 for every currency. bigint, because TZS totals pass the
 // 32-bit limit quickly (TZS 21.5M = 2.15 billion "cents").
@@ -145,6 +145,23 @@ export const offlineRecords = pgTable(
   (t) => [index("offline_collection_idx").on(t.collectionId)],
 );
 
+// Evidence cards: one signed, hash-chained entry per Trust Copilot decision (record, claim, confirm,
+// reject). `body` is the exact JSON that was hashed and signed; it's never rewritten.
+export const evidenceCards = pgTable(
+  "evidence_cards",
+  {
+    id: text("id").primaryKey(),
+    collectionId: text("collection_id").notNull(),
+    recordId: text("record_id").notNull(),
+    seq: integer("seq").notNull(), // position in the collection's chain, from 1
+    body: text("body").notNull(),
+    hash: text("hash").notNull(), // sha256 of body, hex
+    sig: text("sig").notNull(), // Ed25519 signature of hash, base64url
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("evidence_chain_idx").on(t.collectionId, t.seq), index("evidence_record_idx").on(t.recordId)],
+);
+
 // What the agent did: one row per tool call, for the organiser's dashboard and for debugging.
 // Inputs are stored with long digit runs masked (phone and account numbers).
 export const agentActions = pgTable(
@@ -213,3 +230,4 @@ export type Pledge = typeof pledges.$inferSelect;
 export type Payout = typeof payouts.$inferSelect;
 export type AgentAction = typeof agentActions.$inferSelect;
 export type OfflineRecord = typeof offlineRecords.$inferSelect;
+export type EvidenceCard = typeof evidenceCards.$inferSelect;

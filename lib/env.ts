@@ -67,6 +67,15 @@ export const env = {
   /** Approved UTILITY template used for pledge reminders outside the 24h window ("off" disables). */
   waReminderTemplate: () => get("WHATSAPP_REMINDER_TEMPLATE", "pledge_reminder"),
 
+  /**
+   * Ed25519 key that signs Trust Copilot evidence cards: a base64 32-byte seed
+   * (`openssl rand -base64 32`). Keep it stable; changing it makes older cards show as signed by an old key.
+   */
+  evidenceSigningKey: () => get("EVIDENCE_SIGNING_KEY"),
+  /** Vision model that locates and re-reads receipt fields (any Muse Spark model with image input). */
+  metaVisionModel: () => get("META_VISION_MODEL", env.metaModels()[0] ?? "muse-spark-1.3"),
+  metaSegmentModel: () => get("META_SEGMENT_MODEL", "sam-3.1"),
+
   simulatorEnabled: () => get("ENABLE_SIMULATOR", "true") !== "false",
   agStudioLicense: () => get("NEXT_PUBLIC_AG_STUDIO_LICENSE_KEY"),
 };

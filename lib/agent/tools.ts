@@ -26,6 +26,10 @@ export type AgentContext = {
   imageHash?: string;
   /** How the current message arrived, recorded as evidence on offline payments. */
   inputKind?: "text" | "voice" | "photo";
+  /** The receipt photo in the current message, for SAM 3.1 crops on the evidence card. */
+  image?: { data: Uint8Array; mimeType: string };
+  /** The model answering this turn ("meta:muse-spark-1.3"), recorded on evidence cards. */
+  model?: string | null;
 };
 
 const code = z.string().describe("Collection code, e.g. NEEMA24");
@@ -441,8 +445,18 @@ export function buildTools(ctx: AgentContext): Record<string, Tool> {
           receivedOn: i.received_on,
           evidence: ctx.inputKind === "photo" ? "photo" : ctx.inputKind === "voice" ? "voice" : "text",
           imageHash: ctx.inputKind === "photo" ? ctx.imageHash : undefined,
+          image: ctx.inputKind === "photo" ? ctx.image : undefined,
+          model: ctx.model,
         });
-        return { ok: true, record_id: r.record.id, status: r.record.status, check: r.record.checkStatus, note: r.record.checkNote, summary: r.summary };
+        return {
+          ok: true,
+          record_id: r.record.id,
+          status: r.record.status,
+          check: r.record.checkStatus,
+          note: r.record.checkNote,
+          summary: r.summary,
+          proof_url: r.proofUrl,
+        };
       }),
     }),
 

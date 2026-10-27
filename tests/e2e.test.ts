@@ -6,6 +6,8 @@ import assert from "node:assert/strict";
 import { MockLanguageModelV4 } from "ai/test";
 
 process.env.PGLITE_DIR = "memory";
+// Real model keys in the shell (a dev box, a cloud session) must not leak into the offline run.
+for (const k of ["MODEL_API_KEY", "META_MODEL_API_KEY", "META_OPEN_API_KEY", "META_OPEN_BASE_URL", "META_OPEN_MODEL", "GEMINI_API_KEY", "GOOGLE_GENERATIVE_AI_API_KEY", "EVIDENCE_SIGNING_KEY"]) delete process.env[k];
 process.env.PAYPAL_CLIENT_ID = "test-id";
 process.env.PAYPAL_SECRET = "test-secret";
 process.env.APP_URL = "https://sarafupay.test";
