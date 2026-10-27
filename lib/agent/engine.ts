@@ -13,6 +13,7 @@ import { systemPrompt } from "./prompt";
 import { withModelFallback, type ModelPick } from "./models";
 import { listenOpen, SWAHILI_VOICE_CONTEXT, transcribeVoice, voiceToWav } from "./meta-media";
 import { logToolSteps } from "../services/agent-log";
+import { checkReply, investigationFacts } from "./verify-claims";
 import { langOf, t } from "../i18n";
 import { takeAiCall } from "../limits";
 
@@ -212,8 +213,20 @@ async function process(msg: Incoming): Promise<unknown> {
     const toolSteps = result.steps.flatMap((st) =>
       st.toolCalls.map((c) => ({ toolName: c.toolName, input: c.input, output: st.toolResults.find((r) => r.toolCallId === c.toolCallId)?.output })),
     );
+    let reply = result.text.trim();
+    // An explanation of who paid and why is checked against what the investigation found before it goes out.
+    const facts = reply ? investigationFacts(toolSteps) : null;
+    if (facts) {
+      const check = await checkReply(reply, facts, replyLang(reply, lang));
+      reply = check.reply;
+      const code = toolSteps.find((s) => s.toolName === "investigate_payments")?.input;
+      toolSteps.push({
+        toolName: "verify_claims",
+        input: { code: (code as { code?: string } | undefined)?.code },
+        output: check.verdict === "flagged" ? { error: `flagged: ${check.problems.join("; ")}` } : { result: `${check.verdict}${check.problems.length ? `: ${check.problems.join("; ")}` : ""}` },
+      });
+    }
     await logToolSteps(msg.phone, usedModel, toolSteps).catch((e) => console.warn("[agent] action log failed", e));
-    const reply = result.text.trim();
     // A voice note gets a voice note back (then the text, which keeps links and details).
     if (reply && msg.audio && speechConfigured()) await replyByVoice(msg, ctx.user.replyVoice ?? null, reply, replyLang(reply, lang));
     if (reply) await sendTo(msg.phone, reply);

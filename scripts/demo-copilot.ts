@@ -53,6 +53,8 @@ async function main() {
     console.log(`\n🧑 ${q}`);
     for (const m of log.slice(before).filter((m) => m.direction === "out")) console.log(`🤖 ${m.text}`);
   }
+  const checks = await db.select().from(schema.agentActions).where(eq(schema.agentActions.tool, "verify_claims"));
+  console.log(`\n🔎 Claims checks:\n${checks.map((c) => `${c.ok === "yes" ? "✓" : "⚠️"} ${c.result}`).join("\n")}`);
   const jumaLog = await db.select().from(schema.chatLog).where(eq(schema.chatLog.phone, juma.phone)).orderBy(asc(schema.chatLog.id));
   console.log(`\n📱 Juma's chat:\n${jumaLog.filter((m) => m.direction === "out").map((m) => m.text).join("\n---\n")}`);
   process.exit(0);
