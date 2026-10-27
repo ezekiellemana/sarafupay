@@ -16,7 +16,7 @@ Seamless M4T v2 is licensed CC-BY-NC 4.0: fine for the hackathon demo, not for p
 
 ## Modal (pay per use)
 
-`modal_app.py` runs the same server on a Modal T4 GPU that starts on demand and stops after 5 idle
+`modal_app.py` runs the same server on 8 Modal CPU cores (or a T4 GPU with `gpu="T4"`, which needs a payment method) that start on demand and stops after 5 idle
 minutes. From the repo root, with `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET` set:
 
 ```sh
