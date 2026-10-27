@@ -649,7 +649,10 @@ async function main() {
   const sharpMod = (await import("sharp")).default;
   const receiptPng = await sharpMod({ create: { width: 300, height: 400, channels: 3, background: "#ffffff" } }).png().toBuffer();
   let amountRead = "TSH 20,000.00";
+  const amountReads: string[] = []; // queued read-backs, used before amountRead
+  let reference = "AB12CD34";
   const samPrompts: string[] = [];
+  let locateAsk = "";
   const sse = (lines: string[]) =>
     new Response(
       ["event: response.created", 'data: {"type":"response.created"}', "", ...lines.flatMap((l) => [`data: ${JSON.stringify({ type: "response.output_text.delta", delta: l })}`, ""]), 'data: {"type":"response.completed"}', ""].join("\n"),
@@ -669,11 +672,13 @@ async function main() {
     assert.ok(url.endsWith("/v1/chat/completions"));
     assert.equal(body.model, "muse-spark-1.3");
     const ask = body.messages[0].content[0].text as string;
+    if (ask.includes("Find the printed AMOUNT")) locateAsk = ask;
+    // Boxes are relative to what Muse Spark was shown: the receipt SAM 3.1 found, cut out with an 8px margin.
     const content = ask.includes("Find the printed AMOUNT")
-      ? { fields: [{ field: "amount", text: "Amount: TSH 20,000.00", box: [40, 200, 220, 230] }, { field: "reference", text: "Trans ID: AB12CD34", box: [40, 120, 200, 145] }] }
+      ? { fields: [{ field: "amount", text: "Amount: TSH 20,000.00", box: [28, 178, 208, 208] }, { field: "reference", text: `Trans ID: ${reference}`, box: [28, 98, 188, 123] }] }
       : ask.includes("amount of money")
-        ? { text: amountRead }
-        : { text: "AB12CD34" };
+        ? { text: amountReads.shift() ?? amountRead }
+        : { text: reference };
     return Response.json({ choices: [{ message: { content: JSON.stringify(content) } }] });
   };
   const withCrops = await trust.recordOffline({
@@ -683,6 +688,7 @@ async function main() {
   assert.equal(withCrops.record.checkStatus, "ok");
   assert.match(withCrops.proofUrl ?? "", /^https:\/\/sarafupay\.test\/proof\/ev_[a-f0-9]{16}$/);
   assert.equal(samPrompts[0], "receipt");
+  assert.match(locateAsk, /^This image is 277x367 pixels/, "Muse Spark looks at the receipt alone, not the whole photo");
   assert.equal(samPrompts[1], "<0f>1<|box;x1=40;y1=200;x2=220;y2=230;w=300;h=400|>,2<|box;x1=40;y1=120;x2=200;y2=145;w=300;h=400|>", "SAM 3.1 refines Muse Spark's boxes");
   const cropCard = (await ev.getCard(withCrops.proofUrl!.split("/").pop()!))!;
   const cropBody = JSON.parse(cropCard.body) as typeof firstBody;
@@ -710,8 +716,24 @@ async function main() {
   assert.equal(misread.record.checkStatus, "review", "a crop that disagrees with the record sends it to review");
   assert.match(misread.record.checkNote ?? "", /amount reads "TSH 2,000.00"/);
   assert.equal((await ev.verifyChain(trustCol.id)).length, 7);
+
+  // A box one line off (the charge line under the amount) is moved to the line Muse Spark said it read.
+  amountRead = "TSH 20,000.00";
+  amountReads.push("TSH 0.00");
+  reference = "AB12CD36";
+  const shifted = await trust.recordOffline({
+    collection: trustCol, by: owner, displayName: "Upendo", amountCents: 20_000_00, currency: "TZS", method: "mobile_money", reference: "AB12CD36",
+    evidence: "photo", imageHash: "hash-upendo", image: { data: new Uint8Array(receiptPng), mimeType: "image/png" }, model: "meta:muse-spark-1.3",
+  });
+  assert.equal(shifted.record.checkStatus, "ok", shifted.record.checkNote ?? "");
+  const shiftedBody = JSON.parse((await ev.getCard(shifted.proofUrl!.split("/").pop()!))!.body) as typeof firstBody;
+  assert.deepEqual(
+    shiftedBody.crops.map((c) => [c.field, c.boxBy, c.box, c.read, c.matches])[0],
+    ["amount", "muse-spark-1.3", [42, 164, 218, 193], "TSH 20,000.00", true],
+  );
+  assert.ok(shiftedBody.notes.some((n) => n.includes("moved one line up")));
   delete process.env.MODEL_API_KEY;
-  console.log("✓ SAM 3.1 receipt crops: receipt found, fields refined and cropped, read-back mismatch sent to review");
+  console.log("✓ SAM 3.1 receipt crops: receipt found, fields refined and cropped, off-by-a-line box corrected, read-back mismatch sent to review");
 
   // 11d. Treasurer autopilot: due-date reminders, weekly report, one deadline note. Never moves money.
   const ap = await import("../lib/services/autopilot");

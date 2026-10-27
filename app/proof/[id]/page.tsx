@@ -150,6 +150,7 @@ export default async function ProofPage({ params }: PageProps<"/proof/[id]">) {
                     <p className="text-sm">
                       {t.read} <span className="font-mono">{mask(c.read)}</span>{" "}
                       {c.matches === true ? <span className="text-forest">✓ {t.matches}</span> : c.matches === false ? <span className="text-terracotta">✗ {t.differs}</span> : null}
+                      {c.readBy ? <span className="text-ink-soft"> · {c.readBy}</span> : null}
                     </p>
                   ) : null}
                 </li>

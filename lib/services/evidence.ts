@@ -46,7 +46,7 @@ export type EvidenceBody = {
   verdict: string;
   checks: EvidenceCheck[];
   photo_sha256: string | null;
-  crops: Pick<ReceiptCrop, "field" | "url" | "box" | "boxBy" | "read" | "matches">[];
+  crops: Pick<ReceiptCrop, "field" | "url" | "box" | "boxBy" | "read" | "readBy" | "matches">[];
   decided_by: { kind: "agent"; model: string | null } | { kind: "organiser" } | { kind: "rules" };
   notes: string[];
 };
