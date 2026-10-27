@@ -68,9 +68,15 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   if (url.startsWith("https://api.snippe.sh")) {
     const body = init?.body ? JSON.parse(String(init.body)) : undefined;
     snippeCalls.push({ url, body });
-    if (url.endsWith("/api/v1/sessions") && init?.method === "POST")
-      return Response.json({ code: 201, data: { reference: "sess_T1", status: "pending", checkout_url: "https://snippe.me/checkout/T1", amount: body.amount } }, { status: 201 });
-    if (url.includes("/api/v1/sessions/sess_T1")) return Response.json({ code: 200, data: { reference: "sess_T1", status: "pending" } });
+    if (url.endsWith("/v1/payments") && init?.method === "POST") {
+      const n = snippeCalls.filter((c) => c.url.endsWith("/v1/payments")).length;
+      return Response.json({ code: 201, data: { reference: `pi_T${n}`, status: "pending", amount: { value: body.details.amount, currency: "TZS" } } }, { status: 201 });
+    }
+    if (/\/v1\/payments\/pi_T\d+\/push$/.test(url)) return Response.json({ code: 200, data: { status: "pending" } });
+    if (/\/v1\/payments\/pi_T\d+$/.test(url)) return Response.json({ code: 200, data: { reference: url.split("/").at(-1), status: "pending" } });
+    // Contributions started before direct push carry a checkout session reference.
+    if (url.includes("/v1/payments/sess_")) return Response.json({ status: "error", code: 404, message: "payment not found" }, { status: 404 });
+    if (url.includes("/api/v1/sessions/sess_T1")) return Response.json({ code: 200, data: { reference: "sess_T1", status: "completed", amount: 20000 } });
     if (url.endsWith("/v1/payouts/send") && snippeSendFailsOnce) {
       snippeSendFailsOnce = false;
       return Response.json({ message: "upstream timeout" }, { status: 504 });
@@ -380,11 +386,32 @@ async function main() {
   const mm = await core.createContribution({ collection: tzCol, displayName: "Halima", amountCents: 100_000_00, source: "web", payerPhone: "0712 345 678" });
   assert.equal(mm.provider, "snippe");
   assert.equal(mm.payerPhone, "255712345678");
-  const checkout = await core.startCheckout(mm.id);
-  assert.equal(checkout, "https://snippe.me/checkout/T1");
-  const sess = snippeCalls.find((c) => c.url.endsWith("/api/v1/sessions"))!;
-  assert.equal(sess.body?.amount, 100_000, "Snippe gets whole shillings");
-  assert.deepEqual(sess.body?.metadata, { contribution_id: mm.id });
+  // No Snippe checkout page: the pay link opens our own page, and the PIN prompt goes straight to the phone.
+  assert.equal(await core.startCheckout(mm.id), `/pay/${mm.id}/mobile`);
+  assert.equal(snippeCalls.length, 0, "opening the link sends nothing (link previews can't trigger a prompt)");
+  await assert.rejects(core.startMobilePayment(mm.id, "12345"), /Tanzanian mobile number/);
+  await core.startMobilePayment(mm.id, "0712 345 678");
+  const push = snippeCalls.find((c) => c.url.endsWith("/v1/payments"))!;
+  assert.deepEqual(push.body?.details, { amount: 100_000, currency: "TZS" }, "Snippe gets whole shillings");
+  assert.equal(push.body?.payment_type, "mobile");
+  assert.equal(push.body?.phone_number, "255712345678");
+  assert.deepEqual(push.body?.customer, { firstname: "Halima", lastname: "Halima", email: "payments@sarafupay.app" });
+  assert.deepEqual(push.body?.metadata, { contribution_id: mm.id });
+  assert.equal((await core.getContribution(mm.id))?.providerRef, "pi_T1");
+  // Same number again: the same payment's prompt is re-sent. A new number: a new payment.
+  await core.startMobilePayment(mm.id, "+255712345678");
+  assert.ok(snippeCalls.at(-1)!.url.endsWith("/v1/payments/pi_T1/push"));
+  assert.equal(snippeCalls.filter((c) => c.url.endsWith("/v1/payments")).length, 1);
+  await core.startMobilePayment(mm.id, "0754 000 222");
+  const mmNow = (await core.getContribution(mm.id))!;
+  assert.equal(mmNow.providerRef, "pi_T2");
+  assert.equal(mmNow.payerPhone, "255754000222");
+  await core.startMobilePayment(mm.id, "0712 345 678");
+  // A contribution started on the old checkout is still looked up (as a session) and settled.
+  const oldCol = await core.createCollection({ ownerId: owner.id, title: "Old links", category: "other", targetCents: 100_000_00 });
+  const legacy = await core.createContribution({ collection: oldCol, displayName: "Old link", amountCents: 20_000_00, source: "web" });
+  await db.update(schema.contributions).set({ providerRef: "sess_T1" }).where(eq(schema.contributions.id, legacy.id));
+  assert.equal((await core.checkSnippeContribution(legacy.id))?.status, "paid", "legacy session still settles");
   // Webhook: unsigned is refused, signed settles once with Snippe's real fee.
   const { POST: snippeHook } = await import("../app/api/snippe/webhook/route");
   const evt = JSON.stringify({ id: "evt_1", type: "payment.completed", data: { reference: "pi_1", session_reference: "sess_T1", status: "completed", amount: { value: 100000, currency: "TZS" }, settlement: { fees: { value: 2500, currency: "TZS" } }, customer: { phone: "+255712345678" }, metadata: { contribution_id: mm.id } } });
