@@ -108,7 +108,18 @@ export const SWAHILI_VOICE_CONTEXT =
  * audio directly and, unlike Muse Voice Transcribe, has Swahili. Returns null when it isn't
  * configured or heard nothing.
  */
+/** Muse Spark Open now and then answers as if no audio was attached; that reply is not a transcript. */
+const DEAF = /\b(no (audio|voice note)|(can(no|')t|unable to|don't have (the ability|access)( to)?) (hear|listen|access|transcribe)|audio (file )?(was|is) (not )?(attached|included))/i;
+
 export async function listenOpen(audio: { data: Uint8Array; mimeType: string }, opts: { context?: string; draft?: string | null } = {}): Promise<string | null> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const heard = await listenOpenOnce(audio, opts);
+    if (heard === null || !DEAF.test(heard)) return heard;
+  }
+  return null;
+}
+
+async function listenOpenOnce(audio: { data: Uint8Array; mimeType: string }, opts: { context?: string; draft?: string | null }): Promise<string | null> {
   if (!env.metaOpenApiKey()) return null;
   const wav = await voiceToWav(audio);
   const prompt =
