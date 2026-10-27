@@ -593,13 +593,13 @@ async function main() {
   assert.ok(ask.text?.includes("mchango") && ask.text.includes('"Mamilipa air fushini cash."'), "prompt carries SarafuPay context and the Voice Transcribe draft");
   const swLog = (await db.select().from(schema.chatLog).where(eq(schema.chatLog.phone, SW_VOICE)).orderBy(asc(schema.chatLog.id))).map((r) => r.text);
   assert.ok(swLog.includes("🎤 Juma amenilipa elfu ishirini cash"), "the agent reads what Muse Spark Open heard");
-  // …and answers the voice note with a voice note in Swahili (Meta's Seamless voice on our server), then the text.
+  // …and answers the voice note with a voice note in Swahili (Meta's Seamless voice on our server), after the text.
   assert.equal(spoken.length, 1);
   assert.equal(spoken[0].auth, "Bearer vk_test");
   assert.equal(spoken[0].body.lang, "sw");
   assert.equal(spoken[0].body.text, "Sawa, nirekodi shilingi 20,000 cash kutoka kwa Juma?");
   const voiceIdx = swLog.findIndex((m) => m.startsWith("🔊 https://sarafupay.test/api/media/img_"));
-  assert.ok(voiceIdx > 0 && swLog[voiceIdx + 1] === "Sawa, nirekodi TZS 20,000 cash kutoka kwa Juma?", "voice note first, then the text reply");
+  assert.ok(voiceIdx > 0 && swLog[voiceIdx - 1] === "Sawa, nirekodi TZS 20,000 cash kutoka kwa Juma?", "the text reply first, then the voice note");
   const voiceMedia = /img_[a-f0-9]{16}/.exec(swLog[voiceIdx])![0];
   const servedVoice = await (await import("../app/api/media/[id]/route")).GET(new Request("https://x"), { params: Promise.resolve({ id: voiceMedia }) });
   assert.equal(servedVoice.headers.get("content-type"), "audio/ogg; codecs=opus");
