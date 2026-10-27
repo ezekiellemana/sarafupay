@@ -15,6 +15,7 @@ import { RATE_LABELS, RATE_KEYS, rateSummary } from "../pricing";
 import { getRates } from "../services/settings";
 import { offlineSummary, recordOffline, resolveOffline } from "../services/trust";
 import { sendReportNow } from "../services/autopilot";
+import { investigate, sendReminderDrafts } from "../services/investigate";
 import { makeShareCard } from "../services/sharecard";
 import { metaConfigured } from "../env";
 import { sendImageTo } from "../channels/messaging";
@@ -26,6 +27,10 @@ export type AgentContext = {
   imageHash?: string;
   /** How the current message arrived, recorded as evidence on offline payments. */
   inputKind?: "text" | "voice" | "photo";
+  /** The receipt photo in the current message, for SAM 3.1 crops on the evidence card. */
+  image?: { data: Uint8Array; mimeType: string };
+  /** The model answering this turn ("meta:muse-spark-1.3"), recorded on evidence cards. */
+  model?: string | null;
 };
 
 const code = z.string().describe("Collection code, e.g. NEEMA24");
@@ -72,6 +77,17 @@ export function buildTools(ctx: AgentContext): Record<string, Tool> {
         });
         await refreshUser();
         return { ok: true, name: ctx.user.name, paypal_email: ctx.user.paypalEmail };
+      }),
+    }),
+
+    set_reply_voice: tool({
+      description:
+        "Set which voice SarafuPay uses when it answers this user's voice notes: 'male' or 'female' (e.g. \"nijibu kwa sauti ya kiume\", \"use a woman's voice\"), or 'auto' to go back to the automatic choice.",
+      inputSchema: z.object({ voice: z.enum(["male", "female", "auto"]) }),
+      execute: safe(async ({ voice }) => {
+        await core.updateUser(ctx.user.id, { replyVoice: voice === "auto" ? null : voice });
+        await refreshUser();
+        return { ok: true, reply_voice: ctx.user.replyVoice ?? "auto" };
       }),
     }),
 
@@ -286,6 +302,28 @@ export function buildTools(ctx: AgentContext): Record<string, Tool> {
       }),
     }),
 
+    investigate_payments: tool({
+      description:
+        "Owner only: organiser copilot. Use for \"who hasn't paid?\", \"nani bado hajalipa?\", \"why is Juma's payment pending?\", \"kwa nini malipo ya Juma hayajaingia?\". Walks the ledger and the Snippe/PayPal webhook log, asks the provider for the live status of anything pending (recording a payment whose webhook was lost), and returns per person a diagnosis, the plain facts (why), a timeline, and where useful a reminder DRAFT. Drafts are NOT sent: show them and ask the organiser first.",
+      inputSchema: z.object({ code, name: z.string().max(60).optional().describe("A person's name to look into; leave out to check everyone who still owes") }),
+      execute: safe(async (i) => {
+        const col = await mustFind(i.code);
+        mustOwn(col, ctx);
+        return investigate(col, ctx.user, i.name);
+      }),
+    }),
+
+    send_reminder_drafts: tool({
+      description:
+        "Owner only: send reminder drafts made by investigate_payments, each with a fresh pay link. Call ONLY after the organiser has seen the draft text in this chat and clearly said yes (\"ndiyo\", \"tuma\", \"send it\"). If they asked for a change to a single draft, pass the new wording as text.",
+      inputSchema: z.object({ code, draft_ids: z.array(z.string().regex(/^rmd_/)).min(1).max(8), text: z.string().max(500).optional().describe("Organiser's edited wording, for one draft only; the pay link is added automatically") }),
+      execute: safe(async (i) => {
+        const col = await mustFind(i.code);
+        mustOwn(col, ctx);
+        return sendReminderDrafts(col, i.draft_ids, i.text);
+      }),
+    }),
+
     send_pledge_invoice: tool({
       description:
         "Owner only: email a formal PayPal invoice (with QR code) to a pledger, via the PayPal Agent Toolkit. Needs the pledger's name as recorded and their email.",
@@ -441,8 +479,18 @@ export function buildTools(ctx: AgentContext): Record<string, Tool> {
           receivedOn: i.received_on,
           evidence: ctx.inputKind === "photo" ? "photo" : ctx.inputKind === "voice" ? "voice" : "text",
           imageHash: ctx.inputKind === "photo" ? ctx.imageHash : undefined,
+          image: ctx.inputKind === "photo" ? ctx.image : undefined,
+          model: ctx.model,
         });
-        return { ok: true, record_id: r.record.id, status: r.record.status, check: r.record.checkStatus, note: r.record.checkNote, summary: r.summary };
+        return {
+          ok: true,
+          record_id: r.record.id,
+          status: r.record.status,
+          check: r.record.checkStatus,
+          note: r.record.checkNote,
+          summary: r.summary,
+          proof_url: r.proofUrl,
+        };
       }),
     }),
 

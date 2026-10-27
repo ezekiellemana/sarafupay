@@ -104,6 +104,26 @@ BEGIN
   END LOOP;
 END $$;
 -- v2 columns (idempotent, so existing databases upgrade in place)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS reply_voice text;
+ALTER TABLE processed_events ADD COLUMN IF NOT EXISTS provider text;
+ALTER TABLE processed_events ADD COLUMN IF NOT EXISTS kind text;
+ALTER TABLE processed_events ADD COLUMN IF NOT EXISTS contribution_id text;
+ALTER TABLE processed_events ADD COLUMN IF NOT EXISTS ref text;
+ALTER TABLE processed_events ADD COLUMN IF NOT EXISTS status text;
+CREATE INDEX IF NOT EXISTS processed_events_ctb_idx ON processed_events (contribution_id);
+CREATE TABLE IF NOT EXISTS reminder_drafts (
+  id text PRIMARY KEY,
+  collection_id text NOT NULL,
+  created_by text NOT NULL,
+  user_id text NOT NULL,
+  pledge_id text,
+  display_name text NOT NULL,
+  amount_cents bigint NOT NULL,
+  text text NOT NULL,
+  status text NOT NULL DEFAULT 'draft',
+  created_at timestamptz NOT NULL DEFAULT now(),
+  sent_at timestamptz
+);
 ALTER TABLE contributions ADD COLUMN IF NOT EXISTS provider text NOT NULL DEFAULT 'paypal';
 ALTER TABLE contributions ADD COLUMN IF NOT EXISTS provider_ref text;
 ALTER TABLE contributions ADD COLUMN IF NOT EXISTS payer_phone text;
@@ -169,4 +189,16 @@ CREATE TABLE IF NOT EXISTS agent_actions (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS agent_actions_code_idx ON agent_actions (collection_code, id);
+CREATE TABLE IF NOT EXISTS evidence_cards (
+  id text PRIMARY KEY,
+  collection_id text NOT NULL,
+  record_id text NOT NULL,
+  seq integer NOT NULL,
+  body text NOT NULL,
+  hash text NOT NULL,
+  sig text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS evidence_chain_idx ON evidence_cards (collection_id, seq);
+CREATE INDEX IF NOT EXISTS evidence_record_idx ON evidence_cards (record_id);
 `;

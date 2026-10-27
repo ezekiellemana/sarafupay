@@ -1,4 +1,4 @@
-import { pgTable, text, bigint, timestamp, serial, index } from "drizzle-orm/pg-core";
+import { pgTable, text, bigint, integer, timestamp, serial, index, uniqueIndex } from "drizzle-orm/pg-core";
 
 // Money is stored as amount × 100 for every currency. bigint, because TZS totals pass the
 // 32-bit limit quickly (TZS 21.5M = 2.15 billion "cents").
@@ -12,6 +12,8 @@ export const users = pgTable("users", {
   channel: text("channel").notNull(), // 'whatsapp' | 'sim'
   paypalEmail: text("paypal_email"),
   activeCollectionId: text("active_collection_id"),
+  // Voice for spoken replies ("male" | "female") when the user picked one; otherwise it is guessed per voice note.
+  replyVoice: text("reply_voice"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -145,6 +147,23 @@ export const offlineRecords = pgTable(
   (t) => [index("offline_collection_idx").on(t.collectionId)],
 );
 
+// Evidence cards: one signed, hash-chained entry per Trust Copilot decision (record, claim, confirm,
+// reject). `body` is the exact JSON that was hashed and signed; it's never rewritten.
+export const evidenceCards = pgTable(
+  "evidence_cards",
+  {
+    id: text("id").primaryKey(),
+    collectionId: text("collection_id").notNull(),
+    recordId: text("record_id").notNull(),
+    seq: integer("seq").notNull(), // position in the collection's chain, from 1
+    body: text("body").notNull(),
+    hash: text("hash").notNull(), // sha256 of body, hex
+    sig: text("sig").notNull(), // Ed25519 signature of hash, base64url
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("evidence_chain_idx").on(t.collectionId, t.seq), index("evidence_record_idx").on(t.recordId)],
+);
+
 // What the agent did: one row per tool call, for the organiser's dashboard and for debugging.
 // Inputs are stored with long digit runs masked (phone and account numbers).
 export const agentActions = pgTable(
@@ -201,9 +220,35 @@ export const settings = pgTable("settings", {
 });
 
 // Provider webhook events already handled (Snippe retries and may deliver twice).
-export const processedEvents = pgTable("processed_events", {
+// Provider webhook events, claimed once by id. The other columns keep a short log of what each
+// event said, so the organiser copilot can walk a payment's history ("why is Juma's payment pending?").
+export const processedEvents = pgTable(
+  "processed_events",
+  {
+    id: text("id").primaryKey(),
+    provider: text("provider"), // snippe | paypal
+    kind: text("kind"), // payment.completed, CHECKOUT.ORDER.APPROVED, ...
+    contributionId: text("contribution_id"),
+    ref: text("ref"), // Snippe session reference or PayPal order id
+    status: text("status"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("processed_events_ctb_idx").on(t.contributionId)],
+);
+
+// Reminders the organiser copilot drafted. Nothing is sent until the organiser approves the draft.
+export const reminderDrafts = pgTable("reminder_drafts", {
   id: text("id").primaryKey(),
+  collectionId: text("collection_id").notNull(),
+  createdBy: text("created_by").notNull(), // organiser's user id
+  userId: text("user_id").notNull(), // who gets the reminder
+  pledgeId: text("pledge_id"),
+  displayName: text("display_name").notNull(),
+  amountCents: cents("amount_cents").notNull(),
+  text: text("text").notNull(),
+  status: text("status").notNull().default("draft"), // draft | sent | unreachable
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  sentAt: timestamp("sent_at", { withTimezone: true }),
 });
 
 export type User = typeof users.$inferSelect;
@@ -213,3 +258,5 @@ export type Pledge = typeof pledges.$inferSelect;
 export type Payout = typeof payouts.$inferSelect;
 export type AgentAction = typeof agentActions.$inferSelect;
 export type OfflineRecord = typeof offlineRecords.$inferSelect;
+export type EvidenceCard = typeof evidenceCards.$inferSelect;
+export type ReminderDraft = typeof reminderDrafts.$inferSelect;

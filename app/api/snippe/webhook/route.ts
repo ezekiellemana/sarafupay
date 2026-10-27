@@ -21,7 +21,18 @@ export async function POST(req: Request) {
   // Snippe may deliver the same event more than once: claim each id once.
   const db = await getDb();
   const eventId = evt.id ?? `${type}:${d.reference ?? d.session_reference ?? ""}:${d.status ?? ""}`;
-  const [claimed] = await db.insert(schema.processedEvents).values({ id: `snippe:${eventId}` }).onConflictDoNothing().returning();
+  const [claimed] = await db
+    .insert(schema.processedEvents)
+    .values({
+      id: `snippe:${eventId}`,
+      provider: "snippe",
+      kind: type,
+      contributionId: typeof d.metadata?.contribution_id === "string" ? d.metadata.contribution_id : null,
+      ref: d.session_reference ?? d.reference ?? null,
+      status: d.status ?? type.split(".")[1] ?? null,
+    })
+    .onConflictDoNothing()
+    .returning();
   if (!claimed) return NextResponse.json({ ok: true, duplicate: true });
 
   after(async () => {

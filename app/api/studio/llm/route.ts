@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import { generateText, isStepCount, jsonSchema, tool, type ModelMessage, type Tool } from "ai";
-import { withGeminiFallback } from "@/lib/agent/models";
+import { withModelFallback } from "@/lib/agent/models";
 import type { AgAiConversationItem, AgLlmRequest, AgLlmResponse, AgAiOutputItem } from "ag-studio";
-import { env } from "@/lib/env";
+import { aiConfigured } from "@/lib/env";
 import { ownerCollection } from "@/lib/studio/auth";
 import { takeAiCall } from "@/lib/limits";
 
 /**
- * Server half of the AG Studio LLM adapter: one Studio "turn" -> one Gemini call.
- * Tools are declared without execute, so Gemini's tool calls go back to Studio,
+ * Server half of the AG Studio LLM adapter: one Studio "turn" -> one Muse Spark call (Muse Spark
+ * Open as backup). Tools are declared without execute, so the model's tool calls go back to Studio,
  * which runs them in the browser (Studio's own tools and ours).
  */
 
@@ -73,7 +73,7 @@ function toModelMessages(items: AgAiConversationItem[]): { system: string[]; mes
   return { system, messages };
 }
 
-/** Gemini rejects a few JSON-schema keywords; strip them recursively. */
+/** Strict providers reject a few JSON-schema keywords; strip them recursively. */
 function clean(schema: unknown): unknown {
   if (Array.isArray(schema)) return schema.map(clean);
   if (!schema || typeof schema !== "object") return schema;
@@ -88,7 +88,7 @@ function clean(schema: unknown): unknown {
 export async function POST(req: Request) {
   const col = await ownerCollection(req.headers.get("x-collection"), req.headers.get("x-owner-key"));
   if (!col) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  if (!env.geminiApiKey()) return NextResponse.json({ error: "GEMINI_API_KEY missing" }, { status: 500 });
+  if (!aiConfigured()) return NextResponse.json({ error: "MODEL_API_KEY missing" }, { status: 500 });
   if (!(await takeAiCall(`studio:${col.code}`, 80)).ok)
     return NextResponse.json({ error: "Too many AI requests right now. Please wait a few minutes." }, { status: 429 });
 
@@ -100,11 +100,12 @@ export async function POST(req: Request) {
   }
   const id = `resp_${crypto.randomUUID()}`;
   try {
-    let usedModel = env.geminiModel();
-    const result = await withGeminiFallback((model, modelId) => {
-      usedModel = modelId;
+    let usedModel = "";
+    const result = await withModelFallback((pick) => {
+      usedModel = pick.id;
       return generateText({
-      model,
+      model: pick.model,
+      providerOptions: pick.fast,
       system: [body.instructions, ...system].filter(Boolean).join("\n\n") || undefined,
       messages: messages.length ? messages : [{ role: "user", content: "Hello" }],
       tools: Object.keys(tools).length ? tools : undefined,

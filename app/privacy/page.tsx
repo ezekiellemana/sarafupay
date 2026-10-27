@@ -88,8 +88,7 @@ const SECTIONS: Record<"en" | "sw", Section[]> = {
       body: (
         <>
           {list([
-            "Meta: WhatsApp message delivery, and Meta's Muse models for understanding messages, voice notes and photos and for share cards.",
-            "Google (Gemini): the same, as a backup when Meta's models are unavailable.",
+            "Meta: WhatsApp message delivery, and Meta's Muse models for understanding messages, voice notes and photos and for share cards. Muse Spark Open (Meta's open model) runs on Baseten, which processes messages for us when it answers.",
             <>
               <Provider name="Snippe" />: mobile money payments and payouts to mobile money and banks.
             </>,
@@ -183,8 +182,7 @@ const SECTIONS: Record<"en" | "sw", Section[]> = {
       body: (
         <>
           {list([
-            "Meta: kufikisha ujumbe wa WhatsApp, na modeli za Muse za Meta kuelewa ujumbe, voice notes na picha, na kutengeneza bango la mchango.",
-            "Google (Gemini): kazi hiyo hiyo, kama akiba modeli za Meta zisipopatikana.",
+            "Meta: kufikisha ujumbe wa WhatsApp, na modeli za Muse za Meta kuelewa ujumbe, voice notes na picha, na kutengeneza bango la mchango. Muse Spark Open (modeli huria ya Meta) inaendeshwa na Baseten, ambayo hushughulikia ujumbe kwa niaba yetu inapojibu.",
             <>
               <Provider name="Snippe" />: malipo ya pesa ya simu na kutoa pesa kwenda pesa ya simu na benki.
             </>,

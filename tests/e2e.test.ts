@@ -6,6 +6,8 @@ import assert from "node:assert/strict";
 import { MockLanguageModelV4 } from "ai/test";
 
 process.env.PGLITE_DIR = "memory";
+// Real model keys in the shell (a dev box, a cloud session) must not leak into the offline run.
+for (const k of ["MODEL_API_KEY", "META_MODEL_API_KEY", "META_OPEN_API_KEY", "META_OPEN_BASE_URL", "META_OPEN_MODEL", "GEMINI_API_KEY", "GOOGLE_GENERATIVE_AI_API_KEY", "EVIDENCE_SIGNING_KEY", "META_VOICE_URL", "META_VOICE_KEY"]) delete process.env[k];
 process.env.PAYPAL_CLIENT_ID = "test-id";
 process.env.PAYPAL_SECRET = "test-secret";
 process.env.APP_URL = "https://sarafupay.test";
@@ -95,7 +97,7 @@ async function main() {
   const { handleIncoming, __setModelForTests } = await import("../lib/agent/engine");
   const core = await import("../lib/services/core");
   const { getDb, schema } = await import("../lib/db");
-  const { eq, asc } = await import("drizzle-orm");
+  const { eq, asc, and } = await import("drizzle-orm");
   __setModelForTests(model);
   const db = await getDb();
   const inbox = async (phone: string) =>
@@ -496,26 +498,15 @@ async function main() {
   assert.ok(metaCalls.every((c) => c.url === "https://api.meta.ai/v1/chat/completions" || !c.url.includes("chat")), "OpenAI-compatible endpoint");
   console.log("✓ Muse Spark via Meta Model API, falls back across models");
 
-  // 11a. A Meta account problem (billing, bad key) skips the other Muse models and falls back to Gemini.
-  process.env.GEMINI_API_KEY = "g_test";
+  // 11a. A Meta Model API account problem (billing, bad key) skips the other Muse models and falls back
+  // to Muse Spark Open, Meta's open weights on a partner host (Fireworks by default). All Meta, no Gemini.
+  process.env.META_OPEN_API_KEY = "fw_test";
+  assert.deepEqual(models.modelChain().map((m) => m.provider), ["meta", "meta", "meta-open"]);
   const tried: string[] = [];
   metaHandler = (_url, init) => {
     tried.push(JSON.parse(String(init?.body ?? "{}")).model);
     return Response.json({ error: { code: "billing_not_configured", message: "Billing verification failed.", type: "billing_error" } }, { status: 402 });
   };
-  const fellBack = await models.withModelFallback(async (m) => {
-    if (m.provider === "gemini") return `gemini:${m.id}`;
-    return (await generateText({ model: m.model, prompt: "hi", maxRetries: 0 })).text;
-  });
-  assert.match(fellBack, /^gemini:/, "billing error on Meta falls back to Gemini");
-  assert.deepEqual(tried, ["muse-spark-1.3"], "other Muse models are skipped after an account-level error");
-  delete process.env.GEMINI_API_KEY;
-  console.log("✓ Meta billing/auth error falls back to Gemini instead of failing the reply");
-
-  // 11a2. Muse Spark Open on a partner host (Fireworks by default) sits between the Meta API and Gemini.
-  process.env.META_OPEN_API_KEY = "fw_test";
-  process.env.GEMINI_API_KEY = "g_test";
-  assert.deepEqual(models.modelChain().map((m) => m.provider), ["meta", "meta", "meta-open", "gemini", "gemini", "gemini", "gemini"].slice(0, models.modelChain().length));
   const openBodies: Record<string, unknown>[] = [];
   const realFetch2 = globalThis.fetch;
   globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -527,13 +518,13 @@ async function main() {
     }
     return realFetch2(input, init);
   }) as typeof fetch;
-  const viaOpen = await models.withModelFallback((m) => (m.provider === "gemini" ? Promise.resolve({ text: "gemini" }) : generateText({ model: m.model, prompt: "hi", maxRetries: 0, providerOptions: m.fast })));
+  const viaOpen = await models.withModelFallback((m) => generateText({ model: m.model, prompt: "hi", maxRetries: 0, providerOptions: m.fast }));
   assert.equal(viaOpen.text, "Habari kutoka Muse Spark Open", "Meta API billing error → Muse Spark Open answers");
+  assert.deepEqual(tried, ["muse-spark-1.3"], "other Muse models are skipped after an account-level error");
   assert.equal(openBodies[0].model, "accounts/fireworks/models/muse-spark-open");
   globalThis.fetch = realFetch2;
   delete process.env.META_OPEN_API_KEY;
-  delete process.env.GEMINI_API_KEY;
-  console.log("✓ Muse Spark Open on Fireworks answers when the Meta Model API refuses");
+  console.log("✓ Meta Model API billing/auth error falls back to Muse Spark Open (no non-Meta models)");
 
   // 11b. Voice notes: WhatsApp Ogg/Opus → WAV → Muse Voice Transcribe → the agent reads the transcript.
   const { readFileSync } = await import("node:fs");
@@ -562,6 +553,78 @@ async function main() {
   const voiceLog = (await db.select().from(schema.chatLog).where(eq(schema.chatLog.phone, VOICE)).orderBy(asc(schema.chatLog.id))).map((r) => r.text);
   assert.ok(voiceLog.includes("🎤 I received twenty thousand shillings from Juma in cash"), "transcript is what the agent sees and remembers");
   console.log("✓ voice note transcribed by Muse Voice Transcribe (Ogg/Opus decoded to WAV)");
+
+  // 11b2. Swahili voice notes: Muse Spark Open (open weights on Baseten) listens to the audio itself,
+  // with SarafuPay context and Muse Voice Transcribe's draft as a hint.
+  process.env.META_OPEN_API_KEY = "bt_test";
+  process.env.META_OPEN_BASE_URL = "https://inference.baseten.co/v1";
+  process.env.META_OPEN_MODEL = "meta-models/muse-spark-open-1026";
+  process.env.META_VOICE_URL = "https://voice.sarafupay.test";
+  process.env.META_VOICE_KEY = "vk_test";
+  const spoken: { auth: string | null; body: { text: string; lang: string; voice: string } }[] = [];
+  metaHandler = () => Response.json({ sessionId: "s2", transcript: "Mamilipa air fushini cash.", turns: [] });
+  const listenBodies: { model: string; messages: { content: { type: string; text?: string; input_audio?: { data: string; format: string } }[] }[] }[] = [];
+  const realFetch3 = globalThis.fetch;
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input instanceof Request ? input.url : input);
+    if (url === "https://inference.baseten.co/v1/chat/completions") {
+      const body = JSON.parse(String(init?.body));
+      if (body.messages[0]?.content?.[1]?.type === "input_audio") {
+        listenBodies.push(body);
+        return Response.json({ choices: [{ message: { role: "assistant", content: '{"transcript":"Juma amenilipa elfu ishirini cash"}' } }] });
+      }
+    }
+    if (url === "https://voice.sarafupay.test/speak") {
+      spoken.push({ auth: new Headers(init?.headers).get("Authorization"), body: JSON.parse(String(init?.body)) });
+      return new Response(new Uint8Array(ogg), { headers: { "Content-Type": "audio/ogg" } });
+    }
+    return realFetch3(input, init);
+  }) as typeof fetch;
+  const SW_VOICE = "sim:255700000919";
+  assert.equal(await langOf(SW_VOICE), "sw");
+  script.push({ text: "Sawa, nirekodi TZS 20,000 cash kutoka kwa Juma?" });
+  await handleIncoming({ phone: SW_VOICE, channel: "sim", audio: { data: ogg, mimeType: "audio/ogg; codecs=opus" } });
+  globalThis.fetch = realFetch3;
+  assert.equal(listenBodies.length, 1);
+  assert.equal(listenBodies[0].model, "meta-models/muse-spark-open-1026");
+  const [ask, heardAudio] = listenBodies[0].messages[0].content;
+  assert.equal(heardAudio.input_audio?.format, "wav");
+  assert.equal(String.fromCharCode(...Buffer.from(heardAudio.input_audio!.data, "base64").subarray(0, 4)), "RIFF", "Muse Spark Open gets the decoded WAV");
+  assert.ok(ask.text?.includes("mchango") && ask.text.includes('"Mamilipa air fushini cash."'), "prompt carries SarafuPay context and the Voice Transcribe draft");
+  const swLog = (await db.select().from(schema.chatLog).where(eq(schema.chatLog.phone, SW_VOICE)).orderBy(asc(schema.chatLog.id))).map((r) => r.text);
+  assert.ok(swLog.includes("🎤 Juma amenilipa elfu ishirini cash"), "the agent reads what Muse Spark Open heard");
+  // …and answers the voice note with a voice note in Swahili (Meta's Seamless voice on our server), then the text.
+  assert.equal(spoken.length, 1);
+  assert.equal(spoken[0].auth, "Bearer vk_test");
+  assert.equal(spoken[0].body.lang, "sw");
+  assert.equal(spoken[0].body.text, "Sawa, nirekodi shilingi 20,000 cash kutoka kwa Juma?");
+  const voiceIdx = swLog.findIndex((m) => m.startsWith("🔊 https://sarafupay.test/api/media/img_"));
+  assert.ok(voiceIdx > 0 && swLog[voiceIdx + 1] === "Sawa, nirekodi TZS 20,000 cash kutoka kwa Juma?", "voice note first, then the text reply");
+  const voiceMedia = /img_[a-f0-9]{16}/.exec(swLog[voiceIdx])![0];
+  const servedVoice = await (await import("../app/api/media/[id]/route")).GET(new Request("https://x"), { params: Promise.resolve({ id: voiceMedia }) });
+  assert.equal(servedVoice.headers.get("content-type"), "audio/ogg; codecs=opus");
+  const sp = await import("../lib/agent/speech");
+  assert.equal(sp.replyLang("Sorry, I could not find that collection. Please check the code.", "sw"), "en");
+  assert.equal(sp.spokenText("✅ Paid *TZS 5,000*: https://x.test/p/1", "en"), "Paid 5,000 shillings: the link is in the message.");
+  assert.equal(sp.spokenText("• Agnes - TZS 30,000 (kufikia 2026-10-31)", "sw"), "Agnes - shilingi 30,000 (kufikia tarehe 31 Oktoba)");
+  // Reply voice: the one the user picked, else the opposite of the note's pitch, else the default.
+  const tone = (hz: number) => media.encodeWav(Float32Array.from({ length: 24000 }, (_, i) => 0.5 * Math.sin((2 * Math.PI * hz * i) / 24000)), 24000);
+  assert.ok(Math.abs(sp.voicePitch(tone(220)) - 220) < 5, "pitch of a 220 Hz tone");
+  assert.equal(sp.chooseReplyVoice(null, tone(220)), "male", "higher voice → male voice");
+  assert.equal(sp.chooseReplyVoice(null, tone(120)), "female", "lower voice → female voice");
+  assert.equal(sp.chooseReplyVoice(null, tone(162)), "female", "in between → default voice");
+  assert.equal(sp.chooseReplyVoice("female", tone(220)), "female", "a picked voice always wins");
+  assert.ok(["male", "female"].includes(spoken[0].body.voice));
+
+  const swUser = (await core.getOrCreateUser(SW_VOICE, "sim"))!;
+  const voiceTools = buildTools({ user: swUser, channel: "sim" } as never);
+  await (voiceTools.set_reply_voice.execute as (a: { voice: string }) => Promise<unknown>)({ voice: "male" });
+  assert.equal((await core.getUser(swUser.id))?.replyVoice, "male", "\"nijibu kwa sauti ya kiume\" is remembered");
+  const { wer } = await import("../lib/services/voice-eval");
+  assert.equal(wer("Juma amenilipa elfu ishirini cash", "Juma amenilipa elfu ishirini cash."), 0);
+  assert.equal(wer("Nani bado hajalipa mchango", "Nani ni bado hajalipa mchango"), 0.25);
+  for (const k of ["META_OPEN_API_KEY", "META_OPEN_BASE_URL", "META_OPEN_MODEL", "META_VOICE_URL", "META_VOICE_KEY"]) delete process.env[k];
+  console.log("✓ Swahili voice note heard by Muse Spark Open on Baseten (Voice Transcribe's draft as a hint), answered with a Swahili voice note");
 
   // 11c. Trust Copilot: a receipt photo is recorded once, checked against pledges, never counted twice.
   const trustCol = await core.createCollection({ ownerId: owner.id, title: "Harusi ya Neema & Baraka", category: "wedding", targetCents: 1_000_000_00 });
@@ -603,6 +666,136 @@ async function main() {
   assert.equal((await trust.offlineSummary(trustCol.id)).confirmed[0].totalCents, 25_000_00);
   console.log("✓ Trust Copilot: receipt photo recorded, pledge matched, duplicates flagged, claims need the organiser");
 
+  // 11c2. Evidence cards: every decision above is a signed, hash-chained card; tampering shows.
+  const ev = await import("../lib/services/evidence");
+  const chain = await ev.chainFor(trustCol.id);
+  assert.deepEqual(
+    chain.map((c) => (JSON.parse(c.body) as { action: string }).action),
+    ["recorded", "recorded", "recorded", "claimed", "confirmed"],
+    "one card per decision, the organiser's confirmation included",
+  );
+  assert.deepEqual(await ev.verifyChain(trustCol.id), { ok: true, length: 5, brokenAt: null });
+  const firstBody = JSON.parse(chain[0].body) as import("../lib/services/evidence").EvidenceBody;
+  assert.equal(firstBody.prev, null);
+  assert.equal((JSON.parse(chain[1].body) as { prev: string }).prev, chain[0].hash, "each card carries the previous card's hash");
+  assert.deepEqual(firstBody.decided_by, { kind: "agent", model: "test" }, "the deciding model is on the card");
+  assert.ok(firstBody.checks.some((c) => c.rule === "pledge" && c.result === "pass" && c.compared.length === 1), "the pledge it paid is named");
+  const dupCard = JSON.parse(chain[1].body) as typeof firstBody;
+  assert.ok(dupCard.checks.some((c) => c.rule === "photo_unique" && c.result === "flag" && c.compared[0] === off.records[0].id), "the duplicate names the row it duplicates");
+  // Anyone can verify a card with the public key alone.
+  const { GET: proofRoute } = await import("../app/api/proof/[id]/route");
+  const pr = (await (await proofRoute(new Request("https://x"), { params: Promise.resolve({ id: chain[0].id }) })).json()) as { body: string; hash: string; sig: string; publicKey: string; devKey: boolean };
+  const nodeCrypto = await import("node:crypto");
+  assert.equal(nodeCrypto.createHash("sha256").update(pr.body).digest("hex"), pr.hash);
+  const pub = nodeCrypto.createPublicKey({ key: Buffer.concat([Buffer.from("302a300506032b6570032100", "hex"), Buffer.from(pr.publicKey, "base64url")]), format: "der", type: "spki" });
+  assert.ok(nodeCrypto.verify(null, Buffer.from(pr.hash, "hex"), pub, Buffer.from(pr.sig, "base64url")), "signature verifies with the published key");
+  assert.equal(pr.devKey, true);
+  assert.equal((await proofRoute(new Request("https://x"), { params: Promise.resolve({ id: "ev_nope" }) })).status, 404);
+  // Editing a card's body (say, the amount) breaks the chain at that card.
+  const tampered = chain[1].body.replace('"amount":15000', '"amount":1500');
+  assert.notEqual(tampered, chain[1].body);
+  await db.update(schema.evidenceCards).set({ body: tampered }).where(eq(schema.evidenceCards.id, chain[1].id));
+  assert.deepEqual(await ev.verifyChain(trustCol.id), { ok: false, length: 5, brokenAt: 2 });
+  await db.update(schema.evidenceCards).set({ body: chain[1].body }).where(eq(schema.evidenceCards.id, chain[1].id));
+  // Deleting a card leaves a gap.
+  await db.delete(schema.evidenceCards).where(eq(schema.evidenceCards.id, chain[2].id));
+  assert.equal((await ev.verifyChain(trustCol.id)).brokenAt, 4);
+  await db.insert(schema.evidenceCards).values(chain[2]);
+  assert.equal((await ev.verifyChain(trustCol.id)).ok, true);
+  console.log("✓ evidence cards: one per decision, hash-chained, Ed25519-signed, tampering and deletion detected");
+
+  // 11c3. SAM 3.1 receipt crops: SAM finds the receipt, Muse Spark points at the fields, SAM refines,
+  // Muse Spark re-reads each crop. A crop that disagrees with the record sends it to review.
+  process.env.MODEL_API_KEY = "meta_test";
+  const sharpMod = (await import("sharp")).default;
+  const receiptPng = await sharpMod({ create: { width: 300, height: 400, channels: 3, background: "#ffffff" } }).png().toBuffer();
+  let amountRead = "TSH 20,000.00";
+  const amountReads: string[] = []; // queued read-backs, used before amountRead
+  let reference = "AB12CD34";
+  const samPrompts: string[] = [];
+  let locateAsk = "";
+  const sse = (lines: string[]) =>
+    new Response(
+      ["event: response.created", 'data: {"type":"response.created"}', "", ...lines.flatMap((l) => [`data: ${JSON.stringify({ type: "response.output_text.delta", delta: l })}`, ""]), 'data: {"type":"response.completed"}', ""].join("\n"),
+      { headers: { "Content-Type": "text/event-stream" } },
+    );
+  metaHandler = (url, init) => {
+    const body = JSON.parse(String(init?.body));
+    if (url.endsWith("/v1/responses")) {
+      assert.equal(body.model, "sam-3.1");
+      const text = body.input[0].content[0].text as string;
+      assert.match(body.input[0].content[1].image_url, /^data:image\/png;base64,/);
+      samPrompts.push(text);
+      if (text === "receipt") return sse(["<0f>0<|box;x1=20;y1=30;x2=280;y2=380;w=300;h=400|><|mask;x=0;y=0;data=2,2,~abc|>"]);
+      // Box prompts: refine each object a little tighter, keeping its id.
+      return sse([text.replace(/x1=(\d+);y1=(\d+);x2=(\d+);y2=(\d+);w=(\d+);h=(\d+)\|>/g, (_m, a, b, c, d, w, h) => `x1=${+a + 2};y1=${+b + 1};x2=${+c - 2};y2=${+d - 1};w=${w};h=${h}|><|mask;x=0;y=0;data=1,1,~x|>`)]);
+    }
+    assert.ok(url.endsWith("/v1/chat/completions"));
+    assert.equal(body.model, "muse-spark-1.3");
+    const ask = body.messages[0].content[0].text as string;
+    if (ask.includes("Find the printed AMOUNT")) locateAsk = ask;
+    // Boxes are relative to what Muse Spark was shown: the receipt SAM 3.1 found, cut out with an 8px margin.
+    const content = ask.includes("Find the printed AMOUNT")
+      ? { fields: [{ field: "amount", text: "Amount: TSH 20,000.00", box: [28, 178, 208, 208] }, { field: "reference", text: `Trans ID: ${reference}`, box: [28, 98, 188, 123] }] }
+      : ask.includes("amount of money")
+        ? { text: amountReads.shift() ?? amountRead }
+        : { text: reference };
+    return Response.json({ choices: [{ message: { content: JSON.stringify(content) } }] });
+  };
+  const withCrops = await trust.recordOffline({
+    collection: trustCol, by: owner, displayName: "Neema", amountCents: 20_000_00, currency: "TZS", method: "mobile_money", reference: "AB12CD34",
+    evidence: "photo", imageHash: "hash-neema", image: { data: new Uint8Array(receiptPng), mimeType: "image/png" }, model: "meta:muse-spark-1.3",
+  });
+  assert.equal(withCrops.record.checkStatus, "ok");
+  assert.match(withCrops.proofUrl ?? "", /^https:\/\/sarafupay\.test\/proof\/ev_[a-f0-9]{16}$/);
+  assert.equal(samPrompts[0], "receipt");
+  assert.match(locateAsk, /^This image is 277x367 pixels/, "Muse Spark looks at the receipt alone, not the whole photo");
+  assert.equal(samPrompts[1], "<0f>1<|box;x1=40;y1=200;x2=220;y2=230;w=300;h=400|>,2<|box;x1=40;y1=120;x2=200;y2=145;w=300;h=400|>", "SAM 3.1 refines Muse Spark's boxes");
+  const cropCard = (await ev.getCard(withCrops.proofUrl!.split("/").pop()!))!;
+  const cropBody = JSON.parse(cropCard.body) as typeof firstBody;
+  assert.deepEqual(
+    cropBody.crops.map((c) => [c.field, c.boxBy, c.box, c.read, c.matches]),
+    [
+      ["amount", "sam-3.1", [42, 201, 218, 229], "TSH 20,000.00", true],
+      ["reference", "sam-3.1", [42, 121, 198, 144], "AB12CD34", true],
+    ],
+  );
+  assert.ok(cropBody.checks.filter((c) => c.rule === "crop_readback").every((c) => c.result === "pass"));
+  assert.ok(cropBody.notes.some((n) => n.includes("SAM 3.1 located the receipt")));
+  const cropMedia = /img_[a-f0-9]{16}/.exec(cropBody.crops[0].url)![0];
+  const { GET: mediaGet } = await import("../app/api/media/[id]/route");
+  const cropServed = await mediaGet(new Request("https://x"), { params: Promise.resolve({ id: cropMedia }) });
+  assert.equal(cropServed.headers.get("content-type"), "image/png");
+  const cropMeta = await sharpMod(Buffer.from(await cropServed.arrayBuffer())).metadata();
+  assert.ok(cropMeta.width! < 300 && cropMeta.height! < 100, "only the field is kept, not the whole receipt");
+
+  amountRead = "TSH 2,000.00";
+  const misread = await trust.recordOffline({
+    collection: trustCol, by: owner, displayName: "Baraka", amountCents: 20_000_00, currency: "TZS", method: "mobile_money", reference: "AB12CD35",
+    evidence: "photo", imageHash: "hash-baraka", image: { data: new Uint8Array(receiptPng), mimeType: "image/png" }, model: "meta:muse-spark-1.3",
+  });
+  assert.equal(misread.record.checkStatus, "review", "a crop that disagrees with the record sends it to review");
+  assert.match(misread.record.checkNote ?? "", /amount reads "TSH 2,000.00"/);
+  assert.equal((await ev.verifyChain(trustCol.id)).length, 7);
+
+  // A box one line off (the charge line under the amount) is moved to the line Muse Spark said it read.
+  amountRead = "TSH 20,000.00";
+  amountReads.push("TSH 0.00");
+  reference = "AB12CD36";
+  const shifted = await trust.recordOffline({
+    collection: trustCol, by: owner, displayName: "Upendo", amountCents: 20_000_00, currency: "TZS", method: "mobile_money", reference: "AB12CD36",
+    evidence: "photo", imageHash: "hash-upendo", image: { data: new Uint8Array(receiptPng), mimeType: "image/png" }, model: "meta:muse-spark-1.3",
+  });
+  assert.equal(shifted.record.checkStatus, "ok", shifted.record.checkNote ?? "");
+  const shiftedBody = JSON.parse((await ev.getCard(shifted.proofUrl!.split("/").pop()!))!.body) as typeof firstBody;
+  assert.deepEqual(
+    shiftedBody.crops.map((c) => [c.field, c.boxBy, c.box, c.read, c.matches])[0],
+    ["amount", "muse-spark-1.3", [42, 164, 218, 193], "TSH 20,000.00", true],
+  );
+  assert.ok(shiftedBody.notes.some((n) => n.includes("moved one line up")));
+  delete process.env.MODEL_API_KEY;
+  console.log("✓ SAM 3.1 receipt crops: receipt found, fields refined and cropped, off-by-a-line box corrected, read-back mismatch sent to review");
+
   // 11d. Treasurer autopilot: due-date reminders, weekly report, one deadline note. Never moves money.
   const ap = await import("../lib/services/autopilot");
   const rehema = await core.getOrCreateUser("sim:255700000808", "sim", "Rehema");
@@ -643,6 +836,77 @@ async function main() {
   assert.ok(acts.every((a) => a.model === "test"), "the answering model is recorded");
   assert.equal(log.mask('{"phone":"255712345678","amount":20000}'), '{"phone":"255…78","amount":20000}');
   console.log("✓ agent activity log: tool, outcome and model per action, numbers masked");
+
+  // 11d3. Organiser copilot: "nani bado hajalipa?" walks the ledger, the webhook log and the provider's
+  // live status, names what happened to each person, and drafts reminders that go only after a yes.
+  const inv = await import("../lib/services/investigate");
+  const copCol = await core.createCollection({ ownerId: owner.id, title: "Mchango wa Kikundi", category: "community", targetCents: 1_000_000_00 });
+  const person = async (n: string, phone: string) => {
+    const u = await core.getOrCreateUser(phone, "sim");
+    await core.updateUser(u.id, { name: n });
+    await logInbound(phone, "Habari, nitachangia");
+    return (await core.getUser(u.id))!;
+  };
+  const juma = await person("Juma Hassan", "sim:255700001001");
+  const asha = await person("Asha", "sim:255700001002");
+  const barakaU = await person("Baraka", "sim:255700001003");
+  const zuhura = await person("Zuhura", "sim:255700001004");
+  for (const [u, amt] of [[juma, 50_000], [asha, 20_000], [barakaU, 30_000], [zuhura, 40_000]] as const)
+    await core.createPledge({ collection: copCol, user: u, displayName: u.name!, amountCents: amt * 100, dueDate: "2020-01-01" });
+  const started = async (u: typeof juma, ref: string, amt: number) => {
+    const c = await core.createContribution({ collection: copCol, contributorId: u.id, displayName: u.name!, amountCents: amt * 100, source: "sim" });
+    await db.update(schema.contributions).set({ providerRef: ref }).where(eq(schema.contributions.id, c.id));
+    return c;
+  };
+  await started(juma, "sess_JUMA", 50_000); // pushed to his phone, PIN never entered
+  const ashaCtb = await started(asha, "sess_ASHA", 20_000); // paid, but Snippe's webhook never arrived
+  const zuhuraCtb = await started(zuhura, "sess_ZUH", 40_000); // checkout expired
+  await core.applySnippePayment({ contributionId: zuhuraCtb.id, status: "expired" });
+  await db.insert(schema.processedEvents).values({ id: "snippe:evt_zuh", provider: "snippe", kind: "payment.expired", contributionId: zuhuraCtb.id, ref: "sess_ZUH", status: "expired" });
+  const asked: string[] = [];
+  inv.__setInvestigateDepsForTests({
+    snippeSession: async (ref) => {
+      asked.push(ref);
+      return ref === "sess_ASHA" ? { status: "completed", amountTzs: 20_000 } : { status: "pending" };
+    },
+  });
+  const report = await inv.investigate(copCol, owner);
+  const cases = Object.fromEntries(report.cases.map((c) => [c.name, c]));
+  assert.deepEqual(asked.sort(), ["sess_ASHA", "sess_JUMA"], "only pending checkouts are checked live");
+  assert.equal(cases["Juma Hassan"].diagnosis, "waiting_on_payer");
+  assert.match(cases["Juma Hassan"].why, /not approved it on their phone/);
+  assert.equal(cases["Asha"].diagnosis, "recovered_now", "a lost webhook is recovered during the investigation");
+  assert.equal((await core.getContribution(ashaCtb.id))!.status, "paid");
+  assert.ok((await inbox("sim:255700001002")).some((m) => m.includes("20,000")), "Asha gets her receipt");
+  assert.equal(cases["Baraka"].diagnosis, "pledged_not_started");
+  assert.match(cases["Baraka"].why, /overdue/);
+  assert.equal(cases["Zuhura"].diagnosis, "failed");
+  assert.ok(cases["Zuhura"].timeline.some((x) => x.what === "Snippe webhook: payment.expired (expired)"), "timeline shows the provider event");
+  for (const n of ["Juma Hassan", "Baraka", "Zuhura"]) assert.ok(cases[n].draft, `${n} gets a draft`);
+  assert.equal(cases["Asha"].draft, undefined, "no reminder for someone who paid");
+  assert.match(cases["Juma Hassan"].draft!.preview, /^👋 Habari Juma Hassan, tuliona ulianza kulipa TZS 50,000/);
+  // By name, through the agent: drafts are shown, nothing is sent yet.
+  const jumaBefore = (await inbox("sim:255700001001")).length;
+  script.push({ tool: ["investigate_payments", { code: copCol.code, name: "juma" }] }, { text: "Juma alianza kulipa lakini hakuweka PIN. Nitume kumbusho?" });
+  await say(OWNER, "Kwa nini malipo ya Juma bado yanasubiri?");
+  assert.equal((await inbox("sim:255700001001")).length, jumaBefore, "investigating sends nothing");
+  const [jumaDraft] = await db.select().from(schema.reminderDrafts).where(and(eq(schema.reminderDrafts.userId, juma.id), eq(schema.reminderDrafts.status, "draft")));
+  assert.ok(jumaDraft, "one live draft for Juma (the earlier one was replaced)");
+  // A non-owner can't investigate or send.
+  script.push({ tool: ["send_reminder_drafts", { code: copCol.code, draft_ids: [jumaDraft.id] }] }, { text: "Samahani." });
+  await say(AMINA, "tuma");
+  assert.equal((await inbox("sim:255700001001")).length, jumaBefore, "non-owner can't send drafts");
+  // The organiser says yes: sent once, with a fresh pay link.
+  script.push({ tool: ["send_reminder_drafts", { code: copCol.code, draft_ids: [jumaDraft.id] }] }, { text: "Nimemtumia Juma ✅" });
+  await say(OWNER, "Ndiyo, tuma");
+  const jumaMsgs = (await inbox("sim:255700001001")).slice(jumaBefore);
+  assert.equal(jumaMsgs.length, 1);
+  assert.ok(jumaMsgs[0].startsWith("👋 Habari Juma Hassan") && jumaMsgs[0].includes("https://sarafupay.test/pay/"), "reminder carries a pay link");
+  const again = await inv.sendReminderDrafts(copCol, [jumaDraft.id]);
+  assert.deepEqual(again.sent, [], "a draft is sent only once");
+  assert.ok((await db.select().from(schema.pledges).where(eq(schema.pledges.userId, juma.id)))[0].remindedAt, "pledge marked reminded");
+  assert.ok(inv.nameMatches("mama neema", "Mama Neema Joseph") && !inv.nameMatches("neema", "Juma"));
+  console.log("✓ organiser copilot: diagnoses from ledger + webhooks + live status, recovers a lost webhook, drafts sent only after the organiser's yes");
 
   // 11e. Share card drawn by Muse Image, stored, served and sent as an image message.
   process.env.MODEL_API_KEY = "meta_test";
