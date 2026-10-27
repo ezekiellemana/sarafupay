@@ -21,7 +21,7 @@ from pydantic import BaseModel, Field
 from transformers import AutoProcessor, SeamlessM4Tv2ForTextToSpeech
 
 MODEL = os.environ.get("SEAMLESS_MODEL", "facebook/seamless-m4t-v2-large")
-VOICES = {"male": int(os.environ.get("VOICE_MALE_ID", "33")), "female": int(os.environ.get("VOICE_FEMALE_ID", "18"))}
+VOICES = {"male": int(os.environ.get("VOICE_MALE_ID", "54")), "female": int(os.environ.get("VOICE_FEMALE_ID", "18"))}
 LANGS = {"sw": "swh", "en": "eng"}
 RATE = 16000
 
