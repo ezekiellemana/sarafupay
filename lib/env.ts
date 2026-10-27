@@ -20,7 +20,8 @@ export const env = {
   snippeApiKey: () => get("SNIPPE_API_KEY"),
   snippeWebhookSecret: () => get("SNIPPE_WEBHOOK_SECRET"),
   snippeBaseUrl: () => get("SNIPPE_BASE_URL", "https://api.snippe.sh").replace(/\/$/, ""),
-  snippeProfileId: () => get("SNIPPE_PROFILE_ID"),
+  // Snippe requires a customer email on every payment; used when the payer gave none.
+  snippeCustomerEmail: () => get("SNIPPE_CUSTOMER_EMAIL", "payments@sarafupay.app"),
 
   /** Owner-only admin pages (/admin?key=...). Empty disables the admin. */
   adminKey: () => get("ADMIN_KEY"),

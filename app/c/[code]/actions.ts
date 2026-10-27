@@ -1,6 +1,6 @@
 "use server";
 import { redirect } from "next/navigation";
-import { createContribution, findCollection } from "@/lib/services/core";
+import { createContribution, findCollection, startMobilePayment } from "@/lib/services/core";
 import { toCents } from "@/lib/format";
 
 export async function contributeAction(code: string, form: FormData) {
@@ -32,6 +32,17 @@ export async function contributeAction(code: string, form: FormData) {
     id = ctb.id;
   } catch (e) {
     redirect(`/c/${col.code}?err=${encodeURIComponent(e instanceof Error ? e.message : "error")}#chip-in`);
+  }
+  if (provider === "snippe") {
+    // Mobile money: the PIN prompt goes straight to the number they typed; no checkout page.
+    let target = `/c/${col.code}/thanks?ctb=${id}`;
+    try {
+      await startMobilePayment(id, phone);
+    } catch (e) {
+      console.error("[chip-in] prompt failed", e);
+      target = `/pay/${id}/mobile?err=prompt`;
+    }
+    redirect(target);
   }
   redirect(`/pay/${id}`);
 }
