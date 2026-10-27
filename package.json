@@ -12,7 +12,8 @@
     "reconcile": "node scripts/cron-reconcile.mjs",
     "seed": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/seed-demo.ts",
     "test:pricing": "node --import tsx --test tests/pricing.test.ts",
-    "demo:receipt": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/demo-receipt.ts"
+    "demo:receipt": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/demo-receipt.ts",
+    "eval:voice": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/eval-voice.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.104",

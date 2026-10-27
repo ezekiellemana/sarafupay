@@ -18,7 +18,11 @@ Every Trust Copilot decision now leaves a signed evidence card that anyone can c
 - **Resilient vision calls:** field location and read-back retry on Meta API hiccups and fall back to Muse Spark Open on Baseten, so evidence is still produced when a hosted model is briefly unavailable.
 - **Try it:** `npm run seed`, then `npm run demo:receipt -- <receipt photo>` sends the photo to the agent as the demo organiser and prints the reply and the new evidence cards.
 
-### 2. Swahili voice on Meta's open weights (planned)
+### 2. Swahili voice on Meta's open weights
+
+- **Muse Spark Open listens to Swahili voice notes:** the WhatsApp voice note is decoded to WAV and sent to Muse Spark Open on Baseten as audio, with a short description of what SarafuPay voice notes are about and Muse Voice Transcribe's draft as a hint.
+- **Measured, not guessed:** on 12 real Swahili voice notes from 4 speakers, Muse Spark Open makes about 40% fewer word errors than Muse Voice Transcribe (29–34% vs 55% word error rate, mean of two runs). Method and results: [docs/SWAHILI_VOICE_EVAL.md](docs/SWAHILI_VOICE_EVAL.md). The recordings stay private; `npm run eval:voice -- <folder>` reruns it.
+- **Falls back safely:** if Muse Spark Open is unavailable, the agent uses Muse Voice Transcribe's draft, or Gemini when configured.
 
 ### 3. Kiswahili organiser copilot (planned)
 
@@ -28,4 +32,5 @@ Every Trust Copilot decision now leaves a signed evidence card that anyone can c
 |---|---|---|
 | SAM 3.1 | Receipt segmentation and field crops | Yes |
 | Muse Spark 1.3 | Agent brain; field location and crop read-back | Agent existed; field location and read-back are new |
-| Muse Spark Open (Baseten) | Fallback agent brain; fallback for field location and read-back | Existing route, new host; vision fallback is new |
+| Muse Spark Open (Baseten) | Fallback agent brain; fallback for field location and read-back; hears Swahili voice notes | Existing route, new host; vision fallback and Swahili listening are new |
+| Muse Voice Transcribe | Voice notes; draft hint for Swahili | Existing; use as a hint is new |
