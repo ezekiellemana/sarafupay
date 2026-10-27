@@ -1,6 +1,7 @@
 """
-Runs the voice server (app.py) on Modal: a T4 GPU that starts when a voice note needs a reply and
-shuts down after 5 idle minutes, so we pay only while it speaks.
+Runs the voice server (app.py) on Modal: 8 CPU cores that start when a voice note needs a reply and
+shut down after 5 idle minutes, so we pay only while it speaks. (A T4 GPU, gpu="T4", is faster but
+needs a payment method on the Modal account.)
 
 One-time setup (with MODAL_TOKEN_ID / MODAL_TOKEN_SECRET in the environment):
   modal secret create sarafupay-voice VOICE_KEY=<random key>
@@ -31,7 +32,7 @@ image = (
 app = modal.App("sarafupay-voice", image=image)
 
 
-@app.function(gpu="T4", scaledown_window=300, timeout=600, secrets=[modal.Secret.from_name("sarafupay-voice")])
+@app.function(cpu=8.0, memory=12288, scaledown_window=300, timeout=600, secrets=[modal.Secret.from_name("sarafupay-voice")])
 @modal.concurrent(max_inputs=4)
 @modal.asgi_app()
 def web():
