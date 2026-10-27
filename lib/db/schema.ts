@@ -12,6 +12,8 @@ export const users = pgTable("users", {
   channel: text("channel").notNull(), // 'whatsapp' | 'sim'
   paypalEmail: text("paypal_email"),
   activeCollectionId: text("active_collection_id"),
+  // Voice for spoken replies ("male" | "female") when the user picked one; otherwise it is guessed per voice note.
+  replyVoice: text("reply_voice"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

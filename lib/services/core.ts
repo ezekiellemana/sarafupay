@@ -41,7 +41,7 @@ export async function getUser(id: string): Promise<User | undefined> {
   return u;
 }
 
-export async function updateUser(id: string, patch: Partial<Pick<User, "name" | "paypalEmail" | "activeCollectionId">>) {
+export async function updateUser(id: string, patch: Partial<Pick<User, "name" | "paypalEmail" | "activeCollectionId" | "replyVoice">>) {
   const db = await getDb();
   const [u] = await db.update(users).set(patch).where(eq(users.id, id)).returning();
   if (patch.name) {

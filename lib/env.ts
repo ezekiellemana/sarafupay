@@ -48,6 +48,7 @@ export const env = {
   // Spoken replies to voice notes: our own server running Meta's open Seamless M4T v2 voice model.
   metaVoiceUrl: () => get("META_VOICE_URL").replace(/\/$/, ""),
   metaVoiceKey: () => get("META_VOICE_KEY"),
+  metaVoiceDefault: (): "male" | "female" => (get("META_VOICE_DEFAULT", "female") === "male" ? "male" : "female"),
 
   waToken: () => get("WHATSAPP_ACCESS_TOKEN"),
   waPhoneNumberId: () => get("WHATSAPP_PHONE_NUMBER_ID"),

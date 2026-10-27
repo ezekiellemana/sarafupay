@@ -104,6 +104,7 @@ BEGIN
   END LOOP;
 END $$;
 -- v2 columns (idempotent, so existing databases upgrade in place)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS reply_voice text;
 ALTER TABLE contributions ADD COLUMN IF NOT EXISTS provider text NOT NULL DEFAULT 'paypal';
 ALTER TABLE contributions ADD COLUMN IF NOT EXISTS provider_ref text;
 ALTER TABLE contributions ADD COLUMN IF NOT EXISTS payer_phone text;
