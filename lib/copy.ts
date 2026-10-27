@@ -142,6 +142,14 @@ const en = {
     confirming: "Waiting for confirmation…",
     ref: "Ref",
     back: "Back to",
+    resend: "No prompt? Send it again",
+  },
+  mobilePay: {
+    title: "Pay with mobile money",
+    to: "to",
+    how: "We'll send a prompt to this number. Enter your PIN on your phone to pay. M-Pesa, Airtel Money, Mixx by Yas and Halotel all work.",
+    send: "Send the prompt",
+    sending: "Sending…",
   },
   notFound: { title: "This page went missing.", home: "Home" },
   payError: {
@@ -311,6 +319,14 @@ const sw: Copy = {
     confirming: "Tunasubiri uthibitisho…",
     ref: "Kumb.",
     back: "Rudi kwa",
+    resend: "Hujapata ombi? Tuma tena",
+  },
+  mobilePay: {
+    title: "Lipa kwa pesa ya simu",
+    to: "kwa",
+    how: "Tutatuma ombi kwenye namba hii. Weka PIN yako kwenye simu kulipa. M-Pesa, Airtel Money, Mixx by Yas na Halotel zote zinafanya kazi.",
+    send: "Tuma ombi",
+    sending: "Inatuma…",
   },
   notFound: { title: "Ukurasa huu haupatikani.", home: "Mwanzo" },
   payError: {

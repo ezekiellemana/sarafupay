@@ -26,7 +26,6 @@ paste the value and tick **Encrypt**:
 |---|---|
 | `SNIPPE_API_KEY` | Snippe dashboard → Developers / API keys (`snp_…`) |
 | `SNIPPE_WEBHOOK_SECRET` | Snippe dashboard → Settings → Webhook Secret (`whsec_…`) |
-| `SNIPPE_PROFILE_ID` | Optional: Snippe payment profile for checkout branding |
 | `PAYPAL_ENV` | `sandbox` while testing, `live` for real money |
 | `PAYPAL_CLIENT_ID`, `PAYPAL_SECRET` | developer.paypal.com → Apps & Credentials → **Live** (or Sandbox) app |
 | `PAYPAL_WEBHOOK_ID` | Step 4 below |

@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import { checkSnippeContribution, getCollectionById, getContribution } from "@/lib/services/core";
 
-// Snippe sends the payer back here after the hosted checkout. The webhook is the source of
+// Snippe sent payers back here from its hosted checkout, which we no longer use; kept for links
+// started before direct push. The webhook is the source of
 // truth; this only asks Snippe once more so the thank-you page is right when it can be.
 export async function GET(req: Request) {
   const id = new URL(req.url).searchParams.get("c");

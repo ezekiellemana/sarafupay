@@ -48,7 +48,7 @@ export type InvestigateDeps = {
   snippeSession: (ref: string) => Promise<{ status: string; amountTzs?: number }>;
   paypalOrder: typeof getOrderSummary;
 };
-let deps: InvestigateDeps = { snippeSession: (ref) => snippe.getSession(ref), paypalOrder: (id) => getOrderSummary(id) };
+let deps: InvestigateDeps = { snippeSession: (ref) => snippe.getPayment(ref), paypalOrder: (id) => getOrderSummary(id) };
 export function __setInvestigateDepsForTests(d: Partial<InvestigateDeps>) {
   deps = { ...deps, ...d };
 }

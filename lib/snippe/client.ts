@@ -68,50 +68,72 @@ export const isTzPhone = (raw: string) => {
   }
 };
 
-// ---------- hosted checkout (payment sessions) ----------
+// ---------- mobile money payments (USSD push) ----------
+// The payer gets the PIN prompt straight on their phone; there is no hosted page to visit.
 
-type SessionData = { id?: string; reference: string; status: string; checkout_url?: string; payment_link_url?: string; amount?: number };
+type PaymentData = { reference: string; status: string; amount?: Money | number };
 
-export type SnippeSession = { reference: string; status: string; checkoutUrl: string };
+export type SnippePayment = { reference: string; status: string; amountTzs?: number };
 
-export async function createSession(input: {
-  contributionId: string;
-  amountTzs: number;
-  description: string;
-  customerName?: string;
-  customerPhone?: string;
-  redirectUrl: string;
-  webhookUrl: string;
-}): Promise<SnippeSession> {
-  if (!Number.isInteger(input.amountTzs) || input.amountTzs < 500) throw new SnippeError("Mobile money payments start at TZS 500");
-  const customer: Record<string, string> = {};
-  if (input.customerName) customer.name = input.customerName.slice(0, 200);
-  if (input.customerPhone) customer.phone = "+" + normalizeTzPhone(input.customerPhone);
-  const data = await call<SessionData>(
-    "POST",
-    "/api/v1/sessions",
-    {
-      amount: input.amountTzs,
-      currency: "TZS",
-      allowed_methods: ["mobile_money"],
-      ...(env.snippeProfileId() ? { profile_id: env.snippeProfileId() } : {}),
-      ...(Object.keys(customer).length ? { customer } : {}),
-      redirect_url: input.redirectUrl,
-      webhook_url: input.webhookUrl,
-      description: input.description.slice(0, 500),
-      metadata: { contribution_id: input.contributionId },
-      expires_in: 3600,
-    },
-    input.contributionId,
-  );
-  const checkoutUrl = data.checkout_url ?? data.payment_link_url;
-  if (!data.reference || !checkoutUrl) throw new SnippeError("Snippe returned no checkout link");
-  return { reference: data.reference, status: data.status, checkoutUrl };
+const amountOf = (a: Money | number | undefined) => (typeof a === "number" ? a : a?.value);
+
+/** Splits "Halima Juma Ali" into Snippe's first and last name (both required). */
+function splitName(name: string | undefined): { firstname: string; lastname: string } {
+  const words = (name ?? "").trim().split(/\s+/).filter(Boolean);
+  if (!words.length || /^anonymous$/i.test(words[0])) return { firstname: "SarafuPay", lastname: "Contributor" };
+  return { firstname: words[0].slice(0, 100), lastname: (words.slice(1).join(" ") || words[0]).slice(0, 100) };
 }
 
-export async function getSession(reference: string): Promise<{ reference: string; status: string; amountTzs?: number }> {
-  const data = await call<SessionData>("GET", `/api/v1/sessions/${encodeURIComponent(reference)}`);
-  return { reference: data.reference ?? reference, status: data.status, amountTzs: data.amount };
+/**
+ * Sends the payer a USSD push to approve `amountTzs` with their PIN. `idempotencyKey` (≤30 chars)
+ * makes a retried request return the same payment.
+ */
+export async function requestPayment(input: {
+  contributionId: string;
+  idempotencyKey: string;
+  amountTzs: number;
+  phone: string;
+  customerName?: string;
+  customerEmail?: string;
+  webhookUrl: string;
+}): Promise<SnippePayment> {
+  if (!Number.isInteger(input.amountTzs) || input.amountTzs < 500) throw new SnippeError("Mobile money payments start at TZS 500");
+  const data = await call<PaymentData>(
+    "POST",
+    "/v1/payments",
+    {
+      payment_type: "mobile",
+      details: { amount: input.amountTzs, currency: "TZS" },
+      phone_number: normalizeTzPhone(input.phone),
+      // Snippe requires an email; contributors usually have none, so receipts go to ours.
+      customer: { ...splitName(input.customerName), email: input.customerEmail || env.snippeCustomerEmail() },
+      webhook_url: input.webhookUrl,
+      metadata: { contribution_id: input.contributionId },
+    },
+    input.idempotencyKey,
+  );
+  if (!data.reference) throw new SnippeError("Snippe returned no payment reference");
+  return { reference: data.reference, status: data.status, amountTzs: amountOf(data.amount) };
+}
+
+/** Sends the PIN prompt for a pending payment again (the payer missed or dismissed it). */
+export async function repush(reference: string): Promise<void> {
+  await call("POST", `/v1/payments/${encodeURIComponent(reference)}/push`, {});
+}
+
+/**
+ * A payment's status. Contributions started before direct push have a checkout session reference
+ * instead, so those are looked up as sessions.
+ */
+export async function getPayment(reference: string): Promise<SnippePayment> {
+  try {
+    const d = await call<PaymentData>("GET", `/v1/payments/${encodeURIComponent(reference)}`);
+    return { reference: d.reference ?? reference, status: d.status, amountTzs: amountOf(d.amount) };
+  } catch (e) {
+    if (!(e instanceof SnippeError) || (e.status !== 404 && e.status !== 400)) throw e;
+    const d = await call<PaymentData>("GET", `/api/v1/sessions/${encodeURIComponent(reference)}`);
+    return { reference: d.reference ?? reference, status: d.status, amountTzs: amountOf(d.amount) };
+  }
 }
 
 // ---------- payouts (disbursements) ----------
