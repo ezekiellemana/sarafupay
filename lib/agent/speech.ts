@@ -60,6 +60,33 @@ export async function speak(text: string, lang: "sw" | "en", voice: ReplyVoice):
   return { data: new Uint8Array(await res.arrayBuffer()), mimeType: "audio/ogg; codecs=opus" };
 }
 
+/**
+ * Speaks `text` over a picture (a slow zoom) or a short clip, as an MP4 that WhatsApp plays as a
+ * video. Made on the voice server, which has ffmpeg. Null when the voice server isn't configured.
+ */
+export async function speakOver(
+  text: string,
+  lang: "sw" | "en",
+  voice: ReplyVoice,
+  visual: { image: Uint8Array } | { clip: Uint8Array },
+): Promise<{ data: Uint8Array; mimeType: string } | null> {
+  if (!speechConfigured()) return null;
+  const say = spokenText(text, lang);
+  if (!say) return null;
+  const res = await fetch(`${env.metaVoiceUrl()}/video`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(env.metaVoiceKey() ? { Authorization: `Bearer ${env.metaVoiceKey()}` } : {}) },
+    body: JSON.stringify({
+      text: say,
+      lang,
+      voice,
+      ...("clip" in visual ? { video_b64: Buffer.from(visual.clip).toString("base64") } : { image_b64: Buffer.from(visual.image).toString("base64") }),
+    }),
+  });
+  if (!res.ok) throw new Error(`video voice-over failed ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  return { data: new Uint8Array(await res.arrayBuffer()), mimeType: "video/mp4" };
+}
+
 /** Median pitch (Hz) of the voiced parts of a 16-bit PCM WAV, by autocorrelation. 0 when nothing voiced. */
 export function voicePitch(wav: Uint8Array): number {
   const v = new DataView(wav.buffer, wav.byteOffset, wav.byteLength);

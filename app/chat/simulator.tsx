@@ -555,6 +555,14 @@ export function Simulator({ buyer, testMode = true, lang = "en" }: { buyer: { em
                           {voice[2] ? <span className="block text-xs italic text-ink-soft">🔊 {voice[2]}</span> : null}
                         </>
                       );
+                    const video = /^🎬 (https?:\/\/\S+)\n?([\s\S]*)$/u.exec(m.text);
+                    if (video)
+                      return (
+                        <>
+                          <video src={video[1]} controls playsInline preload="metadata" className="mb-2 w-64 max-w-full rounded-xl" aria-label="Video" />
+                          <Rich text={video[2]} />
+                        </>
+                      );
                     const img = /^🖼️ (https?:\/\/\S+)\n?([\s\S]*)$/u.exec(m.text);
                     if (!img) return <Rich text={m.text} />;
                     return (

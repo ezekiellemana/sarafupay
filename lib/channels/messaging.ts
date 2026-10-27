@@ -1,6 +1,6 @@
 import "server-only";
 import { getDb, schema } from "../db";
-import { sendWhatsAppAudio, sendWhatsAppImage, sendWhatsAppText, type SendResult } from "./whatsapp";
+import { sendWhatsAppAudio, sendWhatsAppImage, sendWhatsAppText, sendWhatsAppVideo, type SendResult } from "./whatsapp";
 import { toWhatsAppFormat } from "../i18n";
 
 export function isSimPhone(phone: string) {
@@ -44,4 +44,14 @@ export async function sendVoiceTo(phone: string, url: string, said: string): Pro
   await db.insert(schema.chatLog).values({ phone, direction: "out", text: `🔊 ${url}\n${said}` });
   if (isSimPhone(phone)) return { ok: true };
   return sendWhatsAppAudio(phone, url);
+}
+
+/** Sends a video (public URL) with a caption. The chat log keeps a "🎬 <url>" line, then the caption. */
+export async function sendVideoTo(phone: string, url: string, caption?: string): Promise<SendResult> {
+  const text = toWhatsAppFormat(caption ?? "");
+  const db = await getDb();
+  await db.insert(schema.chatLog).values({ phone, direction: "out", text: `🎬 ${url}${text ? `\n${text}` : ""}` });
+  if (isSimPhone(phone)) return { ok: true };
+  const sent = await sendWhatsAppVideo(phone, url, text);
+  return sent.ok ? sent : sendWhatsAppText(phone, `${text}\n${url}`.trim());
 }
