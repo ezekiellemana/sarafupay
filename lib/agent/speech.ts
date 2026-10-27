@@ -3,12 +3,14 @@ import { env } from "../env";
 
 /**
  * Spoken replies. When someone sends a voice note, the agent answers with a voice note in their
- * language (Tanzanian Swahili or English). Meta's models do the listening and the thinking; the
- * speaking uses Azure neural voices because Meta has no voice licensed for commercial use in Swahili.
+ * language. Meta's models do all of it: Muse Spark listens and thinks, and Meta's open Seamless
+ * M4T v2 model speaks, on our own voice server (voice-server/, set META_VOICE_URL).
  */
 
+export type ReplyVoice = "male" | "female";
+
 export function speechConfigured() {
-  return Boolean(env.azureSpeechKey());
+  return Boolean(env.metaVoiceUrl());
 }
 
 const SW_WORDS = new Set(["na", "ya", "kwa", "ni", "wa", "hii", "sana", "asante", "habari", "nime", "tafadhali", "kiasi", "michango", "mchango", "bado", "sawa", "kwenye", "hapa", "yako", "yangu"]);
@@ -36,25 +38,15 @@ export function spokenText(text: string, lang: "sw" | "en"): string {
     .slice(0, 900);
 }
 
-const xml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-
 /** Speaks `text` as an Ogg/Opus voice note (what WhatsApp shows as a voice message). Null when not configured. */
-export async function speak(text: string, lang: "sw" | "en"): Promise<{ data: Uint8Array; mimeType: string } | null> {
+export async function speak(text: string, lang: "sw" | "en", voice: ReplyVoice): Promise<{ data: Uint8Array; mimeType: string } | null> {
   if (!speechConfigured()) return null;
   const say = spokenText(text, lang);
   if (!say) return null;
-  const voice = lang === "sw" ? env.voiceSw() : env.voiceEn();
-  const locale = voice.split("-").slice(0, 2).join("-");
-  const ssml = `<speak version="1.0" xml:lang="${locale}"><voice name="${voice}"><prosody rate="+4%">${xml(say)}</prosody></voice></speak>`;
-  const res = await fetch(`https://${env.azureSpeechRegion()}.tts.speech.microsoft.com/cognitiveservices/v1`, {
+  const res = await fetch(`${env.metaVoiceUrl()}/speak`, {
     method: "POST",
-    headers: {
-      "Ocp-Apim-Subscription-Key": env.azureSpeechKey(),
-      "Content-Type": "application/ssml+xml",
-      "X-Microsoft-OutputFormat": "ogg-24khz-16bit-mono-opus",
-      "User-Agent": "sarafupay",
-    },
-    body: ssml,
+    headers: { "Content-Type": "application/json", ...(env.metaVoiceKey() ? { Authorization: `Bearer ${env.metaVoiceKey()}` } : {}) },
+    body: JSON.stringify({ text: say, lang, voice }),
   });
   if (!res.ok) throw new Error(`speech failed ${res.status}: ${(await res.text()).slice(0, 200)}`);
   return { data: new Uint8Array(await res.arrayBuffer()), mimeType: "audio/ogg; codecs=opus" };

@@ -38,26 +38,16 @@ export const env = {
   metaReasoningEffort: () => get("META_REASONING_EFFORT", "low"),
   /**
    * Muse Spark Open (Meta's open-weights model) on any OpenAI-compatible host: Fireworks, Together,
-   * Baseten, Groq, Nebius… Used after the Meta Model API and before Gemini.
+   * Baseten, Groq, Nebius… Used after the Meta Model API.
    */
   metaOpenApiKey: () => get("META_OPEN_API_KEY"),
   metaOpenBaseUrl: () => get("META_OPEN_BASE_URL", "https://api.fireworks.ai/inference/v1").replace(/\/$/, ""),
   metaOpenModel: () => get("META_OPEN_MODEL", "accounts/fireworks/models/muse-spark-open"),
   metaImageModel: () => get("META_IMAGE_MODEL", "muse-image-1.0"),
   metaTranscribeModel: () => get("META_TRANSCRIBE_MODEL", "muse-voice-transcribe-1.0"),
-  // Spoken replies to voice notes (Meta's models have no commercial Swahili voice yet).
-  azureSpeechKey: () => get("AZURE_SPEECH_KEY"),
-  azureSpeechRegion: () => get("AZURE_SPEECH_REGION", "westeurope"),
-  voiceSw: () => get("VOICE_SW", "sw-TZ-RehemaNeural"),
-  voiceEn: () => get("VOICE_EN", "en-TZ-ImaniNeural"),
-
-  geminiApiKey: () => get("GOOGLE_GENERATIVE_AI_API_KEY", get("GEMINI_API_KEY")),
-  geminiModel: () => get("GEMINI_MODEL", "gemini-3.8-flash"),
-  /** Tried in order when the primary model is overloaded (503), rate-limited (429) or retired (404). */
-  geminiModels: () =>
-    [get("GEMINI_MODEL", "gemini-3.8-flash"), ...get("GEMINI_FALLBACK_MODELS", "gemini-3.6-flash,gemini-3.5-flash-lite,gemini-3.5-flash").split(",")]
-      .map((m) => m.trim())
-      .filter((m, i, a) => m && a.indexOf(m) === i),
+  // Spoken replies to voice notes: our own server running Meta's open Seamless M4T v2 voice model.
+  metaVoiceUrl: () => get("META_VOICE_URL").replace(/\/$/, ""),
+  metaVoiceKey: () => get("META_VOICE_KEY"),
 
   waToken: () => get("WHATSAPP_ACCESS_TOKEN"),
   waPhoneNumberId: () => get("WHATSAPP_PHONE_NUMBER_ID"),
@@ -96,7 +86,7 @@ export function metaConfigured() {
 }
 /** Some model the agent can talk to. */
 export function aiConfigured() {
-  return Boolean(env.metaApiKey() || env.metaOpenApiKey() || env.geminiApiKey());
+  return Boolean(env.metaApiKey() || env.metaOpenApiKey());
 }
 export function whatsappConfigured() {
   return Boolean(env.waToken() && env.waPhoneNumberId());
