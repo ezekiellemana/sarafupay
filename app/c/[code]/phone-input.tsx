@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { networkOf } from "@/lib/networks";
 
 /** Ten local digits ("0712345678") from anything typed or pasted: "+255 712…", "255712…", "712…". */
 export function toLocal(raw: string): string {
@@ -52,8 +53,13 @@ export function PhoneInput({
         aria-label={label}
         className="min-w-0 flex-1 bg-transparent py-3 font-mono text-lg tracking-wider outline-none"
       />
-      {done ? <span className="phone-ok" aria-hidden>✓</span> : null}
+      {done ? (
+        <span className="phone-ok" aria-hidden>
+          ✓
+        </span>
+      ) : null}
       <input type="hidden" name={name} value={local} />
+      {done && networkOf(local) ? <span className="phone-net">{networkOf(local)}</span> : null}
     </div>
   );
 }

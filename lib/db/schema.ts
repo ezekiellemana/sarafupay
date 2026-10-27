@@ -71,6 +71,10 @@ export const contributions = pgTable(
     fxRate: text("fx_rate"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     paidAt: timestamp("paid_at", { withTimezone: true }),
+    // Mobile money: when the PIN prompt was last sent, and why a payment ended without money
+    // (expired | failed | voided | cancelled), for the payer's status screen.
+    promptSentAt: timestamp("prompt_sent_at", { withTimezone: true }),
+    failReason: text("fail_reason"),
     // When a thank-you video went out to this contributor (one per contribution).
     thankedAt: timestamp("thanked_at", { withTimezone: true }),
   },
