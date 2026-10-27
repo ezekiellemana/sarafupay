@@ -547,6 +547,14 @@ export function Simulator({ buyer, testMode = true, lang = "en" }: { buyer: { em
                   style={{ background: m.direction === "in" ? "var(--bubble-out)" : "var(--bubble-in)" }}
                 >
                   {(() => {
+                    const voice = /^🔊 (https?:\/\/\S+)\n?([\s\S]*)$/u.exec(m.text);
+                    if (voice)
+                      return (
+                        <>
+                          <audio src={voice[1]} controls preload="none" className="mb-1 h-10 w-64 max-w-full" aria-label="Voice reply" />
+                          {voice[2] ? <span className="block text-xs italic text-ink-soft">🔊 {voice[2]}</span> : null}
+                        </>
+                      );
                     const img = /^🖼️ (https?:\/\/\S+)\n?([\s\S]*)$/u.exec(m.text);
                     if (!img) return <Rich text={m.text} />;
                     return (

@@ -1,6 +1,6 @@
 import "server-only";
 import { getDb, schema } from "../db";
-import { sendWhatsAppImage, sendWhatsAppText, type SendResult } from "./whatsapp";
+import { sendWhatsAppAudio, sendWhatsAppImage, sendWhatsAppText, type SendResult } from "./whatsapp";
 import { toWhatsAppFormat } from "../i18n";
 
 export function isSimPhone(phone: string) {
@@ -33,4 +33,15 @@ export async function sendImageTo(phone: string, url: string, caption?: string):
   const sent = await sendWhatsAppImage(phone, url, text);
   // An image the user can't receive still leaves them the caption and the link.
   return sent.ok ? sent : sendWhatsAppText(phone, `${text}\n${url}`.trim());
+}
+
+/**
+ * Sends a voice note (public URL). The chat log keeps a "🔊 <url>" line followed by what was said,
+ * so the agent's memory and the web simulator both see it.
+ */
+export async function sendVoiceTo(phone: string, url: string, said: string): Promise<SendResult> {
+  const db = await getDb();
+  await db.insert(schema.chatLog).values({ phone, direction: "out", text: `🔊 ${url}\n${said}` });
+  if (isSimPhone(phone)) return { ok: true };
+  return sendWhatsAppAudio(phone, url);
 }

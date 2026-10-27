@@ -47,9 +47,6 @@ services:
       - key: DAILY_AI_LIMIT
         value: "300"
         scope: RUN_TIME
-      - key: GEMINI_MODEL
-        value: gemini-3.8-flash
-        scope: RUN_TIME
       # PayPal: "live" for real money, "sandbox" to test.
       - key: PAYPAL_ENV
         value: sandbox
@@ -62,7 +59,10 @@ services:
       - { key: SNIPPE_WEBHOOK_SECRET, type: SECRET, scope: RUN_TIME, value: "" }
       - { key: SNIPPE_PROFILE_ID, scope: RUN_TIME, value: "" }
       # AI + WhatsApp
-      - { key: GEMINI_API_KEY, type: SECRET, scope: RUN_TIME, value: "" }
+      - { key: MODEL_API_KEY, type: SECRET, scope: RUN_TIME, value: "" }
+      - { key: META_OPEN_API_KEY, type: SECRET, scope: RUN_TIME, value: "" }
+      - { key: META_OPEN_BASE_URL, scope: RUN_TIME, value: "https://inference.baseten.co/v1" }
+      - { key: META_OPEN_MODEL, scope: RUN_TIME, value: "meta-models/muse-spark-open" }
       - { key: WHATSAPP_ACCESS_TOKEN, type: SECRET, scope: RUN_TIME, value: "" }
       - { key: WHATSAPP_PHONE_NUMBER_ID, scope: RUN_TIME, value: "" }
       - { key: WHATSAPP_VERIFY_TOKEN, type: SECRET, scope: RUN_TIME, value: "" }

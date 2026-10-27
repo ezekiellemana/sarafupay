@@ -10,7 +10,7 @@ import {
   type AgAiHarnessSetupParams,
   type AgReportState,
 } from "ag-studio";
-import { geminiProxyAdapter } from "@/lib/studio/adapter";
+import { modelProxyAdapter } from "@/lib/studio/adapter";
 import type { StudioProps } from "./studio-dashboard";
 import { pledgeScoreboardDefinition, type NudgeResult } from "./pledge-scoreboard";
 
@@ -297,7 +297,7 @@ Your users are organisers who must account to their community for every shilling
 
 export default function StudioInner({ code, ownerKey, currency, data, licenseKey }: StudioProps) {
   const headers = useMemo(() => ({ "x-collection": code, "x-owner-key": ownerKey }), [code, ownerKey]);
-  const adapter = useMemo(() => geminiProxyAdapter({ endpoint: "/api/studio/llm", headers }), [headers]);
+  const adapter = useMemo(() => modelProxyAdapter({ endpoint: "/api/studio/llm", headers }), [headers]);
 
   const sources = useMemo(() => {
     const fields = sourceFields(currency);

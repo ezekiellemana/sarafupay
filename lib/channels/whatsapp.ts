@@ -61,6 +61,22 @@ export async function sendWhatsAppImage(toDigits: string, link: string, caption?
   return { ok: true };
 }
 
+/** Sends a voice note by public URL (Ogg/Opus shows as a voice message with a play button). */
+export async function sendWhatsAppAudio(toDigits: string, link: string): Promise<SendResult> {
+  if (!whatsappConfigured()) return { ok: false, reason: "not_configured" };
+  const res = await fetch(`${graph()}/${env.waPhoneNumberId()}/messages`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${env.waToken()}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ messaging_product: "whatsapp", recipient_type: "individual", to: toDigits, type: "audio", audio: { link } }),
+  });
+  if (!res.ok) {
+    const detail = await res.text();
+    console.error("[whatsapp] audio send failed", res.status, detail);
+    return { ok: false, reason: /131047|re-engagement/i.test(detail) ? "outside_24h" : "error", detail: detail.slice(0, 300) };
+  }
+  return { ok: true };
+}
+
 /**
  * Sends an approved message template. Templates are the only messages WhatsApp delivers
  * outside the 24-hour window (e.g. pledge reminders to people who haven't written lately).

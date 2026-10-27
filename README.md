@@ -19,8 +19,8 @@ The two balances are kept separately and never converted automatically.
 
 ## The agent (Meta's Muse models)
 
-The WhatsApp agent runs on **Muse Spark** through the Meta Model API, with Muse Spark Open on a
-partner host and Gemini as backups. It plans, calls SarafuPay's tools, and never moves money on its own.
+The WhatsApp agent runs on **Muse Spark** through the Meta Model API, with Muse Spark Open (Meta's open
+weights) on a partner host as backup. All AI in SarafuPay is Meta. It plans, calls SarafuPay's tools, and never moves money on its own.
 
 - **Chat in Swahili or English:** create a collection, contribute, pledge, ask "who hasn't paid?".
 - **Voice notes:** transcribed by Muse Voice Transcribe, then handled like text.
@@ -50,7 +50,7 @@ The math lives in `lib/pricing.ts` and is covered by `tests/pricing.test.ts`.
 ## Stack
 
 Next.js 16 (App Router), TypeScript, Drizzle + Postgres (PGlite locally), Vercel AI SDK with
-Meta's Muse models (Meta Model API; Muse Spark Open on a partner host) and Gemini as fallback, WhatsApp Cloud API, Snippe REST API, PayPal Server SDK + Payouts, AG Studio treasurer
+Meta's Muse models (Meta Model API; Muse Spark Open on a partner host), WhatsApp Cloud API, Snippe REST API, PayPal Server SDK + Payouts, AG Studio treasurer
 dashboard. Hosted on DigitalOcean App Platform (`.do/app.yaml`).
 
 ```

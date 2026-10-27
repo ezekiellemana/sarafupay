@@ -38,21 +38,17 @@ export const env = {
   metaReasoningEffort: () => get("META_REASONING_EFFORT", "low"),
   /**
    * Muse Spark Open (Meta's open-weights model) on any OpenAI-compatible host: Fireworks, Together,
-   * Baseten, Groq, Nebius… Used after the Meta Model API and before Gemini.
+   * Baseten, Groq, Nebius… Used after the Meta Model API.
    */
   metaOpenApiKey: () => get("META_OPEN_API_KEY"),
   metaOpenBaseUrl: () => get("META_OPEN_BASE_URL", "https://api.fireworks.ai/inference/v1").replace(/\/$/, ""),
   metaOpenModel: () => get("META_OPEN_MODEL", "accounts/fireworks/models/muse-spark-open"),
   metaImageModel: () => get("META_IMAGE_MODEL", "muse-image-1.0"),
   metaTranscribeModel: () => get("META_TRANSCRIBE_MODEL", "muse-voice-transcribe-1.0"),
-
-  geminiApiKey: () => get("GOOGLE_GENERATIVE_AI_API_KEY", get("GEMINI_API_KEY")),
-  geminiModel: () => get("GEMINI_MODEL", "gemini-3.8-flash"),
-  /** Tried in order when the primary model is overloaded (503), rate-limited (429) or retired (404). */
-  geminiModels: () =>
-    [get("GEMINI_MODEL", "gemini-3.8-flash"), ...get("GEMINI_FALLBACK_MODELS", "gemini-3.6-flash,gemini-3.5-flash-lite,gemini-3.5-flash").split(",")]
-      .map((m) => m.trim())
-      .filter((m, i, a) => m && a.indexOf(m) === i),
+  // Spoken replies to voice notes: our own server running Meta's open Seamless M4T v2 voice model.
+  metaVoiceUrl: () => get("META_VOICE_URL").replace(/\/$/, ""),
+  metaVoiceKey: () => get("META_VOICE_KEY"),
+  metaVoiceDefault: (): "male" | "female" => (get("META_VOICE_DEFAULT", "female") === "male" ? "male" : "female"),
 
   waToken: () => get("WHATSAPP_ACCESS_TOKEN"),
   waPhoneNumberId: () => get("WHATSAPP_PHONE_NUMBER_ID"),
@@ -66,6 +62,15 @@ export const env = {
   waGraphVersion: () => get("WHATSAPP_GRAPH_VERSION", "v23.0"),
   /** Approved UTILITY template used for pledge reminders outside the 24h window ("off" disables). */
   waReminderTemplate: () => get("WHATSAPP_REMINDER_TEMPLATE", "pledge_reminder"),
+
+  /**
+   * Ed25519 key that signs Trust Copilot evidence cards: a base64 32-byte seed
+   * (`openssl rand -base64 32`). Keep it stable; changing it makes older cards show as signed by an old key.
+   */
+  evidenceSigningKey: () => get("EVIDENCE_SIGNING_KEY"),
+  /** Vision model that locates and re-reads receipt fields (any Muse Spark model with image input). */
+  metaVisionModel: () => get("META_VISION_MODEL", env.metaModels()[0] ?? "muse-spark-1.3"),
+  metaSegmentModel: () => get("META_SEGMENT_MODEL", "sam-3.1"),
 
   simulatorEnabled: () => get("ENABLE_SIMULATOR", "true") !== "false",
   agStudioLicense: () => get("NEXT_PUBLIC_AG_STUDIO_LICENSE_KEY"),
@@ -82,7 +87,7 @@ export function metaConfigured() {
 }
 /** Some model the agent can talk to. */
 export function aiConfigured() {
-  return Boolean(env.metaApiKey() || env.metaOpenApiKey() || env.geminiApiKey());
+  return Boolean(env.metaApiKey() || env.metaOpenApiKey());
 }
 export function whatsappConfigured() {
   return Boolean(env.waToken() && env.waPhoneNumberId());

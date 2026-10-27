@@ -1,6 +1,6 @@
 import "server-only";
 import { ApiError } from "@paypal/paypal-server-sdk";
-import { and, eq, gt, isNotNull, lt } from "drizzle-orm";
+import { and, eq, gt, isNotNull, isNull, lt, or } from "drizzle-orm";
 import { getDb, schema } from "../db";
 import { getOrderSummary } from "../paypal/orders";
 import { applyCapture, checkSnippeContribution, refreshPayout, settleOrder } from "./core";
@@ -180,7 +180,13 @@ export async function reconcile(deps: ReconcileDeps = realDeps): Promise<Reconci
     .returning({ id: processedMessages.id });
   const prunedEvents = await db
     .delete(processedEvents)
-    .where(lt(processedEvents.createdAt, new Date(now - 7 * 24 * 60 * 60_000)))
+    .where(
+      or(
+        and(isNull(processedEvents.contributionId), lt(processedEvents.createdAt, new Date(now - 7 * 24 * 60 * 60_000))),
+        // Payment events stay longer: they are the history the organiser copilot explains.
+        lt(processedEvents.createdAt, new Date(now - 90 * 24 * 60 * 60_000)),
+      ),
+    )
     .returning({ id: processedEvents.id });
   report.prunedDedupRows = pruned.length + prunedEvents.length;
 

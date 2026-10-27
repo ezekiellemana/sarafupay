@@ -95,3 +95,67 @@ export async function generateImage(prompt: string, size = "1024x1280"): Promise
   if (!b64) throw new Error("image generation returned no image");
   return { data: new Uint8Array(Buffer.from(b64, "base64")), mimeType: `image/${body.output_format ?? "png"}` };
 }
+
+/** What SarafuPay voice notes are about, so a listening model hears "mchango" and not "mchanga". */
+export const SWAHILI_VOICE_CONTEXT =
+  "The speaker is in Tanzania or Kenya, using SarafuPay to collect and manage money for a group (wedding, funeral, club, church, team). " +
+  "Expect Swahili, often mixed with English words (cash, M-Pesa, PayPal, link), names of people, and amounts in Swahili words " +
+  "(elfu ishirini = 20,000; laki moja = 100,000). Common words: mchango (contribution), michango, amenilipa (has paid me), " +
+  "hajalipa (hasn't paid), ahadi (pledge), kiasi gani (how much), tumefikisha (we have reached), salio (balance), toa pesa (withdraw).";
+
+/**
+ * Speech to text with Muse Spark Open (Meta's open weights, served on Baseten), which listens to
+ * audio directly and, unlike Muse Voice Transcribe, has Swahili. Returns null when it isn't
+ * configured or heard nothing.
+ */
+/** Muse Spark Open now and then answers as if no audio was attached; that reply is not a transcript. */
+const DEAF = /\b(no (audio|voice note)|(can(no|')t|unable to|don't have (the ability|access)( to)?) (hear|listen|access|transcribe)|audio (file )?(was|is) (not )?(attached|included))/i;
+
+export async function listenOpen(audio: { data: Uint8Array; mimeType: string }, opts: { context?: string; draft?: string | null } = {}): Promise<string | null> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const heard = await listenOpenOnce(audio, opts);
+    if (heard === null || !DEAF.test(heard)) return heard;
+  }
+  return null;
+}
+
+async function listenOpenOnce(audio: { data: Uint8Array; mimeType: string }, opts: { context?: string; draft?: string | null }): Promise<string | null> {
+  if (!env.metaOpenApiKey()) return null;
+  const wav = await voiceToWav(audio);
+  const prompt =
+    "Transcribe this voice note exactly as spoken, in the language spoken (usually Swahili). " +
+    (opts.context ? `Context: ${opts.context} ` : "") +
+    (opts.draft ? `A speech recogniser that doesn't know Swahili well heard: "${opts.draft}". Use it only as a hint; trust what you hear. ` : "") +
+    'Spell Swahili words in standard Swahili spelling. Reply as JSON: {"transcript":"..."}; use "" if nothing is said.';
+  const res = await fetch(`${env.metaOpenBaseUrl()}/chat/completions`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${env.metaOpenApiKey()}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: env.metaOpenModel(),
+      max_tokens: 3000,
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: prompt },
+            { type: "input_audio", input_audio: { data: Buffer.from(wav).toString("base64"), format: "wav" } },
+          ],
+        },
+      ],
+    }),
+  });
+  if (!res.ok) throw new Error(`listen failed ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  const body = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+  const content = body.choices?.[0]?.message?.content ?? "";
+  let text = content;
+  const json = /\{[\s\S]*\}/.exec(content)?.[0];
+  if (json) {
+    try {
+      text = String((JSON.parse(json) as { transcript?: unknown }).transcript ?? "");
+    } catch {
+      /* not JSON: use the raw reply */
+    }
+  }
+  text = text.trim();
+  return text ? text : null;
+}
