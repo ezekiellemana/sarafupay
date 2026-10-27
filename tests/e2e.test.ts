@@ -606,6 +606,20 @@ async function main() {
   const sp = await import("../lib/agent/speech");
   assert.equal(sp.replyLang("Sorry, I could not find that collection. Please check the code.", "sw"), "en");
   assert.equal(sp.spokenText("✅ Paid *TZS 5,000*: https://x.test/p/1", "en"), "Paid 5,000 shillings: the link is in the message.");
+  assert.equal(sp.spokenText("• Agnes - TZS 30,000 (kufikia 2026-10-31)", "sw"), "Agnes - shilingi 30,000 (kufikia tarehe 31 Oktoba)");
+  // Reply voice: the one the user picked, else the opposite of the note's pitch, else the default.
+  const tone = (hz: number) => media.encodeWav(Float32Array.from({ length: 24000 }, (_, i) => 0.5 * Math.sin((2 * Math.PI * hz * i) / 24000)), 24000);
+  assert.ok(Math.abs(sp.voicePitch(tone(220)) - 220) < 5, "pitch of a 220 Hz tone");
+  assert.equal(sp.chooseReplyVoice(null, tone(220)), "male", "higher voice → male voice");
+  assert.equal(sp.chooseReplyVoice(null, tone(120)), "female", "lower voice → female voice");
+  assert.equal(sp.chooseReplyVoice(null, tone(162)), "female", "in between → default voice");
+  assert.equal(sp.chooseReplyVoice("female", tone(220)), "female", "a picked voice always wins");
+  assert.ok(["male", "female"].includes(spoken[0].body.voice));
+
+  const swUser = (await core.getOrCreateUser(SW_VOICE, "sim"))!;
+  const voiceTools = buildTools({ user: swUser, channel: "sim" } as never);
+  await (voiceTools.set_reply_voice.execute as (a: { voice: string }) => Promise<unknown>)({ voice: "male" });
+  assert.equal((await core.getUser(swUser.id))?.replyVoice, "male", "\"nijibu kwa sauti ya kiume\" is remembered");
   const { wer } = await import("../lib/services/voice-eval");
   assert.equal(wer("Juma amenilipa elfu ishirini cash", "Juma amenilipa elfu ishirini cash."), 0);
   assert.equal(wer("Nani bado hajalipa mchango", "Nani ni bado hajalipa mchango"), 0.25);

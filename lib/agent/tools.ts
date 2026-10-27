@@ -79,6 +79,17 @@ export function buildTools(ctx: AgentContext): Record<string, Tool> {
       }),
     }),
 
+    set_reply_voice: tool({
+      description:
+        "Set which voice SarafuPay uses when it answers this user's voice notes: 'male' or 'female' (e.g. \"nijibu kwa sauti ya kiume\", \"use a woman's voice\"), or 'auto' to go back to the automatic choice.",
+      inputSchema: z.object({ voice: z.enum(["male", "female", "auto"]) }),
+      execute: safe(async ({ voice }) => {
+        await core.updateUser(ctx.user.id, { replyVoice: voice === "auto" ? null : voice });
+        await refreshUser();
+        return { ok: true, reply_voice: ctx.user.replyVoice ?? "auto" };
+      }),
+    }),
+
     create_collection: tool({
       description:
         "Create a new collection (michango) owned by the current user. Only call once you know at least a title and target amount and the user's name.",
