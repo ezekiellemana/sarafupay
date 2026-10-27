@@ -227,9 +227,10 @@ async function process(msg: Incoming): Promise<unknown> {
       });
     }
     await logToolSteps(msg.phone, usedModel, toolSteps).catch((e) => console.warn("[agent] action log failed", e));
-    // A voice note gets a voice note back (then the text, which keeps links and details).
-    if (reply && msg.audio && speechConfigured()) await replyByVoice(msg, ctx.user.replyVoice ?? null, reply, replyLang(reply, lang));
+    // The text goes first (it has the links and details, and the voice server may need ~30 s to wake);
+    // a voice note then gets a voice note back.
     if (reply) await sendTo(msg.phone, reply);
+    if (reply && msg.audio && speechConfigured()) await replyByVoice(msg, ctx.user.replyVoice ?? null, reply, replyLang(reply, lang));
   } catch (e) {
     console.error("[agent] generation failed", e);
     await sendTo(msg.phone, t(lang, "😕 Samahani, nimepata hitilafu kidogo. Tafadhali jaribu tena baada ya muda mfupi.", "😕 Sorry, I hit a problem just now. Please try again in a moment."));
