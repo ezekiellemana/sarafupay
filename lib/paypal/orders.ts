@@ -4,6 +4,7 @@ import {
   CheckoutPaymentIntent,
   CustomError,
   OrdersController,
+  PaypalExperienceLandingPage,
   PaypalExperienceUserAction,
   PaypalWalletContextShippingPreference,
   type Order,
@@ -43,6 +44,8 @@ export async function createContributionOrder(input: {
             brandName: "SarafuPay",
             shippingPreference: PaypalWalletContextShippingPreference.NoShipping,
             userAction: PaypalExperienceUserAction.PayNow,
+            // Payers pick "Card" on our page: open PayPal on its card form, not its login page.
+            landingPage: PaypalExperienceLandingPage.GuestCheckout,
             returnUrl: `${env.appUrl()}/pay/return`,
             cancelUrl: `${env.appUrl()}/pay/cancel?c=${input.contributionId}`,
           },
