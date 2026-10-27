@@ -908,6 +908,41 @@ async function main() {
   assert.ok(inv.nameMatches("mama neema", "Mama Neema Joseph") && !inv.nameMatches("neema", "Juma"));
   console.log("✓ organiser copilot: diagnoses from ledger + webhooks + live status, recovers a lost webhook, drafts sent only after the organiser's yes");
 
+  // 11d4. Verification layer: the copilot's explanation is checked against what the investigation found.
+  const vc = await import("../lib/agent/verify-claims");
+  assert.deepEqual(vc.unknownFigures("Juma alilipa TZS 60,000 tarehe 2026-10-25 (2026)", '{"why":"pledged TZS 50,000 due 2026-10-25"}'), ["60000"]);
+  const checkerQueue: string[] = [];
+  vc.__setClaimCheckerForTests(
+    new MockLanguageModelV4({
+      doGenerate: async () => ({ content: [{ type: "text", text: checkerQueue.shift() ?? "" }], finishReason: { unified: "stop", raw: "stop" }, usage, warnings: [] }),
+    }),
+  );
+  const ownerLast = async () => (await inbox(OWNER)).at(-1)!;
+  // A wrong story is caught (a code check on the amount, Muse Spark on the claim) and rewritten from the facts.
+  script.push({ tool: ["investigate_payments", { code: copCol.code, name: "baraka" }] }, { text: "Baraka amelipa TZS 70,000 ✅" });
+  checkerQueue.push(
+    '{"unsupported":[{"claim":"Baraka amelipa","reason":"the facts say he pledged and has not started paying"}]}',
+    "Baraka aliahidi TZS 30,000 lakini bado hajaanza kulipa. Nitume kumbusho?",
+    '{"unsupported":[]}',
+  );
+  await say(OWNER, "Baraka amelipa?");
+  assert.equal(await ownerLast(), "Baraka aliahidi TZS 30,000 lakini bado hajaanza kulipa. Nitume kumbusho?", "the corrected reply is what the organiser sees");
+  const vlog = (await log.actionsFor(copCol.code)).find((a) => a.tool === "verify_claims")!;
+  assert.ok(vlog.ok === "yes" && vlog.result!.startsWith("corrected") && vlog.result!.includes("70000"), "the correction is in the activity log");
+  // A rewrite that is still wrong is sent with a warning instead of as fact.
+  script.push({ tool: ["investigate_payments", { code: copCol.code, name: "baraka" }] }, { text: "Baraka amelipa TZS 70,000 kwa mchango ✅" });
+  checkerQueue.push('{"unsupported":[]}', "Baraka alilipa TZS 70,000.", '{"unsupported":[]}');
+  await say(OWNER, "Baraka amelipa?");
+  assert.match(await ownerLast(), /^Baraka amelipa TZS 70,000 kwa mchango ✅[\s\S]*⚠️ Sikuweza kuthibitisha/);
+  // A supported reply goes out unchanged.
+  script.push({ tool: ["investigate_payments", { code: copCol.code, name: "baraka" }] }, { text: "Baraka aliahidi TZS 30,000 lakini bado hajaanza kulipa." });
+  checkerQueue.push('{"unsupported":[]}');
+  await say(OWNER, "Na Baraka?");
+  assert.equal(await ownerLast(), "Baraka aliahidi TZS 30,000 lakini bado hajaanza kulipa.");
+  assert.equal(checkerQueue.length, 0);
+  vc.__setClaimCheckerForTests(undefined);
+  console.log("✓ verification layer: copilot explanations checked against the investigation (code + Muse Spark), corrected or flagged, logged");
+
   // 11e. Share card drawn by Muse Image, stored, served and sent as an image message.
   process.env.MODEL_API_KEY = "meta_test";
   let imgPrompt = "";
