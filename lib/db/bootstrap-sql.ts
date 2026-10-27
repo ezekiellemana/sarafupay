@@ -133,6 +133,7 @@ ALTER TABLE contributions ADD COLUMN IF NOT EXISTS net_cents bigint;
 ALTER TABLE contributions ADD COLUMN IF NOT EXISTS rate_json text;
 ALTER TABLE contributions ADD COLUMN IF NOT EXISTS pay_currency text;
 ALTER TABLE contributions ADD COLUMN IF NOT EXISTS pay_amount_cents bigint;
+ALTER TABLE contributions ADD COLUMN IF NOT EXISTS thanked_at timestamptz;
 ALTER TABLE contributions ADD COLUMN IF NOT EXISTS fx_rate text;
 CREATE INDEX IF NOT EXISTS contrib_provider_ref_idx ON contributions (provider_ref);
 ALTER TABLE payouts ADD COLUMN IF NOT EXISTS method text NOT NULL DEFAULT 'paypal';

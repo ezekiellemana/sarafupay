@@ -23,7 +23,7 @@ Every Trust Copilot decision now leaves a signed evidence card that anyone can c
 - **Muse Spark Open listens to Swahili voice notes:** the WhatsApp voice note is decoded to WAV and sent to Muse Spark Open on Baseten as audio, with a short description of what SarafuPay voice notes are about and Muse Voice Transcribe's draft as a hint.
 - **Measured, not guessed:** on 12 real Swahili voice notes from 4 speakers, Muse Spark Open makes about 40% fewer word errors than Muse Voice Transcribe (29–34% vs 55% word error rate, mean of two runs). Method and results: [docs/SWAHILI_VOICE_EVAL.md](docs/SWAHILI_VOICE_EVAL.md). The recordings stay private; `npm run eval:voice -- <folder>` reruns it.
 - **Falls back safely:** if Muse Spark Open is unavailable, the agent uses Muse Voice Transcribe's draft; if nothing was heard, it asks the person to resend or type.
-- **Voice in, voice out:** a voice note gets a voice note back in the speaker's language, then the text with links and details. The speaking is Meta's open **Seamless M4T v2** on our own voice server (`voice-server/`, one male and one female voice picked from its 200 built-in speakers). The reply uses the opposite voice of the note's pitch (a higher voice hears the male voice), or the voice the person asked for ("nijibu kwa sauti ya kike"), which is remembered. Only the voice choice is stored. Live run: Muse Spark Open heard a Swahili voice note, Muse Spark answered, and Muse Spark Open listening back to the Seamless reply heard every sentence.
+- **Voice in, voice out:** a voice note gets the text reply at once (with links and details), then a voice note in the speaker's language. The speaking is Meta's open **Seamless M4T v2** on our own voice server (`voice-server/`, one male and one female voice picked from its 200 built-in speakers). The reply uses the opposite voice of the note's pitch (a higher voice hears the male voice), or the voice the person asked for ("nijibu kwa sauti ya kike"), which is remembered. Only the voice choice is stored. Live run: Muse Spark Open heard a Swahili voice note, Muse Spark answered, and Muse Spark Open listening back to the Seamless reply heard every sentence.
 - **Safer voice payments:** before recording money from a voice note alone, the agent repeats the payer and amount back and records only after the organiser confirms.
 
 ### 3. Kiswahili organiser copilot
@@ -35,6 +35,17 @@ An organiser asks "nani bado hajalipa?" or "kwa nini malipo ya Juma bado yanasub
 - **Names what happened:** started paying but never entered the PIN, checkout expired, pay link never opened, pledged but not started (and whether it's overdue), outside payment waiting for the organiser, or a receipt that failed the checks. Each comes with a timeline in East Africa time.
 - **Checks its own explanation:** before the organiser sees the reply, a verification layer outside the agent's control checks it against what the investigation found. Code checks that every amount and date in the reply was actually found, and a separate Muse Spark call checks every claim against the facts. A reply that fails is rewritten from the facts and checked again; if it still fails, it goes out with a warning instead of as fact. Each verdict (verified, corrected, flagged) is in the organiser's activity log. Live test: a reply claiming "Juma alishalipa… benki imechelewesha" and "Baraka alikataa kulipa kwa sababu ya ugonjwa" had all three invented claims caught and was rewritten to what the records show.
 - **Drafts, then waits:** where a nudge would help, it drafts a reminder in the payer's own language, worded for what happened ("tuliona ulianza kulipa… lakini bado hatujapokea uthibitisho"). Nothing goes out until the organiser says yes. Each draft is sent once, with a fresh pay link, and expires after 24 hours.
+
+### 4. Personal thank-you videos
+
+An organiser says "watumie asante wote waliolipa" and everyone who paid gets a short video on WhatsApp, with their own name and amount spoken in their own language:
+
+- **Muse Image** draws a thank-you card in the collection's mood (marigolds for a wedding, calm dusk for a funeral).
+- **Muse Wonder** animates it into a short clip. Wonder isn't enabled for our key yet, so until it is, the card itself is used with a slow zoom; the request is already built and tested, so the clips switch on by themselves once Meta turns access on.
+- **Seamless M4T v2** speaks "Asante sana Asha! Esther anakushukuru kwa mchango wako wa shilingi 20,000…" over it, on our voice server, which also puts picture and voice together into a WhatsApp video.
+- **The words come from the records,** not from a model, so names and amounts are always right. Each contribution gets one video; if one fails, it isn't marked as thanked, so asking again retries it. The organiser gets a summary and a copy of the first video.
+
+Live test: two videos (one Swahili, one English) made and delivered in 78 s on CPU.
 
 ### All AI is Meta
 
@@ -48,4 +59,6 @@ Gemini (a backup brain before the hackathon) and the dashboard chat's Gemini rou
 | Muse Spark 1.3 | Agent brain; field location and crop read-back | Agent existed; field location and read-back are new |
 | Muse Spark Open (Baseten) | Fallback agent brain; fallback for field location and read-back; hears Swahili voice notes | Existing route, new host; vision fallback and Swahili listening are new |
 | Muse Voice Transcribe | Voice notes; draft hint for Swahili | Existing; use as a hint is new |
-| Seamless M4T v2 (open weights, self-hosted) | Spoken Swahili and English replies to voice notes | Yes |
+| Seamless M4T v2 (open weights, self-hosted) | Spoken Swahili and English replies to voice notes; the voice in thank-you videos | Yes |
+| Muse Image | Share cards; thank-you video cards | Share cards existed; thank-you cards are new |
+| Muse Wonder | Animates the thank-you card (switches on when enabled for our key) | Yes |
