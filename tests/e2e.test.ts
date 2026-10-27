@@ -605,6 +605,114 @@ async function main() {
   assert.equal((await trust.offlineSummary(trustCol.id)).confirmed[0].totalCents, 25_000_00);
   console.log("✓ Trust Copilot: receipt photo recorded, pledge matched, duplicates flagged, claims need the organiser");
 
+  // 11c2. Evidence cards: every decision above is a signed, hash-chained card; tampering shows.
+  const ev = await import("../lib/services/evidence");
+  const chain = await ev.chainFor(trustCol.id);
+  assert.deepEqual(
+    chain.map((c) => (JSON.parse(c.body) as { action: string }).action),
+    ["recorded", "recorded", "recorded", "claimed", "confirmed"],
+    "one card per decision, the organiser's confirmation included",
+  );
+  assert.deepEqual(await ev.verifyChain(trustCol.id), { ok: true, length: 5, brokenAt: null });
+  const firstBody = JSON.parse(chain[0].body) as import("../lib/services/evidence").EvidenceBody;
+  assert.equal(firstBody.prev, null);
+  assert.equal((JSON.parse(chain[1].body) as { prev: string }).prev, chain[0].hash, "each card carries the previous card's hash");
+  assert.deepEqual(firstBody.decided_by, { kind: "agent", model: "test" }, "the deciding model is on the card");
+  assert.ok(firstBody.checks.some((c) => c.rule === "pledge" && c.result === "pass" && c.compared.length === 1), "the pledge it paid is named");
+  const dupCard = JSON.parse(chain[1].body) as typeof firstBody;
+  assert.ok(dupCard.checks.some((c) => c.rule === "photo_unique" && c.result === "flag" && c.compared[0] === off.records[0].id), "the duplicate names the row it duplicates");
+  // Anyone can verify a card with the public key alone.
+  const { GET: proofRoute } = await import("../app/api/proof/[id]/route");
+  const pr = (await (await proofRoute(new Request("https://x"), { params: Promise.resolve({ id: chain[0].id }) })).json()) as { body: string; hash: string; sig: string; publicKey: string; devKey: boolean };
+  const nodeCrypto = await import("node:crypto");
+  assert.equal(nodeCrypto.createHash("sha256").update(pr.body).digest("hex"), pr.hash);
+  const pub = nodeCrypto.createPublicKey({ key: Buffer.concat([Buffer.from("302a300506032b6570032100", "hex"), Buffer.from(pr.publicKey, "base64url")]), format: "der", type: "spki" });
+  assert.ok(nodeCrypto.verify(null, Buffer.from(pr.hash, "hex"), pub, Buffer.from(pr.sig, "base64url")), "signature verifies with the published key");
+  assert.equal(pr.devKey, true);
+  assert.equal((await proofRoute(new Request("https://x"), { params: Promise.resolve({ id: "ev_nope" }) })).status, 404);
+  // Editing a card's body (say, the amount) breaks the chain at that card.
+  const tampered = chain[1].body.replace('"amount":15000', '"amount":1500');
+  assert.notEqual(tampered, chain[1].body);
+  await db.update(schema.evidenceCards).set({ body: tampered }).where(eq(schema.evidenceCards.id, chain[1].id));
+  assert.deepEqual(await ev.verifyChain(trustCol.id), { ok: false, length: 5, brokenAt: 2 });
+  await db.update(schema.evidenceCards).set({ body: chain[1].body }).where(eq(schema.evidenceCards.id, chain[1].id));
+  // Deleting a card leaves a gap.
+  await db.delete(schema.evidenceCards).where(eq(schema.evidenceCards.id, chain[2].id));
+  assert.equal((await ev.verifyChain(trustCol.id)).brokenAt, 4);
+  await db.insert(schema.evidenceCards).values(chain[2]);
+  assert.equal((await ev.verifyChain(trustCol.id)).ok, true);
+  console.log("✓ evidence cards: one per decision, hash-chained, Ed25519-signed, tampering and deletion detected");
+
+  // 11c3. SAM 3.1 receipt crops: SAM finds the receipt, Muse Spark points at the fields, SAM refines,
+  // Muse Spark re-reads each crop. A crop that disagrees with the record sends it to review.
+  process.env.MODEL_API_KEY = "meta_test";
+  const sharpMod = (await import("sharp")).default;
+  const receiptPng = await sharpMod({ create: { width: 300, height: 400, channels: 3, background: "#ffffff" } }).png().toBuffer();
+  let amountRead = "TSH 20,000.00";
+  const samPrompts: string[] = [];
+  const sse = (lines: string[]) =>
+    new Response(
+      ["event: response.created", 'data: {"type":"response.created"}', "", ...lines.flatMap((l) => [`data: ${JSON.stringify({ type: "response.output_text.delta", delta: l })}`, ""]), 'data: {"type":"response.completed"}', ""].join("\n"),
+      { headers: { "Content-Type": "text/event-stream" } },
+    );
+  metaHandler = (url, init) => {
+    const body = JSON.parse(String(init?.body));
+    if (url.endsWith("/v1/responses")) {
+      assert.equal(body.model, "sam-3.1");
+      const text = body.input[0].content[0].text as string;
+      assert.match(body.input[0].content[1].image_url, /^data:image\/png;base64,/);
+      samPrompts.push(text);
+      if (text === "receipt") return sse(["<0f>0<|box;x1=20;y1=30;x2=280;y2=380;w=300;h=400|><|mask;x=0;y=0;data=2,2,~abc|>"]);
+      // Box prompts: refine each object a little tighter, keeping its id.
+      return sse([text.replace(/x1=(\d+);y1=(\d+);x2=(\d+);y2=(\d+);w=(\d+);h=(\d+)\|>/g, (_m, a, b, c, d, w, h) => `x1=${+a + 2};y1=${+b + 1};x2=${+c - 2};y2=${+d - 1};w=${w};h=${h}|><|mask;x=0;y=0;data=1,1,~x|>`)]);
+    }
+    assert.ok(url.endsWith("/v1/chat/completions"));
+    assert.equal(body.model, "muse-spark-1.3");
+    const ask = body.messages[0].content[0].text as string;
+    const content = ask.includes("Find the printed AMOUNT")
+      ? { fields: [{ field: "amount", text: "Amount: TSH 20,000.00", box: [40, 200, 220, 230] }, { field: "reference", text: "Trans ID: AB12CD34", box: [40, 120, 200, 145] }] }
+      : ask.includes("amount of money")
+        ? { text: amountRead }
+        : { text: "AB12CD34" };
+    return Response.json({ choices: [{ message: { content: JSON.stringify(content) } }] });
+  };
+  const withCrops = await trust.recordOffline({
+    collection: trustCol, by: owner, displayName: "Neema", amountCents: 20_000_00, currency: "TZS", method: "mobile_money", reference: "AB12CD34",
+    evidence: "photo", imageHash: "hash-neema", image: { data: new Uint8Array(receiptPng), mimeType: "image/png" }, model: "meta:muse-spark-1.3",
+  });
+  assert.equal(withCrops.record.checkStatus, "ok");
+  assert.match(withCrops.proofUrl ?? "", /^https:\/\/sarafupay\.test\/proof\/ev_[a-f0-9]{16}$/);
+  assert.equal(samPrompts[0], "receipt");
+  assert.equal(samPrompts[1], "<0f>1<|box;x1=40;y1=200;x2=220;y2=230;w=300;h=400|>,2<|box;x1=40;y1=120;x2=200;y2=145;w=300;h=400|>", "SAM 3.1 refines Muse Spark's boxes");
+  const cropCard = (await ev.getCard(withCrops.proofUrl!.split("/").pop()!))!;
+  const cropBody = JSON.parse(cropCard.body) as typeof firstBody;
+  assert.deepEqual(
+    cropBody.crops.map((c) => [c.field, c.boxBy, c.box, c.read, c.matches]),
+    [
+      ["amount", "sam-3.1", [42, 201, 218, 229], "TSH 20,000.00", true],
+      ["reference", "sam-3.1", [42, 121, 198, 144], "AB12CD34", true],
+    ],
+  );
+  assert.ok(cropBody.checks.filter((c) => c.rule === "crop_readback").every((c) => c.result === "pass"));
+  assert.ok(cropBody.notes.some((n) => n.includes("SAM 3.1 located the receipt")));
+  const cropMedia = /img_[a-f0-9]{16}/.exec(cropBody.crops[0].url)![0];
+  const { GET: mediaGet } = await import("../app/api/media/[id]/route");
+  const cropServed = await mediaGet(new Request("https://x"), { params: Promise.resolve({ id: cropMedia }) });
+  assert.equal(cropServed.headers.get("content-type"), "image/png");
+  const cropMeta = await sharpMod(Buffer.from(await cropServed.arrayBuffer())).metadata();
+  assert.ok(cropMeta.width! < 300 && cropMeta.height! < 100, "only the field is kept, not the whole receipt");
+
+  amountRead = "TSH 2,000.00";
+  const misread = await trust.recordOffline({
+    collection: trustCol, by: owner, displayName: "Baraka", amountCents: 20_000_00, currency: "TZS", method: "mobile_money", reference: "AB12CD35",
+    evidence: "photo", imageHash: "hash-baraka", image: { data: new Uint8Array(receiptPng), mimeType: "image/png" }, model: "meta:muse-spark-1.3",
+  });
+  assert.equal(misread.record.checkStatus, "review", "a crop that disagrees with the record sends it to review");
+  assert.match(misread.record.checkNote ?? "", /amount reads "TSH 2,000.00"/);
+  assert.equal((await ev.verifyChain(trustCol.id)).length, 7);
+  delete process.env.MODEL_API_KEY;
+  console.log("✓ SAM 3.1 receipt crops: receipt found, fields refined and cropped, read-back mismatch sent to review");
+
   // 11d. Treasurer autopilot: due-date reminders, weekly report, one deadline note. Never moves money.
   const ap = await import("../lib/services/autopilot");
   const rehema = await core.getOrCreateUser("sim:255700000808", "sim", "Rehema");

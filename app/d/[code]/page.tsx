@@ -9,6 +9,7 @@ import { StudioDashboard, type DashboardData } from "./studio-dashboard";
 import { CopyLink } from "./copy-link";
 import { offlineSummary } from "@/lib/services/trust";
 import { actionsFor } from "@/lib/services/agent-log";
+import { chainFor, verifyChain, type EvidenceBody } from "@/lib/services/evidence";
 
 export const metadata = { title: "SarafuPay — treasurer dashboard", robots: { index: false } };
 
@@ -18,13 +19,15 @@ export default async function DashboardPage({ params, searchParams }: PageProps<
   const { key } = await searchParams;
   const col = await ownerCollection(code, typeof key === "string" ? key : null);
   if (!col) notFound();
-  const [stats, paid, pledges, payouts, outside, actions] = await Promise.all([
+  const [stats, paid, pledges, payouts, outside, actions, evidence, chainCheck] = await Promise.all([
     collectionStats(col),
     listContributions(col.id, "paid"),
     listPledges(col.id),
     listPayouts(col.id),
     offlineSummary(col.id),
     actionsFor(col.code),
+    chainFor(col.id),
+    verifyChain(col.id),
   ]);
   const data: DashboardData = {
     contributions: paid.map((c) => ({
@@ -113,10 +116,44 @@ export default async function DashboardPage({ params, searchParams }: PageProps<
         ) : (
           <span className="shrink-0 rounded-full bg-forest/10 px-3 py-1 text-forest">🔎 All records check out</span>
         )}
+        {evidence.length ? (
+          <span
+            className={`shrink-0 rounded-full px-3 py-1 ${chainCheck.ok ? "bg-forest/10 text-forest" : "bg-terracotta/10 font-semibold text-terracotta"}`}
+            title="Every Trust Copilot decision is a signed, hash-chained evidence card."
+          >
+            🧾 {evidence.length} evidence card{evidence.length === 1 ? "" : "s"} · {chainCheck.ok ? "chain verified" : `chain broken at #${chainCheck.brokenAt}`}
+          </span>
+        ) : null}
         {outside.claimsWaiting ? (
           <span className="shrink-0 rounded-full bg-marigold/30 px-3 py-1 font-semibold text-ink">📸 {outside.claimsWaiting} waiting for you</span>
         ) : null}
       </div>
+      {evidence.length ? (
+        <details className="group border-b border-line bg-paper text-xs">
+          <summary className="flex cursor-pointer list-none items-center gap-2 px-5 py-2 text-ink-soft">
+            <span className="transition-transform group-open:rotate-90" aria-hidden>▸</span>
+            Evidence cards · {evidence.length}
+          </summary>
+          <ol className="max-h-64 space-y-1.5 overflow-y-auto px-5 pb-3">
+            {[...evidence].reverse().map((c) => {
+              const b = JSON.parse(c.body) as EvidenceBody;
+              return (
+                <li key={c.id} className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
+                  <span className="font-mono text-[11px] text-ink-soft">#{c.seq}</span>
+                  <span className={`rounded px-1.5 font-mono text-[11px] ${b.verdict === "ok" ? "bg-forest/10 text-forest" : "bg-terracotta/10 text-terracotta"}`}>{b.action}</span>
+                  <span className="min-w-0 flex-1 text-ink">
+                    {b.claim.payer} · {money(Math.round(b.claim.amount * 100), b.claim.currency)} · {b.verdict}
+                    {b.crops.length ? ` · ${b.crops.length} receipt crop${b.crops.length === 1 ? "" : "s"}` : ""}
+                  </span>
+                  <a href={`/proof/${c.id}`} target="_blank" rel="noreferrer" className="underline">
+                    proof ↗
+                  </a>
+                </li>
+              );
+            })}
+          </ol>
+        </details>
+      ) : null}
       {actions.length ? (
         <details className="group border-b border-line bg-paper text-xs">
           <summary className="flex cursor-pointer list-none items-center gap-2 px-5 py-2 text-ink-soft">
