@@ -71,6 +71,8 @@ export const contributions = pgTable(
     fxRate: text("fx_rate"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     paidAt: timestamp("paid_at", { withTimezone: true }),
+    // When a thank-you video went out to this contributor (one per contribution).
+    thankedAt: timestamp("thanked_at", { withTimezone: true }),
   },
   (t) => [index("contrib_collection_idx").on(t.collectionId), index("contrib_order_idx").on(t.paypalOrderId)],
 );

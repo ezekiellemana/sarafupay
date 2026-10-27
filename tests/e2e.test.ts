@@ -966,8 +966,106 @@ async function main() {
   assert.equal(served.headers.get("content-type"), "image/png");
   assert.equal(await served.text(), "PNGDATA");
   assert.equal((await getMediaRoute(new Request("https://x"), { params: Promise.resolve({ id: "../etc" }) })).status, 404);
-  delete process.env.MODEL_API_KEY;
   console.log("✓ share card drawn by Muse Image, stored, served and sent");
+
+  // 11f. Thank-you videos: Muse Image card (animated by Muse Wonder when enabled) with each person's
+  // thanks spoken in their language, sent as WhatsApp videos; one per contribution.
+  {
+    const ty = await import("../lib/services/thankyou");
+    process.env.META_VOICE_URL = "https://voice.sarafupay.test";
+    process.env.META_VOICE_KEY = "vk_test";
+    const owner = (await core.getOrCreateUser(OWNER, "sim"))!;
+    const tyCol = await core.createCollection({ ownerId: owner.id, title: "Sherehe ya Neema", category: "wedding", targetCents: 1_000_000_00 });
+    const payer = async (name: string, phone: string | null, amount: number, hello?: string) => {
+      const u = phone ? await core.getOrCreateUser(phone, "sim") : null;
+      if (u) await core.updateUser(u.id, { name });
+      if (phone && hello) await logInbound(phone, hello);
+      const c = await core.createContribution({ collection: tyCol, contributorId: u?.id ?? null, displayName: name, amountCents: amount * 100, source: u ? "sim" : "web" });
+      await core.applySnippePayment({ contributionId: c.id, status: "completed" });
+      return c;
+    };
+    await payer("Asha Mohamed", "sim:255700003001", 20_000, "Habari, nimechangia");
+    await payer("John Smith", "sim:255700003002", 50_000, "Hello, I just paid");
+    await payer("Web Friend", null, 10_000);
+    let wonder: "off" | "on" = "off";
+    const videoPrompts: string[] = [];
+    metaHandler = (url, init) => {
+      if (url.endsWith("/v1/images/generations")) return Response.json({ data: [{ b64_json: Buffer.from("CARDPNG").toString("base64") }], output_format: "png" });
+      if (url.endsWith("/v1/videos")) {
+        const body = JSON.parse(String(init?.body));
+        videoPrompts.push(body.prompt);
+        assert.equal(body.model, "muse-wonder-1.0");
+        assert.equal(body.input_reference.image_url, `data:image/png;base64,${Buffer.from("CARDPNG").toString("base64")}`, "Muse Wonder animates the card");
+        if (wonder === "off") return Response.json({ error: { code: "model_not_found", message: "The requested model was not found." } }, { status: 400 });
+        return Response.json({ id: "vid_1", status: "completed" });
+      }
+      if (url.endsWith("/v1/videos/vid_1/content")) return new Response("MP4CLIP");
+      throw new Error(`unexpected Meta call ${url}`);
+    };
+    const made: { auth: string | null; body: { text: string; lang: string; voice: string; image_b64?: string; video_b64?: string } }[] = [];
+    let voiceDown = false;
+    const realFetch4 = globalThis.fetch;
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input instanceof Request ? input.url : input);
+      if (url === "https://voice.sarafupay.test/video") {
+        if (voiceDown) return new Response("boom", { status: 500 });
+        made.push({ auth: new Headers(init?.headers).get("Authorization"), body: JSON.parse(String(init?.body)) });
+        return new Response("MP4DATA", { headers: { "Content-Type": "video/mp4" } });
+      }
+      return realFetch4(input, init);
+    }) as typeof fetch;
+    try {
+      script.push({ tool: ["send_thank_you_videos", { code: tyCol.code }] }, { text: "Ninatuma video za asante kwa Asha na John 🎬" });
+      await say(OWNER, "Watumie asante wote waliolipa");
+      await ty.__waitForThankYous();
+      assert.equal(made.length, 2);
+      assert.ok(made.every((m) => m.auth === "Bearer vk_test" && m.body.image_b64 === Buffer.from("CARDPNG").toString("base64")), "Muse Wonder off: the card itself");
+      const asha = made.find((m) => m.body.lang === "sw")!;
+      assert.equal(asha.body.text, "Asante sana Asha! Enzo anakushukuru kwa mchango wako wa shilingi 20,000 kwa Sherehe ya Neema. Tunathamini sana upendo wako.");
+      assert.match(made.find((m) => m.body.lang === "en")!.body.text, /^Thank you so much, John! Enzo is grateful for your contribution of 50,000 shillings to Sherehe ya Neema\./);
+      const ashaVideo = (await inbox("sim:255700003001")).find((m) => m.startsWith("🎬 https://sarafupay.test/api/media/img_"));
+      assert.ok(ashaVideo?.includes("Asante Asha! Mchango wako wa *TZS 20,000* kwa *Sherehe ya Neema* umepokelewa."), "sent as a video with a caption");
+      const vid = /img_[a-f0-9]{16}/.exec(ashaVideo!)![0];
+      const { GET: getMediaRoute2 } = await import("../app/api/media/[id]/route");
+      const servedVid = await getMediaRoute2(new Request("https://x"), { params: Promise.resolve({ id: vid }) });
+      assert.equal(servedVid.headers.get("content-type"), "video/mp4");
+      assert.ok((await inbox("sim:255700003002")).some((m) => m.startsWith("🎬 ") && m.includes("Thank you, John!")));
+      const preview = (await inbox(OWNER)).find((m) => m.startsWith("🎬 ") && m.includes("Video za asante zimetumwa kwa: Asha Mohamed, John Smith."));
+      assert.ok(preview, "the organiser gets a summary and a copy of the first video");
+      const thanked = await db.select().from(schema.contributions).where(eq(schema.contributions.collectionId, tyCol.id));
+      assert.deepEqual(thanked.filter((c) => c.thankedAt).map((c) => c.displayName).sort(), ["Asha Mohamed", "John Smith"]);
+      // One video per contribution; web payers have no WhatsApp number.
+      const again = await ty.sendThankYouVideos(tyCol, owner);
+      assert.deepEqual(again.sending, []);
+      assert.equal(again.already_thanked, 2);
+      assert.deepEqual(again.skipped, [{ name: "Web Friend", reason: "paid on the web, no WhatsApp number" }]);
+      // Muse Wonder on: the voice goes over its clip.
+      wonder = "on";
+      await payer("Baraka John", "sim:255700003003", 30_000, "Habari");
+      const one = await ty.sendThankYouVideos(tyCol, owner, "baraka");
+      assert.deepEqual(one.sending, ["Baraka John"]);
+      await ty.__waitForThankYous();
+      assert.equal(made.at(-1)!.body.video_b64, Buffer.from("MP4CLIP").toString("base64"));
+      assert.equal(made.at(-1)!.body.image_b64, undefined);
+      assert.ok(videoPrompts.every((p) => /thank-you card/.test(p)));
+      // The voice server fails: nothing is marked thanked, so asking again retries.
+      voiceDown = true;
+      await payer("Zuhura Ali", "sim:255700003004", 40_000, "Habari");
+      await ty.sendThankYouVideos(tyCol, owner, "zuhura");
+      await ty.__waitForThankYous();
+      const [z] = await db.select().from(schema.contributions).where(and(eq(schema.contributions.collectionId, tyCol.id), eq(schema.contributions.displayName, "Zuhura Ali")));
+      assert.equal(z.thankedAt, null);
+      assert.match((await inbox(OWNER)).at(-1)!, /Hazikutumwa kwa: Zuhura Ali/);
+      // Contributors can't send thank-you videos for someone else's collection.
+      script.push({ tool: ["send_thank_you_videos", { code: tyCol.code }] }, { text: "Samahani, ni mwenye mchango tu." });
+      await say("sim:255700003001", "Watumie asante");
+      assert.equal(made.length, 3);
+    } finally {
+      globalThis.fetch = realFetch4;
+      delete process.env.MODEL_API_KEY;
+    }
+    console.log("✓ thank-you videos: Muse Image card (Muse Wonder clip when enabled) + spoken thanks, one per contribution, retried on failure, owner only");
+  }
 
   // 12. Rates an admin saved before Oct 25 lose the SarafuPay payout fee once; later edits stand.
   const settingsMod = await import("../lib/services/settings");

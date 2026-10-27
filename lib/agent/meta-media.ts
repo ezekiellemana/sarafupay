@@ -159,3 +159,47 @@ async function listenOpenOnce(audio: { data: Uint8Array; mimeType: string }, opt
   text = text.trim();
   return text ? text : null;
 }
+
+/**
+ * A short clip from Muse Wonder, Meta's video model, as MP4 bytes; `image` (a still to animate) is
+ * optional. Returns null while Muse Wonder isn't enabled for our key ("model_not_found"), so callers
+ * fall back to a Muse Image still. Video jobs run asynchronously: start one, poll it, download it.
+ */
+export async function generateVideo(prompt: string, image?: { data: Uint8Array; mimeType: string }, opts: { timeoutMs?: number; pollMs?: number } = {}): Promise<Uint8Array | null> {
+  if (!env.metaApiKey()) return null;
+  const base = env.metaBaseUrl();
+  const res = await fetch(`${base}/videos`, {
+    method: "POST",
+    headers: { ...auth(), "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: env.metaVideoModel(),
+      prompt: prompt.slice(0, 3800),
+      ...(image ? { input_reference: { image_url: `data:${image.mimeType};base64,${Buffer.from(image.data).toString("base64")}` } } : {}),
+    }),
+  });
+  if (!res.ok) {
+    const detail = await res.text();
+    if (/model_not_found|not available|not enabled/i.test(detail) || res.status === 404) return null;
+    throw new Error(`video generation failed ${res.status}: ${detail.slice(0, 200)}`);
+  }
+  type Job = { id?: string; status?: string; url?: string; b64_json?: string; data?: { url?: string; b64_json?: string }[]; error?: { message?: string } };
+  const ready = async (j: Job): Promise<Uint8Array | null> => {
+    const b64 = j.b64_json ?? j.data?.[0]?.b64_json;
+    if (b64) return new Uint8Array(Buffer.from(b64, "base64"));
+    const url = j.url ?? j.data?.[0]?.url;
+    const content = await fetch(url ?? `${base}/videos/${j.id}/content`, url ? {} : { headers: auth() });
+    if (!content.ok) throw new Error(`video download failed ${content.status}`);
+    return new Uint8Array(await content.arrayBuffer());
+  };
+  let job = (await res.json()) as Job;
+  const deadline = Date.now() + (opts.timeoutMs ?? 180_000);
+  for (;;) {
+    if (job.status === "failed" || job.error) throw new Error(`video generation failed: ${job.error?.message ?? "unknown"}`);
+    if (!job.id || job.status === "completed" || job.status === "succeeded") return ready(job);
+    if (Date.now() > deadline) throw new Error("video generation timed out");
+    await new Promise((r) => setTimeout(r, opts.pollMs ?? 5000));
+    const poll = await fetch(`${base}/videos/${job.id}`, { headers: auth() });
+    if (!poll.ok) throw new Error(`video status failed ${poll.status}`);
+    job = (await poll.json()) as Job;
+  }
+}

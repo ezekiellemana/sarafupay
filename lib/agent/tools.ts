@@ -17,6 +17,7 @@ import { offlineSummary, recordOffline, resolveOffline } from "../services/trust
 import { sendReportNow } from "../services/autopilot";
 import { investigate, sendReminderDrafts } from "../services/investigate";
 import { makeShareCard } from "../services/sharecard";
+import { sendThankYouVideos } from "../services/thankyou";
 import { metaConfigured } from "../env";
 import { sendImageTo } from "../channels/messaging";
 
@@ -511,6 +512,25 @@ export function buildTools(ctx: AgentContext): Record<string, Tool> {
         if (i.on !== undefined) current = (await core.updateCollection(col.id, { autopilot: i.on ? "on" : "off" })) ?? col;
         const report = i.report_now ? await sendReportNow(current) : undefined;
         return { ok: true, autopilot: current.autopilot, report_sent: Boolean(report), note: report ? "The report was sent as its own message; don't repeat it." : undefined };
+      }),
+    }),
+
+    send_thank_you_videos: tool({
+      description:
+        "Owner only: send each person who paid (and hasn't had one yet) a short personal thank-you video on WhatsApp: a card drawn by Muse Image and animated by Muse Wonder, with their name and amount spoken in their language. Pass name to thank one person. Returns at once; the videos follow in about 20 s each and the organiser gets a summary plus a copy of the first. Use when the organiser asks to thank contributors (\"watumie asante\", \"thank everyone who paid\").",
+      inputSchema: z.object({ code, name: z.string().optional().describe("Only this contributor, e.g. \"Asha\"") }),
+      execute: safe(async (i) => {
+        if (!metaConfigured()) throw new ToolError("Thank-you videos need the Meta Model API, which isn't configured.");
+        const col = await mustFind(i.code);
+        mustOwn(col, ctx);
+        const r = await sendThankYouVideos(col, ctx.user, i.name);
+        if (!r.voice_ready) throw new ToolError("Thank-you videos need the voice server (META_VOICE_URL), which isn't configured.");
+        return {
+          ...r,
+          note: r.sending.length
+            ? "Videos are being made now. Tell the organiser who they're going to, that each takes about 20 seconds, and that they'll get a copy of the first. Mention anyone skipped and why."
+            : "Nobody to send to; explain using skipped and already_thanked.",
+        };
       }),
     }),
 
