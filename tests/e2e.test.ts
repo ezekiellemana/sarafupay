@@ -565,6 +565,44 @@ async function main() {
   assert.ok(voiceLog.includes("🎤 I received twenty thousand shillings from Juma in cash"), "transcript is what the agent sees and remembers");
   console.log("✓ voice note transcribed by Muse Voice Transcribe (Ogg/Opus decoded to WAV)");
 
+  // 11b2. Swahili voice notes: Muse Spark Open (open weights on Baseten) listens to the audio itself,
+  // with SarafuPay context and Muse Voice Transcribe's draft as a hint.
+  process.env.META_OPEN_API_KEY = "bt_test";
+  process.env.META_OPEN_BASE_URL = "https://inference.baseten.co/v1";
+  process.env.META_OPEN_MODEL = "meta-models/muse-spark-open-1026";
+  metaHandler = () => Response.json({ sessionId: "s2", transcript: "Mamilipa air fushini cash.", turns: [] });
+  const listenBodies: { model: string; messages: { content: { type: string; text?: string; input_audio?: { data: string; format: string } }[] }[] }[] = [];
+  const realFetch3 = globalThis.fetch;
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input instanceof Request ? input.url : input);
+    if (url === "https://inference.baseten.co/v1/chat/completions") {
+      const body = JSON.parse(String(init?.body));
+      if (body.messages[0]?.content?.[1]?.type === "input_audio") {
+        listenBodies.push(body);
+        return Response.json({ choices: [{ message: { role: "assistant", content: '{"transcript":"Juma amenilipa elfu ishirini cash"}' } }] });
+      }
+    }
+    return realFetch3(input, init);
+  }) as typeof fetch;
+  const SW_VOICE = "sim:255700000919";
+  assert.equal(await langOf(SW_VOICE), "sw");
+  script.push({ text: "Sawa, nirekodi TZS 20,000 cash kutoka kwa Juma?" });
+  await handleIncoming({ phone: SW_VOICE, channel: "sim", audio: { data: ogg, mimeType: "audio/ogg; codecs=opus" } });
+  globalThis.fetch = realFetch3;
+  assert.equal(listenBodies.length, 1);
+  assert.equal(listenBodies[0].model, "meta-models/muse-spark-open-1026");
+  const [ask, heardAudio] = listenBodies[0].messages[0].content;
+  assert.equal(heardAudio.input_audio?.format, "wav");
+  assert.equal(String.fromCharCode(...Buffer.from(heardAudio.input_audio!.data, "base64").subarray(0, 4)), "RIFF", "Muse Spark Open gets the decoded WAV");
+  assert.ok(ask.text?.includes("mchango") && ask.text.includes('"Mamilipa air fushini cash."'), "prompt carries SarafuPay context and the Voice Transcribe draft");
+  const swLog = (await db.select().from(schema.chatLog).where(eq(schema.chatLog.phone, SW_VOICE)).orderBy(asc(schema.chatLog.id))).map((r) => r.text);
+  assert.ok(swLog.includes("🎤 Juma amenilipa elfu ishirini cash"), "the agent reads what Muse Spark Open heard");
+  const { wer } = await import("../lib/services/voice-eval");
+  assert.equal(wer("Juma amenilipa elfu ishirini cash", "Juma amenilipa elfu ishirini cash."), 0);
+  assert.equal(wer("Nani bado hajalipa mchango", "Nani ni bado hajalipa mchango"), 0.25);
+  for (const k of ["META_OPEN_API_KEY", "META_OPEN_BASE_URL", "META_OPEN_MODEL"]) delete process.env[k];
+  console.log("✓ Swahili voice note heard by Muse Spark Open on Baseten, with Voice Transcribe's draft as a hint");
+
   // 11c. Trust Copilot: a receipt photo is recorded once, checked against pledges, never counted twice.
   const trustCol = await core.createCollection({ ownerId: owner.id, title: "Harusi ya Neema & Baraka", category: "wedding", targetCents: 1_000_000_00 });
   const jumaUser = await core.getOrCreateUser("sim:255700000707", "sim", "Juma");

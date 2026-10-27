@@ -9,7 +9,7 @@ import * as core from "../services/core";
 import { buildTools, type AgentContext } from "./tools";
 import { systemPrompt } from "./prompt";
 import { withModelFallback, type ModelPick } from "./models";
-import { transcribeVoice } from "./meta-media";
+import { listenOpen, SWAHILI_VOICE_CONTEXT, transcribeVoice } from "./meta-media";
 import { logToolSteps } from "../services/agent-log";
 import { langOf, t } from "../i18n";
 import { takeAiCall } from "../limits";
@@ -59,18 +59,31 @@ async function history(phone: string, limit = 16): Promise<ModelMessage[]> {
 }
 
 /**
- * Voice notes: Muse Voice Transcribe turns them into text first (it doesn't list Swahili, so
- * Swahili speakers' notes go straight to a model that listens to audio, when one is configured).
+ * Voice notes become text before the agent reads them.
+ * - Swahili speakers: Muse Spark Open (Meta's open weights) listens to the note itself, with
+ *   SarafuPay context and Muse Voice Transcribe's draft as a hint. On our Swahili test set this
+ *   roughly halves the word error rate of Muse Voice Transcribe alone (see HACKATHON.md).
+ * - Everyone else: Muse Voice Transcribe.
+ * Without either, Swahili notes go to a model that listens to audio (Gemini) when configured.
  */
 async function hearVoice(msg: Incoming, lang: "sw" | "en"): Promise<string | null> {
-  if (!msg.audio || !metaConfigured()) return null;
-  if (lang === "sw" && env.geminiApiKey()) return null;
-  try {
-    return await transcribeVoice(msg.audio, lang === "en" ? ["English"] : undefined);
-  } catch (e) {
-    console.warn("[agent] transcription failed", e instanceof Error ? e.message : e);
-    return null;
+  if (!msg.audio) return null;
+  if (lang === "sw" && !env.metaOpenApiKey() && env.geminiApiKey()) return null;
+  const draft = metaConfigured()
+    ? await transcribeVoice(msg.audio, lang === "en" ? ["English"] : undefined).catch((e) => {
+        console.warn("[agent] transcription failed", e instanceof Error ? e.message : e);
+        return null;
+      })
+    : null;
+  if (lang === "sw" && env.metaOpenApiKey()) {
+    const heard = await listenOpen(msg.audio, { context: SWAHILI_VOICE_CONTEXT, draft }).catch((e) => {
+      console.warn("[agent] Muse Spark Open listening failed", e instanceof Error ? e.message : e);
+      return null;
+    });
+    if (heard) return heard;
   }
+  if (lang === "sw" && env.geminiApiKey()) return null; // Gemini listens to the note itself
+  return draft;
 }
 
 async function process(msg: Incoming): Promise<unknown> {

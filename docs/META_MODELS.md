@@ -11,7 +11,7 @@ Set `MODEL_API_KEY` and the agent uses Meta's models; without it, it falls back 
 | Collection posters for WhatsApp groups | `muse-image-1.0` | `lib/services/sharecard.ts` |
 
 Fallback order: each Muse Spark model in `META_MODELS` (Meta Model API), then Muse Spark Open on the partner host, then each Gemini model. An account-level refusal (billing, bad key) skips straight to the next route. A Meta outage never takes the bot down.
-Muse Voice Transcribe doesn't list Swahili, so Swahili speakers' voice notes go to Gemini (which listens to audio) when it's configured.
+Muse Voice Transcribe doesn't list Swahili, so Swahili speakers' voice notes are heard by Muse Spark Open (open weights, which listens to audio) with Muse Voice Transcribe's transcript as a hint; see [SWAHILI_VOICE_EVAL.md](SWAHILI_VOICE_EVAL.md). Without Muse Spark Open they go to Gemini when it's configured.
 
 ## Agentic features
 
