@@ -21,8 +21,18 @@ function pretty(local: string): string {
  * One phone field that arranges the number as it is typed (0712 345 678). Accepts +255 / 255
  * forms and pasted numbers. Submits the ten local digits as `name`.
  */
-export function PhoneInput({ name, onChange, label = "Mobile money number" }: { name: string; onChange?: (local: string) => void; label?: string }) {
-  const [shown, setShown] = useState("");
+export function PhoneInput({
+  name,
+  onChange,
+  label = "Mobile money number",
+  defaultValue = "",
+}: {
+  name: string;
+  onChange?: (local: string) => void;
+  label?: string;
+  defaultValue?: string;
+}) {
+  const [shown, setShown] = useState(() => pretty(toLocal(defaultValue)));
   const local = toLocal(shown);
   const done = /^0[67]\d{8}$/.test(local);
 

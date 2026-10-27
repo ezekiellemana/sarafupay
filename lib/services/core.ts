@@ -392,7 +392,11 @@ export async function getContribution(id: string) {
   return c;
 }
 
-/** Starts the provider checkout for a contribution (once) and returns the URL to send the payer to. */
+/**
+ * Where to send the payer for a contribution. PayPal: its checkout (the order is created once, on
+ * click). Mobile money has no hosted page: our own page asks for the number and sends the PIN
+ * prompt straight to the phone (startMobilePayment).
+ */
 export async function startCheckout(contributionId: string): Promise<string> {
   const db = await getDb();
   const ctb = await getContribution(contributionId);
@@ -400,19 +404,7 @@ export async function startCheckout(contributionId: string): Promise<string> {
   if (ctb.status !== "pending") throw new Error("This payment link has already been used");
   const col = await getCollectionById(ctb.collectionId);
   if (!col || col.status !== "active") throw new Error("This collection is closed");
-  if (ctb.provider === "snippe") {
-    const session = await snippe.createSession({
-      contributionId: ctb.id,
-      amountTzs: Math.round(ctb.amountCents / 100),
-      description: `${col.title} (${col.code})`,
-      customerName: ctb.displayName !== "Anonymous" ? ctb.displayName : undefined,
-      customerPhone: ctb.payerPhone ?? undefined,
-      redirectUrl: `${env.appUrl()}/pay/snippe/return?c=${ctb.id}`,
-      webhookUrl: `${env.appUrl()}/api/snippe/webhook`,
-    });
-    await db.update(contributions).set({ providerRef: session.reference }).where(eq(contributions.id, ctb.id));
-    return session.checkoutUrl;
-  }
+  if (ctb.provider === "snippe") return `/pay/${ctb.id}/mobile`;
   const order = await createContributionOrder({
     contributionId: ctb.id,
     amountCents: ctb.payAmountCents ?? ctb.amountCents,
@@ -422,6 +414,43 @@ export async function startCheckout(contributionId: string): Promise<string> {
   });
   await db.update(contributions).set({ paypalOrderId: order.orderId }).where(eq(contributions.id, ctb.id));
   return order.approveUrl;
+}
+
+/**
+ * Sends the PIN prompt for a mobile money contribution straight to `phone` (USSD push). Asking
+ * again for the same number re-sends the prompt of the same payment; a new number starts a new one.
+ */
+export async function startMobilePayment(contributionId: string, phoneRaw: string): Promise<Contribution> {
+  const db = await getDb();
+  const ctb = await getContribution(contributionId);
+  if (!ctb || ctb.provider !== "snippe") throw new Error("Unknown payment link");
+  if (ctb.status !== "pending") throw new Error("This payment link has already been used");
+  const col = await getCollectionById(ctb.collectionId);
+  if (!col || col.status !== "active") throw new Error("This collection is closed");
+  const phone = snippe.normalizeTzPhone(phoneRaw);
+  if (ctb.providerRef) {
+    // Never start a second payment while the first may already have gone through.
+    const prev = await snippe.getPayment(ctb.providerRef).catch(() => null);
+    if (prev?.status === "completed") return (await applySnippePayment({ contributionId: ctb.id, status: "completed", amountTzs: prev.amountTzs })) ?? ctb;
+    if (prev?.status === "pending" && ctb.payerPhone === phone) {
+      const again = await snippe.repush(ctb.providerRef).then(
+        () => true,
+        () => false,
+      );
+      if (again) return ctb;
+    }
+  }
+  const pay = await snippe.requestPayment({
+    contributionId: ctb.id,
+    idempotencyKey: `${ctb.id}-${Date.now().toString(36)}`,
+    amountTzs: Math.round(ctb.amountCents / 100),
+    phone,
+    customerName: ctb.displayName,
+    customerEmail: ctb.payerEmail ?? undefined,
+    webhookUrl: `${env.appUrl()}/api/snippe/webhook`,
+  });
+  const [row] = await db.update(contributions).set({ providerRef: pay.reference, payerPhone: phone }).where(eq(contributions.id, ctb.id)).returning();
+  return row!;
 }
 
 /**
@@ -564,11 +593,11 @@ export async function applySnippePayment(input: {
   );
 }
 
-/** Return page / reconcile: ask Snippe for the session status and settle if paid. */
+/** Waiting page / reconcile: ask Snippe for the payment status and settle if paid. */
 export async function checkSnippeContribution(contributionId: string): Promise<Contribution | undefined> {
   const ctb = await getContribution(contributionId);
   if (!ctb || ctb.provider !== "snippe" || ctb.status !== "pending" || !ctb.providerRef) return ctb;
-  const s = await snippe.getSession(ctb.providerRef);
+  const s = await snippe.getPayment(ctb.providerRef);
   return applySnippePayment({ contributionId: ctb.id, status: s.status, amountTzs: s.amountTzs });
 }
 

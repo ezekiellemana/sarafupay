@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Logo, Progress } from "@/components/brand";
-import { collectionStats, findCollection, getContribution } from "@/lib/services/core";
+import { checkSnippeContribution, collectionStats, findCollection, getContribution } from "@/lib/services/core";
 import { money } from "@/lib/format";
 import { CoinField } from "@/components/landing/coin-field";
 import { TiltCard } from "@/components/landing/tilt-card";
@@ -16,7 +16,9 @@ export default async function Thanks({ params, searchParams }: PageProps<"/c/[co
   const { ctb: ctbId } = await searchParams;
   const col = await findCollection(code);
   if (!col) notFound();
-  const ctb = typeof ctbId === "string" ? await getContribution(ctbId) : undefined;
+  let ctb = typeof ctbId === "string" ? await getContribution(ctbId) : undefined;
+  // While the payer approves the prompt, ask Snippe too, in case its webhook is late or lost.
+  if (ctb?.provider === "snippe" && ctb.status === "pending" && ctb.collectionId === col.id) ctb = (await checkSnippeContribution(ctb.id).catch(() => undefined)) ?? ctb;
   const stats = await collectionStats(col);
   const v = await detectVisitor();
   const t = copy(v.lang).thanks;
@@ -60,6 +62,11 @@ export default async function Thanks({ params, searchParams }: PageProps<"/c/[co
                   : t.confirming}
           </p>
           {paid && ref ? <p className="mt-2 font-mono text-xs text-ink-soft">{t.ref} {ref}</p> : null}
+          {ctb?.provider === "snippe" && !paid && !failed ? (
+            <Link href={`/pay/${ctb.id}/mobile`} className="mt-3 inline-block text-sm underline">
+              {t.resend}
+            </Link>
+          ) : null}
           <div className="mt-6 text-left">
             <Progress percent={stats.percent} />
             <p className="mt-2 text-sm text-ink-soft">
