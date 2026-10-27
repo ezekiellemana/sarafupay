@@ -215,7 +215,7 @@ export async function recordOffline(i: OfflineInput): Promise<{ record: OfflineR
     verdict: check.status,
     checks: check.evidence,
     photo_sha256: i.imageHash ?? null,
-    crops: (visual?.crops ?? []).map(({ field, url, box, boxBy, read, matches }) => ({ field, url, box, boxBy, read, matches })),
+    crops: (visual?.crops ?? []).map(({ field, url, box, boxBy, read, readBy, matches }) => ({ field, url, box, boxBy, read, readBy, matches })),
     decided_by: i.model ? { kind: "agent", model: i.model } : { kind: "rules" },
     notes: [...(visual?.receiptBox ? [`SAM 3.1 located the receipt at ${visual.receiptBox.join(",")} in a ${visual.width}x${visual.height} photo`] : []), ...(visual?.notes ?? [])],
   }).catch((e) => {
