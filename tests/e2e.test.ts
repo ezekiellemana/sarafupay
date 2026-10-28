@@ -968,6 +968,10 @@ async function main() {
   // 11d4. Verification layer: the copilot's explanation is checked against what the investigation found.
   const vc = await import("../lib/agent/verify-claims");
   assert.deepEqual(vc.unknownFigures("Juma alilipa TZS 60,000 tarehe 2026-10-25 (2026)", '{"why":"pledged TZS 50,000 due 2026-10-25"}'), ["60000"]);
+  // Coverage: everyone investigated must be in the reply.
+  const two = JSON.stringify([{ cases: [{ name: "Juma Hassan" }, { name: "Baraka Mollel" }] }]);
+  assert.deepEqual(vc.missingPeople("Juma bado hajalipa.", two), ["Baraka Mollel"]);
+  assert.deepEqual(vc.missingPeople("JUMA na Baraka bado.", two), []);
   const checkerQueue: string[] = [];
   vc.__setClaimCheckerForTests(
     new MockLanguageModelV4({
