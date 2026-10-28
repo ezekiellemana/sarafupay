@@ -395,8 +395,9 @@ async function main() {
   assert.deepEqual(push.body?.details, { amount: 100_000, currency: "TZS" }, "Snippe gets whole shillings");
   assert.equal(push.body?.payment_type, "mobile");
   assert.equal(push.body?.phone_number, "255712345678");
-  assert.deepEqual(push.body?.customer, { firstname: "Halima", lastname: "Halima", email: "payments@sarafupay.app" });
-  assert.deepEqual(push.body?.metadata, { contribution_id: mm.id });
+  assert.deepEqual(push.body?.customer, { firstname: "SarafuPay", lastname: "(Halima)", email: "payments@sarafupay.app" });
+  // What the payment was for, readable in Snippe's dashboard.
+  assert.deepEqual(push.body?.metadata, { contributor: "Halima", collection: tzCol.title, collection_code: tzCol.code, via: "SarafuPay (web)", contribution_id: mm.id });
   assert.equal((await core.getContribution(mm.id))?.providerRef, "pi_T1");
   // Same number again: the same payment's prompt is re-sent. A new number: a new payment.
   await core.startMobilePayment(mm.id, "+255712345678");
@@ -417,6 +418,12 @@ async function main() {
   assert.equal(waiting.amount, "TZS 100,000");
   const { networkOf } = await import("../lib/networks");
   assert.deepEqual(["0754000111", "255688000111", "+255 621 000 111", "0999"].map(networkOf), ["M-Pesa", "Airtel Money", "HaloPesa", null]);
+  // Snippe's dashboard lists SarafuPay payments as "SarafuPay (name)".
+  const { payerName } = await import("../lib/snippe/client");
+  assert.deepEqual(payerName("Ezekiel"), { firstname: "SarafuPay", lastname: "(Ezekiel)" });
+  assert.deepEqual(payerName(" Halima  Juma Ali "), { firstname: "SarafuPay", lastname: "(Halima Juma Ali)" });
+  assert.deepEqual(payerName(""), { firstname: "SarafuPay", lastname: "(Anonymous)" });
+  assert.deepEqual(payerName("Asha 🎉", true), { firstname: "SarafuPay", lastname: "Asha" });
   const ended0 = await core.createContribution({ collection: tzCol, displayName: "Neema", amountCents: 5_000_00, source: "web", payerPhone: "0754 000 111", message: "Hongera" });
   assert.equal((await payStatus(ended0.id))!.state, "prompt_needed");
   await core.applySnippePayment({ contributionId: ended0.id, status: "expired" });

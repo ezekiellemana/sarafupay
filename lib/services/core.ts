@@ -475,6 +475,7 @@ export async function startMobilePayment(contributionId: string, phoneRaw: strin
     customerName: ctb.displayName,
     customerEmail: ctb.payerEmail ?? undefined,
     webhookUrl: `${env.appUrl()}/api/snippe/webhook`,
+    about: { contributor: ctb.displayName, collection: col.title, collection_code: col.code, message: ctb.message ?? undefined, via: `SarafuPay (${ctb.source})` },
   });
   const [row] = await db.update(contributions).set({ providerRef: pay.reference, payerPhone: phone, promptSentAt: new Date() }).where(eq(contributions.id, ctb.id)).returning();
   return row!;
