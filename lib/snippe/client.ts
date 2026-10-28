@@ -77,11 +77,14 @@ export type SnippePayment = { reference: string; status: string; amountTzs?: num
 
 const amountOf = (a: Money | number | undefined) => (typeof a === "number" ? a : a?.value);
 
-/** Splits "Halima Juma Ali" into Snippe's first and last name (both required). */
-function splitName(name: string | undefined): { firstname: string; lastname: string } {
+/**
+ * Splits "Halima Juma Ali" into Snippe's first and last name (both required). A single name is not
+ * repeated ("Ezekiel Ezekiel" in the dashboard); the last name says where it came from instead.
+ */
+export function splitName(name: string | undefined): { firstname: string; lastname: string } {
   const words = (name ?? "").trim().split(/\s+/).filter(Boolean);
-  if (!words.length || /^anonymous$/i.test(words[0])) return { firstname: "SarafuPay", lastname: "Contributor" };
-  return { firstname: words[0].slice(0, 100), lastname: (words.slice(1).join(" ") || words[0]).slice(0, 100) };
+  if (!words.length || /^anonymous$/i.test(words[0])) return { firstname: "Anonymous", lastname: "SarafuPay" };
+  return { firstname: words[0].slice(0, 100), lastname: (words.slice(1).join(" ") || "SarafuPay").slice(0, 100) };
 }
 
 /**
@@ -96,6 +99,8 @@ export async function requestPayment(input: {
   customerName?: string;
   customerEmail?: string;
   webhookUrl: string;
+  /** Shown under Metadata in Snippe's dashboard, so each payment says what it was for. */
+  about?: Record<string, string | undefined>;
 }): Promise<SnippePayment> {
   if (!Number.isInteger(input.amountTzs) || input.amountTzs < 500) throw new SnippeError("Mobile money payments start at TZS 500");
   const data = await call<PaymentData>(
@@ -108,12 +113,20 @@ export async function requestPayment(input: {
       // Snippe requires an email; contributors usually have none, so receipts go to ours.
       customer: { ...splitName(input.customerName), email: input.customerEmail || env.snippeCustomerEmail() },
       webhook_url: input.webhookUrl,
-      metadata: { contribution_id: input.contributionId },
+      metadata: { ...cleanMeta(input.about), contribution_id: input.contributionId },
     },
     input.idempotencyKey,
   );
   if (!data.reference) throw new SnippeError("Snippe returned no payment reference");
   return { reference: data.reference, status: data.status, amountTzs: amountOf(data.amount) };
+}
+
+function cleanMeta(about: Record<string, string | undefined> | undefined): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(about ?? {})
+      .map(([k, v]) => [k, (v ?? "").trim().slice(0, 200)] as const)
+      .filter(([, v]) => v),
+  );
 }
 
 /** Sends the PIN prompt for a pending payment again (the payer missed or dismissed it). */
