@@ -8,10 +8,12 @@ import type { ToolStep } from "../services/agent-log";
  *
  * When a reply explains payments found by investigate_payments, it is checked before the organiser
  * sees it:
- * 1. Code: every amount and date in the reply must appear in what the investigation found.
+ * 1. Code: every amount and date in the reply must appear in what the investigation found, and
+ *    every person the investigation looked at must be in the reply (nobody silently left out).
  * 2. Muse Spark: each claim in the reply must be supported by the investigation's facts.
- * A reply that fails is rewritten once from the facts alone and checked again. If it still fails,
- * the original is sent with a warning, so the organiser is never told an unchecked story as fact.
+ * A reply that fails is rewritten from the facts with the problems as feedback and checked again,
+ * up to twice. If it still fails, the original is sent with a warning, so the organiser is never
+ * told an unchecked story as fact.
  */
 
 export type ClaimCheck = {
@@ -39,6 +41,24 @@ export function unknownFigures(reply: string, facts: string): string[] {
   const known = new Set(figures(facts));
   for (const d of facts.matchAll(/(\d{4})-\d{2}-\d{2}/g)) known.add(d[1]); // "2026" on its own
   return figures(reply).filter((f) => !known.has(f));
+}
+
+const fold = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+
+/** People the investigation looked at whom the reply never mentions (by first name). */
+export function missingPeople(reply: string, facts: string): string[] {
+  let names: string[] = [];
+  try {
+    const found = JSON.parse(facts) as { cases?: { name?: string }[] }[];
+    names = found.flatMap((f) => (f.cases ?? []).map((c) => c.name ?? "")).filter(Boolean);
+  } catch {
+    return [];
+  }
+  const text = fold(reply);
+  return [...new Set(names)].filter((n) => {
+    const first = fold(n).split(/\s+/)[0];
+    return first && !text.includes(first);
+  });
 }
 
 /** The investigation results this turn, or null when the reply needs no check. */
@@ -88,7 +108,10 @@ function parseUnsupported(text: string): string[] | null {
 }
 
 async function problemsIn(reply: string, facts: string): Promise<{ problems: string[]; modelChecked: boolean }> {
-  const problems = unknownFigures(reply, facts).map((f) => `"${f}" is not an amount or date the investigation found`);
+  const problems = [
+    ...unknownFigures(reply, facts).map((f) => `"${f}" is not an amount or date the investigation found`),
+    ...missingPeople(reply, facts).map((n) => `${n} was investigated but the reply leaves them out`),
+  ];
   let modelChecked = false;
   try {
     const raw = await ask(CHECK.replace("{facts}", facts).replace("{reply}", reply));
@@ -107,14 +130,20 @@ async function problemsIn(reply: string, facts: string): Promise<{ problems: str
 export async function checkReply(reply: string, facts: string, lang: "sw" | "en"): Promise<ClaimCheck> {
   const first = await problemsIn(reply, facts);
   if (!first.problems.length) return { verdict: first.modelChecked ? "verified" : "unchecked", problems: [], reply };
-  try {
-    const fixed = await ask(FIX.replace("{problems}", first.problems.map((p) => `- ${p}`).join("\n")).replace("{facts}", facts).replace("{reply}", reply));
-    if (fixed) {
+  // Each rewrite gets the problems the last check found, so it can fix exactly those.
+  let draft = reply;
+  let problems = first.problems;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const fixed = await ask(FIX.replace("{problems}", problems.map((p) => `- ${p}`).join("\n")).replace("{facts}", facts).replace("{reply}", draft));
+      if (!fixed) break;
       const again = await problemsIn(fixed, facts);
       if (!again.problems.length) return { verdict: "corrected", problems: first.problems, reply: fixed };
+      [draft, problems] = [fixed, again.problems];
+    } catch (e) {
+      console.warn("[verify-claims] rewrite failed", e);
+      break;
     }
-  } catch (e) {
-    console.warn("[verify-claims] rewrite failed", e);
   }
   const note =
     lang === "sw"
