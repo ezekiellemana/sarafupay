@@ -78,13 +78,13 @@ export type SnippePayment = { reference: string; status: string; amountTzs?: num
 const amountOf = (a: Money | number | undefined) => (typeof a === "number" ? a : a?.value);
 
 /**
- * Splits "Halima Juma Ali" into Snippe's first and last name (both required). A single name is not
- * repeated ("Ezekiel Ezekiel" in the dashboard); the last name says where it came from instead.
+ * How the payer appears in Snippe's dashboard list: "SarafuPay (Halima Juma)", so SarafuPay's
+ * payments stand out from other apps on the account. The details sit under Metadata.
+ * `plain` drops the brackets, for a retry if Snippe ever refuses them.
  */
-export function splitName(name: string | undefined): { firstname: string; lastname: string } {
-  const words = (name ?? "").trim().split(/\s+/).filter(Boolean);
-  if (!words.length || /^anonymous$/i.test(words[0])) return { firstname: "Anonymous", lastname: "SarafuPay" };
-  return { firstname: words[0].slice(0, 100), lastname: (words.slice(1).join(" ") || "SarafuPay").slice(0, 100) };
+export function payerName(name: string | undefined, plain = false): { firstname: string; lastname: string } {
+  const clean = (name ?? "").trim().replace(/\s+/g, " ").slice(0, 90) || "Anonymous";
+  return { firstname: "SarafuPay", lastname: plain ? clean.replace(/[^\p{L}\p{N} .'-]/gu, "").trim() || "Contributor" : `(${clean})` };
 }
 
 /**
@@ -103,20 +103,26 @@ export async function requestPayment(input: {
   about?: Record<string, string | undefined>;
 }): Promise<SnippePayment> {
   if (!Number.isInteger(input.amountTzs) || input.amountTzs < 500) throw new SnippeError("Mobile money payments start at TZS 500");
-  const data = await call<PaymentData>(
-    "POST",
-    "/v1/payments",
-    {
-      payment_type: "mobile",
-      details: { amount: input.amountTzs, currency: "TZS" },
-      phone_number: normalizeTzPhone(input.phone),
-      // Snippe requires an email; contributors usually have none, so receipts go to ours.
-      customer: { ...splitName(input.customerName), email: input.customerEmail || env.snippeCustomerEmail() },
-      webhook_url: input.webhookUrl,
-      metadata: { ...cleanMeta(input.about), contribution_id: input.contributionId },
-    },
-    input.idempotencyKey,
-  );
+  const send = (plain: boolean) =>
+    call<PaymentData>(
+      "POST",
+      "/v1/payments",
+      {
+        payment_type: "mobile",
+        details: { amount: input.amountTzs, currency: "TZS" },
+        phone_number: normalizeTzPhone(input.phone),
+        // Snippe requires an email; contributors usually have none, so receipts go to ours.
+        customer: { ...payerName(input.customerName, plain), email: input.customerEmail || env.snippeCustomerEmail() },
+        webhook_url: input.webhookUrl,
+        metadata: { ...cleanMeta(input.about), contribution_id: input.contributionId },
+      },
+      plain ? `${input.idempotencyKey.slice(0, 28)}-p` : input.idempotencyKey,
+    );
+  // A refused request sends no prompt, so trying once more without the brackets is safe.
+  const data = await send(false).catch((e) => {
+    if (e instanceof SnippeError && (e.status === 400 || e.status === 422)) return send(true);
+    throw e;
+  });
   if (!data.reference) throw new SnippeError("Snippe returned no payment reference");
   return { reference: data.reference, status: data.status, amountTzs: amountOf(data.amount) };
 }
