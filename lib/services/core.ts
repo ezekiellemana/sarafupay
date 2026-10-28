@@ -417,6 +417,29 @@ export async function startCheckout(contributionId: string): Promise<string> {
 }
 
 /**
+ * A fresh attempt at a contribution that ended without money (or that the payer wants to redo):
+ * same collection, name, amount, message and number, new id. Used values are never reopened.
+ */
+export async function retryContribution(contributionId: string): Promise<Contribution> {
+  const prev = await getContribution(contributionId);
+  if (!prev) throw new Error("Unknown payment link");
+  if (prev.status === "paid") throw new Error("This payment link has already been used");
+  const col = await getCollectionById(prev.collectionId);
+  if (!col) throw new Error("This collection is closed");
+  return createContribution({
+    collection: col,
+    contributorId: prev.contributorId,
+    displayName: prev.displayName,
+    amountCents: prev.payAmountCents ?? prev.amountCents,
+    source: prev.source as "whatsapp" | "sim" | "web",
+    message: prev.message ?? undefined,
+    provider: prev.provider as Rail,
+    payerPhone: prev.payerPhone ?? undefined,
+    payCurrency: prev.payCurrency ?? undefined,
+  });
+}
+
+/**
  * Sends the PIN prompt for a mobile money contribution straight to `phone` (USSD push). Asking
  * again for the same number re-sends the prompt of the same payment; a new number starts a new one.
  */
@@ -437,7 +460,10 @@ export async function startMobilePayment(contributionId: string, phoneRaw: strin
         () => true,
         () => false,
       );
-      if (again) return ctb;
+      if (again) {
+        const [row] = await db.update(contributions).set({ promptSentAt: new Date() }).where(eq(contributions.id, ctb.id)).returning();
+        return row!;
+      }
     }
   }
   const pay = await snippe.requestPayment({
@@ -449,7 +475,7 @@ export async function startMobilePayment(contributionId: string, phoneRaw: strin
     customerEmail: ctb.payerEmail ?? undefined,
     webhookUrl: `${env.appUrl()}/api/snippe/webhook`,
   });
-  const [row] = await db.update(contributions).set({ providerRef: pay.reference, payerPhone: phone }).where(eq(contributions.id, ctb.id)).returning();
+  const [row] = await db.update(contributions).set({ providerRef: pay.reference, payerPhone: phone, promptSentAt: new Date() }).where(eq(contributions.id, ctb.id)).returning();
   return row!;
 }
 
@@ -564,7 +590,8 @@ export async function applySnippePayment(input: {
   if (!cur || cur.provider !== "snippe") return cur;
   const st = input.status.toLowerCase();
   if (st === "failed" || st === "expired" || st === "voided" || st === "cancelled") {
-    if (cur.status === "pending") await db.update(contributions).set({ status: "failed" }).where(and(eq(contributions.id, cur.id), eq(contributions.status, "pending")));
+    if (cur.status === "pending")
+      await db.update(contributions).set({ status: "failed", failReason: st }).where(and(eq(contributions.id, cur.id), eq(contributions.status, "pending")));
     const [c] = await db.select().from(contributions).where(eq(contributions.id, cur.id));
     return c;
   }

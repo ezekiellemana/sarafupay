@@ -407,6 +407,29 @@ async function main() {
   assert.equal(mmNow.providerRef, "pi_T2");
   assert.equal(mmNow.payerPhone, "255754000222");
   await core.startMobilePayment(mm.id, "0712 345 678");
+  // The payer's status screen: waiting for the PIN (masked number, network, prompt age), then why it ended.
+  const { payStatus } = await import("../lib/services/pay-status");
+  const waiting = (await payStatus(mm.id))!;
+  assert.equal(waiting.state, "waiting_pin");
+  assert.equal(waiting.phone, "0712 ••• 678");
+  assert.equal(waiting.network, "Mixx by Yas");
+  assert.ok(waiting.promptAge !== null && waiting.promptAge < 5);
+  assert.equal(waiting.amount, "TZS 100,000");
+  const { networkOf } = await import("../lib/networks");
+  assert.deepEqual(["0754000111", "255688000111", "+255 621 000 111", "0999"].map(networkOf), ["M-Pesa", "Airtel Money", "HaloPesa", null]);
+  const ended0 = await core.createContribution({ collection: tzCol, displayName: "Neema", amountCents: 5_000_00, source: "web", payerPhone: "0754 000 111", message: "Hongera" });
+  assert.equal((await payStatus(ended0.id))!.state, "prompt_needed");
+  await core.applySnippePayment({ contributionId: ended0.id, status: "expired" });
+  const ended = (await payStatus(ended0.id))!;
+  assert.equal(ended.state, "failed");
+  assert.equal(ended.failReason, "expired");
+  // "Try again" is a fresh attempt with the same details; the ended one is never reopened.
+  const retry = await core.retryContribution(ended0.id);
+  assert.notEqual(retry.id, ended0.id);
+  assert.deepEqual([retry.status, retry.amountCents, retry.payerPhone, retry.message, retry.provider], ["pending", 5_000_00, "255754000111", "Hongera", "snippe"]);
+  const { GET: statusRoute } = await import("../app/api/pay/status/[id]/route");
+  assert.equal((await statusRoute(new Request("https://x"), { params: Promise.resolve({ id: "ctb_nope" }) })).status, 404);
+  assert.equal(((await (await statusRoute(new Request("https://x"), { params: Promise.resolve({ id: ended0.id }) })).json()) as { failReason: string }).failReason, "expired");
   // A contribution started on the old checkout is still looked up (as a session) and settled.
   const oldCol = await core.createCollection({ ownerId: owner.id, title: "Old links", category: "other", targetCents: 100_000_00 });
   const legacy = await core.createContribution({ collection: oldCol, displayName: "Old link", amountCents: 20_000_00, source: "web" });
