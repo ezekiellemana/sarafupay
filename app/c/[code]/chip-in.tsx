@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useFormStatus } from "react-dom";
 import { AmountInput } from "./amount-input";
 import { isTzMobile, PhoneInput } from "./phone-input";
 import { PAYPAL_CURRENCIES } from "@/lib/currency";
@@ -86,11 +87,19 @@ export function ChipIn({ disabled, t, cardFirst, cardCurrency }: { disabled: boo
             {t.message} <span className="font-normal text-ink-soft">{t.optional}</span>
             <input name="message" maxLength={280} placeholder={t.msgPh} className="field mt-1.5" />
           </label>
-          <button disabled={disabled || !ready} className="btn btn-primary w-full justify-center disabled:opacity-50">
-            {method === "mobile_money" ? t.payMobile : t.payCard}
-          </button>
+          <PayButton disabled={disabled || !ready} label={method === "mobile_money" ? t.payMobile : t.payCard} busy={method === "mobile_money" ? t.busyMobile : t.busyCard} />
         </div>
       ) : null}
     </div>
+  );
+}
+
+/** The submit button, which says what is happening while the prompt is sent or the card form opens. */
+function PayButton({ disabled, label, busy }: { disabled: boolean; label: string; busy: string }) {
+  const { pending } = useFormStatus();
+  return (
+    <button disabled={disabled || pending} aria-busy={pending} className="btn btn-primary w-full justify-center disabled:opacity-50">
+      {pending ? busy : label}
+    </button>
   );
 }
