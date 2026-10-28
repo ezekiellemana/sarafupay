@@ -7,6 +7,7 @@ import { isTzMobile, PhoneInput } from "./phone-input";
 import { PAYPAL_CURRENCIES } from "@/lib/currency";
 import type { Copy } from "@/lib/copy";
 import { Card, PhoneMoney } from "@/components/icons";
+import { useFreshOnBack } from "@/components/back-nav";
 
 type Method = "mobile_money" | "card_or_paypal";
 
@@ -25,6 +26,7 @@ const currencyName = (code: string) => {
  * Submits `method`, `currency`, `amount`, `phone`, `name`, `message`.
  */
 export function ChipIn({ disabled, t, cardFirst, cardCurrency }: { disabled: boolean; t: Copy["chip"]; cardFirst: boolean; cardCurrency: string }) {
+  useFreshOnBack();
   const [method, setMethod] = useState<Method | null>(null);
   const [phone, setPhone] = useState("");
   // The server picks the visitor's own currency (from their country) when PayPal supports it.
