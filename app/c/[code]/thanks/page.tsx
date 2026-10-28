@@ -10,6 +10,7 @@ import { copy } from "@/lib/copy";
 import { collectionUrl } from "@/lib/services/links";
 import { payStatus } from "@/lib/services/pay-status";
 import { PaymentStatus, type CardFlag } from "./payment-status";
+import { BackTo } from "@/components/back-nav";
 
 export const metadata = { title: "Your payment · SarafuPay", robots: { index: false } };
 
@@ -28,6 +29,8 @@ export default async function Thanks({ params, searchParams }: PageProps<"/c/[co
       <div className="kanga" />
       <main className="relative mx-auto max-w-lg px-5 py-10 text-center sm:px-6 sm:py-12">
         <Logo />
+        {/* Back from here goes to the collection, never back into PayPal or a sent form. */}
+        <BackTo href={`/c/${col.code}`} />
         <div className="rise mt-8 sm:mt-10">
           <TiltCard className="card p-6 sm:p-8">
             {status && status.collection.code === col.code ? (

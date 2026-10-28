@@ -7,6 +7,7 @@ import {
   PaypalExperienceLandingPage,
   PaypalExperienceUserAction,
   PaypalWalletContextShippingPreference,
+  PhoneType,
   type Order,
 } from "@paypal/paypal-server-sdk";
 import { paypalSdk } from "./client";
@@ -22,6 +23,8 @@ export async function createContributionOrder(input: {
   currency: string;
   collectionTitle: string;
   collectionCode: string;
+  /** What we already know about the payer, filled into PayPal's card form so they type less. */
+  payer?: { name?: string; tzPhone?: string };
 }): Promise<CreatedOrder> {
   const orders = new OrdersController(paypalSdk());
   const { result } = await orders.createOrder({
@@ -40,6 +43,7 @@ export async function createContributionOrder(input: {
       ],
       paymentSource: {
         paypal: {
+          ...prefill(input.payer),
           experienceContext: {
             brandName: "SarafuPay",
             shippingPreference: PaypalWalletContextShippingPreference.NoShipping,
@@ -56,6 +60,17 @@ export async function createContributionOrder(input: {
   const approveUrl = result.links?.find((l) => l.rel === "payer-action" || l.rel === "approve")?.href;
   if (!result.id || !approveUrl) throw new Error("PayPal did not return an approval link");
   return { orderId: result.id, approveUrl };
+}
+
+/** Name (and a Tanzanian mobile number, when we have one) for PayPal to fill in on its card form. */
+function prefill(payer: { name?: string; tzPhone?: string } | undefined) {
+  const words = (payer?.name ?? "").trim().split(/\s+/).filter(Boolean);
+  const named = words.length && !/^anonymous$/i.test(words[0]);
+  const national = payer?.tzPhone?.replace(/\D/g, "").replace(/^255/, "");
+  return {
+    ...(named ? { name: { givenName: words[0].slice(0, 140), ...(words.length > 1 ? { surname: words.slice(1).join(" ").slice(0, 140) } : {}) } } : {}),
+    ...(national && /^[67]\d{8}$/.test(national) ? { phone: { phoneType: PhoneType.Mobile, phoneNumber: { nationalNumber: national } } } : {}),
+  };
 }
 
 export type CaptureResult = {

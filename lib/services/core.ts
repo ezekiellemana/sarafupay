@@ -411,6 +411,7 @@ export async function startCheckout(contributionId: string): Promise<string> {
     currency: ctb.payCurrency ?? ctb.currency,
     collectionTitle: col.title,
     collectionCode: col.code,
+    payer: { name: ctb.displayName, tzPhone: ctb.payerPhone ?? (ctb.contributorId ? (await getUser(ctb.contributorId))?.phone : undefined) },
   });
   await db.update(contributions).set({ paypalOrderId: order.orderId }).where(eq(contributions.id, ctb.id));
   return order.approveUrl;
