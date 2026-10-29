@@ -65,6 +65,7 @@ export function Ledger<R extends Record<string, string | number>>({
 }) {
   const [q, setQ] = useState("");
   const [sort, setSort] = useState(defaultSort);
+  const [all, setAll] = useState(false);
 
   const shown = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -78,6 +79,14 @@ export function Ledger<R extends Record<string, string | number>>({
   }, [rows, columns, q, sort]);
 
   const moneyCols = columns.filter((c) => c.kind === "money");
+  // Phones get a list instead of a table: name and amount, with date, status and note beneath.
+  const titleCol = columns[0];
+  const amountCol = moneyCols[0];
+  const dateCol = columns.find((c) => c.kind === "date");
+  const pillCol = columns.find((c) => c.kind === "pill");
+  const noteCol = columns.find((c, i) => i > 0 && c.kind === "text" && !c.key.endsWith("_ref"));
+  const PHONE_ROWS = 6;
+  const phoneRows = all ? shown : shown.slice(0, PHONE_ROWS);
   const totals = Object.fromEntries(moneyCols.map((c) => [c.key, shown.reduce((s, r) => s + Number(r[c.key] ?? 0), 0)]));
 
   const download = () => {
@@ -95,6 +104,7 @@ export function Ledger<R extends Record<string, string | number>>({
 
   return (
     <div className="flex min-h-0 flex-col">
+      {rows.length > 5 ? (
       <div className="mb-3 flex items-center gap-2">
         <input
           type="search"
@@ -113,10 +123,41 @@ export function Ledger<R extends Record<string, string | number>>({
           ⬇ CSV
         </button>
       </div>
+      ) : null}
       {rows.length === 0 ? (
         <p className="grid min-h-24 place-items-center text-center text-sm text-ink-soft">{empty}</p>
       ) : (
-        <div className="max-h-96 overflow-auto rounded-xl border border-[#eadfc8]">
+        <>
+        <ul className="divide-y divide-[#eadfc8] md:hidden">
+          {phoneRows.map((r, i) => (
+            <li key={i} className="flex items-start gap-3 py-3">
+              <span className="min-w-0 flex-1">
+                <span className="block truncate font-medium">{r[titleCol.key]}</span>
+                <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-soft">
+                  {dateCol ? <span>{shortDate(String(r[dateCol.key]))}</span> : null}
+                  {pillCol ? <Pill value={String(r[pillCol.key])} /> : null}
+                </span>
+                {noteCol && r[noteCol.key] ? (
+                  <span className="mt-1 block truncate text-xs text-ink-soft">{noteCol.key === "message" ? `“${r[noteCol.key]}”` : r[noteCol.key]}</span>
+                ) : null}
+              </span>
+              {amountCol ? <span className="shrink-0 font-semibold tabular-nums">{fmt(Number(r[amountCol.key]))}</span> : null}
+            </li>
+          ))}
+          {shown.length === 0 ? <li className="py-6 text-center text-sm text-ink-soft">Nothing matches “{q}”.</li> : null}
+          {amountCol && shown.length ? (
+            <li className="flex items-center justify-between py-3 text-sm font-bold">
+              <span>Total · {shown.length}</span>
+              <span className="tabular-nums">{fmt(totals[amountCol.key])}</span>
+            </li>
+          ) : null}
+        </ul>
+        {shown.length > PHONE_ROWS ? (
+          <button type="button" onClick={() => setAll((v) => !v)} className="mt-1 w-full rounded-full border border-line py-2 text-sm font-semibold text-ink-soft md:hidden">
+            {all ? "Show less" : `Show all ${shown.length}`}
+          </button>
+        ) : null}
+        <div className="hidden max-h-[28rem] overflow-auto rounded-xl border border-[#eadfc8] md:block">
           <table className="w-full border-collapse text-sm">
             <thead className="sticky top-0 bg-[#f6efe0] text-left text-xs text-ink-soft">
               <tr>
@@ -174,6 +215,7 @@ export function Ledger<R extends Record<string, string | number>>({
             ) : null}
           </table>
         </div>
+        </>
       )}
     </div>
   );

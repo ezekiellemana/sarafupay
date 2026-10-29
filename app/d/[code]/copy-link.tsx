@@ -17,9 +17,11 @@ export function CopyLink({ url }: { url: string }) {
           window.prompt("Copy this link", url);
         }
       }}
-      className="rounded-full border border-line bg-white px-3 py-1.5 text-sm transition-colors hover:border-forest"
+      aria-label="Copy the public link"
+      className="inline-flex h-9 items-center gap-1.5 rounded-full border border-line bg-white px-3 text-sm font-medium transition-colors hover:border-forest sm:px-4"
     >
-      {done ? "Copied ✓" : "Copy link"}
+      <span aria-hidden>{done ? "✓" : "🔗"}</span>
+      <span className="hidden sm:inline">{done ? "Copied" : "Copy link"}</span>
     </button>
   );
 }

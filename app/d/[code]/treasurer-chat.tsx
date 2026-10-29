@@ -65,9 +65,11 @@ export function TreasurerChat({ headers }: { headers: Record<string, string> }) 
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`fixed bottom-5 right-5 z-30 inline-flex items-center gap-2 rounded-full bg-forest px-5 py-3 text-sm font-semibold text-paper shadow-lg shadow-forest/30 transition hover:bg-forest-2 ${open ? "pointer-events-none opacity-0" : ""}`}
+        className={`fixed bottom-4 right-4 z-30 inline-flex items-center gap-2 rounded-full bg-forest px-4 py-3 sm:bottom-6 sm:right-6 sm:px-5 text-sm font-semibold text-paper shadow-lg shadow-forest/30 transition hover:bg-forest-2 ${open ? "pointer-events-none opacity-0" : ""}`}
       >
-        <span aria-hidden>✨</span> Ask the Treasurer
+        <span aria-hidden>✨</span>
+        <span className="sm:hidden">Ask</span>
+        <span className="hidden sm:inline">Ask the Treasurer</span>
       </button>
       <div className={`fixed inset-0 z-40 bg-ink/20 transition-opacity ${open ? "opacity-100" : "pointer-events-none opacity-0"}`} onClick={() => setOpen(false)} aria-hidden />
       <aside
