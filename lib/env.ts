@@ -75,7 +75,6 @@ export const env = {
   metaSegmentModel: () => get("META_SEGMENT_MODEL", "sam-3.1"),
 
   simulatorEnabled: () => get("ENABLE_SIMULATOR", "true") !== "false",
-  agStudioLicense: () => get("NEXT_PUBLIC_AG_STUDIO_LICENSE_KEY"),
 };
 
 export function paypalConfigured() {

@@ -49,7 +49,7 @@ Live test: two videos (one Swahili, one English) made and delivered in 78 s on C
 
 ### All AI is Meta
 
-Gemini (a backup brain before the hackathon) and the dashboard chat's Gemini route were removed: the agent, the dashboard's AG Studio chat, vision, segmentation, listening and speaking all run on Meta models. Non-AI services stay (PayPal and Snippe payments, AG Studio's charts, hosting).
+Gemini (a backup brain before the hackathon) and the dashboard chat's Gemini route were removed: the agent, the dashboard's Treasurer chat, vision, segmentation, listening and speaking all run on Meta models. Non-AI services stay (PayPal and Snippe payments, hosting).
 
 ## Meta models used
 
