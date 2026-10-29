@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Pledge scoreboard: a custom AG Studio widget.
+ * Pledge scoreboard.
  *
  * Shows who promised what as a friendly scoreboard rather than a collections report:
  * kept promises, what is still to come, who is overdue, and a "send friendly nudges"
@@ -9,13 +9,12 @@
  * The nudge reaches everyone with an open pledge, so the widget never filters itself.
  */
 
-import { useEffect, useMemo, useState } from "react";
-import type { AgWidgetField, AgWidgetParams } from "ag-studio";
+import { useState } from "react";
+import type { Fmt } from "./charts";
 
 export type NudgeResult = { ok: boolean; reminded?: string[]; error?: string };
-export type ScoreboardOptions = { currency: string; onNudge?: () => Promise<NudgeResult> };
+export type PledgeRow = { pledger: string; amount: number; due: string; status: string; reminded: string };
 
-type Mapping = "person" | "amount" | "status" | "due" | "reminded";
 type Row = { person: string; amount: number; status: string; due: Date | null; reminded: boolean };
 
 const INK = "#12261e";
@@ -24,8 +23,6 @@ const FOREST = "#0e3b2c";
 const GOLD = "#c98a0e";
 const LINE = "#eadfc8";
 const AVATAR = ["#0e3b2c", "#c98a0e", "#c4502f", "#2a6f97", "#5c7d60", "#9c6b3d"];
-
-const ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>`;
 
 const DAY = 86_400_000;
 
@@ -69,60 +66,17 @@ function rank(r: Row, today: Date) {
   return r.due ? 1 : 2;
 }
 
-export function PledgeScoreboard(params: AgWidgetParams) {
-  const { widgetApi, dataMapping, config } = params;
-  const options = (config?.options ?? {}) as ScoreboardOptions;
-  const map = dataMapping as Partial<Record<Mapping, AgWidgetField[]>>;
-  const [rows, setRows] = useState<Row[] | null>(null);
+export function PledgeScoreboard({ pledges, fmt, onNudge }: { pledges: PledgeRow[]; fmt: Fmt; onNudge?: () => Promise<NudgeResult> }) {
   const [nudge, setNudge] = useState<"idle" | "confirm" | "sending" | "done" | "error">("idle");
   const [nudgeMsg, setNudgeMsg] = useState("");
-
-  const fmt = useMemo(() => {
-    try {
-      return new Intl.NumberFormat("en-US", { style: "currency", currency: options.currency || "USD", currencyDisplay: "narrowSymbol" });
-    } catch {
-      return new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }
-  }, [options.currency]);
-
-  useEffect(() => {
-    const person = map.person?.[0];
-    const amount = map.amount?.[0];
-    if (!person || !amount) {
-      widgetApi.setDisplayState("incompleteDataMapping");
-      return;
-    }
-    const extras = (["status", "due", "reminded"] as const).map((k) => map[k]?.[0]).filter(Boolean) as AgWidgetField[];
-    let cancelled = false;
-    (async () => {
-      widgetApi.setDisplayState("loading", { prominent: rows === null });
-      try {
-        const res = await widgetApi.getData({ kind: "flat", fields: [person, ...extras, amount] });
-        if (cancelled) return;
-        const get = (row: Record<string, unknown>, f?: AgWidgetField) => (f ? row[f.key] : undefined);
-        const next: Row[] = res.results.rows.map((row) => ({
-          person: String(get(row, person) ?? "Someone"),
-          amount: Number(get(row, amount) ?? 0),
-          status: String(get(row, map.status?.[0]) ?? "open").toLowerCase(),
-          due: toDate(get(row, map.due?.[0])),
-          reminded: String(get(row, map.reminded?.[0]) ?? "").toLowerCase() === "yes",
-        }));
-        setRows(next);
-        widgetApi.setDisplayState(next.length ? "displayed" : "noData");
-      } catch {
-        if (!cancelled) widgetApi.setDisplayState("noData");
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-    // Studio hands us fresh params whenever filters, mapping or data change.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params]);
-
-  // Always render an element: Studio treats an empty widget as "not rendered yet"
-  // and, on a slow machine, never attaches it to the page.
-  if (!rows) return <div style={{ height: "100%" }} aria-busy="true" />;
+  const rows: Row[] = pledges.map((p) => ({
+    person: p.pledger || "Someone",
+    amount: p.amount,
+    status: p.status.toLowerCase(),
+    due: toDate(p.due),
+    reminded: p.reminded === "yes",
+  }));
+  if (!rows.length) return <p className="grid min-h-32 place-items-center text-center text-sm text-ink-soft">No pledges yet. When someone promises to pay later, they show up here.</p>;
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -138,10 +92,10 @@ export function PledgeScoreboard(params: AgWidgetParams) {
   const sorted = [...waiting].sort((a, b) => rank(a, today) - rank(b, today) || (a.due?.getTime() ?? 0) - (b.due?.getTime() ?? 0) || b.amount - a.amount);
 
   const sendNudges = async () => {
-    if (!options.onNudge) return;
+    if (!onNudge) return;
     setNudge("sending");
     try {
-      const r = await options.onNudge();
+      const r = await onNudge();
       if (r.ok) {
         setNudge("done");
         setNudgeMsg(r.reminded?.length ? `Nudged ${r.reminded.join(", ")} on WhatsApp.` : "Nobody needed a nudge.");
@@ -156,14 +110,14 @@ export function PledgeScoreboard(params: AgWidgetParams) {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", color: INK, fontSize: 13, minHeight: 0 }}>
+    <div style={{ display: "flex", flexDirection: "column", maxHeight: 480, color: INK, fontSize: 13, minHeight: 0 }}>
       <div style={{ padding: "2px 2px 10px" }}>
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
           <div style={{ fontWeight: 700, fontSize: 15 }}>
             {kept.length} of {live.length} promise{live.length === 1 ? "" : "s"} kept
           </div>
           <div style={{ color: MUTED, fontSize: 12 }}>
-            {fmt.format(openSum)} still to come{late ? ` · ${late} past the date` : ""}
+            {fmt(openSum)} still to come{late ? ` · ${late} past the date` : ""}
           </div>
         </div>
         <div
@@ -177,7 +131,7 @@ export function PledgeScoreboard(params: AgWidgetParams) {
           <div style={{ width: `${pct}%`, height: "100%", borderRadius: 999, background: `linear-gradient(90deg, ${FOREST}, #2f7a5a)`, transition: "width .4s" }} />
         </div>
         <div style={{ marginTop: 4, color: MUTED, fontSize: 11 }}>
-          {fmt.format(keptSum)} of {fmt.format(total)} pledged has arrived ({pct}%)
+          {fmt(keptSum)} of {fmt(total)} pledged has arrived ({pct}%)
         </div>
         {kept.length > 0 && (
           <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 6 }} aria-label="Promises kept">
@@ -193,7 +147,7 @@ export function PledgeScoreboard(params: AgWidgetParams) {
                   fontWeight: 700,
                 }}
               >
-                ✓ {r.person} · {fmt.format(r.amount)}
+                ✓ {r.person} · {fmt(r.amount)}
               </span>
             ))}
           </div>
@@ -242,7 +196,7 @@ export function PledgeScoreboard(params: AgWidgetParams) {
                   <span style={{ display: "block", fontSize: 11, color: isLate ? "#9c3d22" : MUTED }}>{whenText(r, today)}</span>
                 </span>
                 <span style={{ textAlign: "right" }}>
-                  <span style={{ display: "block", fontWeight: 700, color: isKept ? FOREST : INK }}>{fmt.format(r.amount)}</span>
+                  <span style={{ display: "block", fontWeight: 700, color: isKept ? FOREST : INK }}>{fmt(r.amount)}</span>
                   <span
                     style={{
                       display: "inline-block",
@@ -264,7 +218,7 @@ export function PledgeScoreboard(params: AgWidgetParams) {
         })}
       </ol>
 
-      {options.onNudge && open.length > 0 && (
+      {onNudge && open.length > 0 && (
         <div style={{ paddingTop: 10, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           {nudge === "idle" && (
             <button type="button" onClick={() => setNudge("confirm")} style={btn(GOLD)}>
@@ -304,56 +258,5 @@ function btn(bg: string, fg = "#fff"): React.CSSProperties {
     fontSize: 12,
     fontWeight: 700,
     cursor: "pointer",
-  };
-}
-
-/** Widget definition for `createWidgets({ additionalTypes })`. */
-export function pledgeScoreboardDefinition(options: ScoreboardOptions) {
-  return {
-    id: "pledge-scoreboard",
-    label: "Pledge scoreboard",
-    icon: ICON,
-    comp: PledgeScoreboard,
-    options,
-    defaultSize: { width: 420, height: 420 },
-    minSize: { width: 260, height: 220 },
-    dataMapping: {
-      person: { type: "field", supportedRoles: ["category"], required: true, aiDescription: "Who made the pledge." },
-      amount: {
-        type: "field",
-        supportedRoles: ["numeric"],
-        required: true,
-        requires: { per: "dataMapping.person", cardinality: "one" },
-        aiDescription: "Amount pledged.",
-      },
-      status: { type: "field", supportedRoles: ["category"], aiDescription: "Pledge status: open, fulfilled or cancelled." },
-      due: { type: "field", supportedRoles: ["temporal", "category"], aiDescription: "Date the person promised to pay." },
-      reminded: { type: "field", supportedRoles: ["category"], aiDescription: "yes/no: was a reminder already sent." },
-    },
-    defaultState: {
-      dataMapping: {
-        person: [{ id: "pledges.pledger" }],
-        amount: [{ id: "pledges.amount", aggregation: "sum" }],
-        status: [{ id: "pledges.status" }],
-        due: [{ id: "pledges.due" }],
-        reminded: [{ id: "pledges.reminded" }],
-      },
-    },
-    form: (p: { createDefaults: (o: unknown) => unknown }) =>
-      p.createDefaults({
-        dataMappingItems: [
-          { key: "person", label: "Person" },
-          { key: "amount", label: "Amount" },
-          { key: "status", label: "Status" },
-          { key: "due", label: "Due date" },
-          { key: "reminded", label: "Reminded" },
-        ],
-      }),
-    ai: {
-      label: "Pledge scoreboard",
-      description: "A friendly scoreboard of pledges: promises kept vs still to come, progress bar, per-person rows with due dates, and a button to send WhatsApp nudges.",
-      usage: "Use to show who has pledged and who still has to pay. Prefer it over a grid for pledge follow-up.",
-      configuration: "Map person to pledges.pledger, amount to pledges.amount (sum), status to pledges.status, due to pledges.due and reminded to pledges.reminded.",
-    },
   };
 }

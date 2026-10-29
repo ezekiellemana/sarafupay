@@ -70,7 +70,6 @@ services:
       - { key: WHATSAPP_DISPLAY_NUMBER, scope: RUN_TIME, value: "" }
       # Owner-only admin page: https://sarafupay.app/admin?key=<ADMIN_KEY>
       - { key: ADMIN_KEY, type: SECRET, scope: RUN_TIME, value: "" }
-      - { key: NEXT_PUBLIC_AG_STUDIO_LICENSE_KEY, scope: RUN_AND_BUILD_TIME, value: "" }
 
 jobs:
   - name: reconcile

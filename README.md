@@ -50,8 +50,8 @@ The math lives in `lib/pricing.ts` and is covered by `tests/pricing.test.ts`.
 ## Stack
 
 Next.js 16 (App Router), TypeScript, Drizzle + Postgres (PGlite locally), Vercel AI SDK with
-Meta's Muse models (Meta Model API; Muse Spark Open on a partner host), WhatsApp Cloud API, Snippe REST API, PayPal Server SDK + Payouts, AG Studio treasurer
-dashboard. Hosted on DigitalOcean App Platform (`.do/app.yaml`).
+Meta's Muse models (Meta Model API; Muse Spark Open on a partner host), WhatsApp Cloud API, Snippe REST API, PayPal Server SDK + Payouts, and a
+hand-built treasurer dashboard (plain SVG charts, no chart or grid library). Hosted on DigitalOcean App Platform (`.do/app.yaml`).
 
 ```
 app/

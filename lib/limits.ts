@@ -5,7 +5,7 @@ import { kvRun } from "./kv";
  * Cost guard for the public demo (WhatsApp number + /chat simulator are open to anyone).
  *
  * - Per sender: at most PER_PHONE_MAX AI replies per PER_PHONE_WINDOW_MS (the dashboard
- *   passes a higher cap, since one Studio question fans out into several model calls).
+ *   passes a higher cap, since one Treasurer question can take several model steps).
  * - Global: at most DAILY_AI_LIMIT AI calls per UTC day (env-tunable), so a spammer
  *   or a loop cannot drain the model credits.
  * Deterministic paths (CONFIRM/CANCEL payout codes) are never limited.
@@ -128,7 +128,7 @@ function memHit(key: string, max: number, windowMs: number): boolean {
 
 // ---------- public API ----------
 
-/** Reserve one AI call for `key` (a phone, or "studio:<code>"). */
+/** Reserve one AI call for `key` (a phone, or "dashboard:<code>"). */
 export async function takeAiCall(key: string, perWindowMax = PER_PHONE_MAX): Promise<LimitResult> {
   return (await kvTakeAiCall(key, perWindowMax)) ?? memTakeAiCall(key, perWindowMax);
 }
