@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Logo, Progress, SandboxBadge } from "@/components/brand";
-import { ownerCollection } from "@/lib/studio/auth";
+import { ownerCollection } from "@/lib/dashboard/auth";
 import { collectionStats, listContributions, listPayouts, listPledges } from "@/lib/services/core";
 import { money } from "@/lib/format";
 import { collectionUrl } from "@/lib/services/links";
-import { StudioDashboard, type DashboardData } from "./studio-dashboard";
+import { Dashboard, type DashboardData } from "./dashboard";
 import { CopyLink } from "./copy-link";
 import { offlineSummary } from "@/lib/services/trust";
 import { actionsFor } from "@/lib/services/agent-log";
@@ -36,7 +36,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps<
       channel: c.source === "sim" ? "chat" : c.source,
       paid_on: (c.paidAt ?? c.createdAt).toISOString().slice(0, 10),
       message: c.message ?? "",
-      paypal_ref: c.provider === "snippe" ? (c.providerRef ?? "") : (c.paypalCaptureId ?? ""),
+      provider_ref: c.provider === "snippe" ? (c.providerRef ?? "") : (c.paypalCaptureId ?? ""),
     })),
     pledges: pledges.map((p) => ({
       pledger: p.displayName,
@@ -54,19 +54,17 @@ export default async function DashboardPage({ params, searchParams }: PageProps<
         status: p.status,
         sent_on: (p.executedAt ?? p.createdAt).toISOString().slice(0, 10),
       })),
-    summary: [
-      {
-        target: col.targetCents / 100,
-        raised: stats.raisedCents / 100,
-        funded: col.targetCents > 0 ? stats.raisedCents / col.targetCents : 0,
-        balance: stats.availableCents / 100,
-        paid_out: stats.paidOutCents / 100,
-        open_pledges: stats.openPledgeCents / 100,
-      },
-    ],
+    summary: {
+      target: col.targetCents / 100,
+      raised: stats.raisedCents / 100,
+      balance: stats.availableCents / 100,
+      paid_out: stats.paidOutCents / 100,
+      open_pledges: stats.openPledgeCents / 100,
+      open_pledge_count: stats.openPledgeCount,
+    },
   };
   return (
-    <div className="flex h-dvh flex-col">
+    <div className="min-h-dvh bg-paper">
       <div className="kanga" />
       <header className="border-b border-line bg-[#fffaf0]">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 px-5 py-3">
@@ -172,17 +170,8 @@ export default async function DashboardPage({ params, searchParams }: PageProps<
           </ol>
         </details>
       ) : null}
-      <p className="border-b border-line bg-paper-2 px-5 py-2 text-xs text-ink-soft md:hidden">
-        Tip: the treasurer dashboard is built for bigger screens. Rotate your phone or open it on a laptop for the full view.
-      </p>
-      <main className="min-h-0 flex-1">
-        <StudioDashboard
-          code={col.code}
-          ownerKey={col.ownerKey}
-          currency={col.currency}
-          data={data}
-          licenseKey={process.env.NEXT_PUBLIC_AG_STUDIO_LICENSE_KEY ?? ""}
-        />
+      <main>
+        <Dashboard code={col.code} ownerKey={col.ownerKey} currency={col.currency} data={data} />
       </main>
     </div>
   );

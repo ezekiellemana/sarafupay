@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { ownerCollection } from "@/lib/studio/auth";
+import { ownerCollection } from "@/lib/dashboard/auth";
 import { collectionStats, remindPledgers } from "@/lib/services/core";
 import { money } from "@/lib/format";
 
-// Actions the dashboard's Treasurer agent can take. Payouts are deliberately NOT here:
+// Actions the dashboard (its buttons and its Treasurer chat) can take. Payouts are deliberately NOT here:
 // they stay in chat behind the owner's CONFIRM code.
 export async function POST(req: Request) {
   const col = await ownerCollection(req.headers.get("x-collection"), req.headers.get("x-owner-key"));
