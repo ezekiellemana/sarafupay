@@ -11,6 +11,7 @@ import * as core from "../services/core";
 import { buildTools, type AgentContext } from "./tools";
 import { systemPrompt } from "./prompt";
 import { withModelFallback, type ModelPick } from "./models";
+import { fastPlan, routeMessage, type FastPlan } from "./router";
 import { listenOpen, SWAHILI_VOICE_CONTEXT, transcribeVoice, voiceToWav } from "./meta-media";
 import { logToolSteps } from "../services/agent-log";
 import { checkReply, investigationFacts } from "./verify-claims";
@@ -143,6 +144,9 @@ async function process(msg: Incoming): Promise<unknown> {
     );
   }
 
+  // The Glimmer router reads text (and voice transcripts) while we load the user's collections.
+  const routing = msg.image ? Promise.resolve(null) : routeMessage(text);
+
   const owned = await core.listOwnedCollections(user.id);
   const ownedSummary = await Promise.all(
     owned.slice(0, 5).map(async (c) => ({ code: c.code, title: c.title, progress: core.statusLine(c, await core.collectionStats(c)) })),
@@ -176,19 +180,27 @@ async function process(msg: Incoming): Promise<unknown> {
       lang,
     });
     const messages = [...(await history(msg.phone)), current];
+    const routed = await routing;
+    let plan: FastPlan | null = fastPlan(routed?.decision ?? null, Object.keys(buildTools(ctx)));
+    // Fast path: Muse Spark sees only the tools this intent needs and reasons less.
+    const withEffort = (fast: ModelPick["fast"] | undefined) =>
+      fast && plan
+        ? Object.fromEntries(Object.entries(fast).map(([k, v]) => [k, { ...v, reasoningEffort: env.fastReasoningEffort() }]))
+        : fast;
     const runOnce = (model: Parameters<typeof generateText>[0]["model"], fast: ModelPick["fast"] | undefined) =>
       generateText({
         model,
         system,
         messages,
         tools: buildTools(ctx),
-        stopWhen: isStepCount(8),
+        ...(plan ? { activeTools: plan.activeTools } : {}),
+        stopWhen: isStepCount(plan ? plan.maxSteps : 8),
         maxOutputTokens: 1200, // WhatsApp replies are short; caps cost per step
         maxRetries: 1,
         // Chat replies should feel instant: low reasoning effort.
-        ...(fast ? { providerOptions: fast } : {}),
+        ...(withEffort(fast) ? { providerOptions: withEffort(fast) } : {}),
       });
-    const run = async (pick: Pick<ModelPick, "model" | "fast">) => {
+    const runPick = async (pick: Pick<ModelPick, "model" | "fast">) => {
       try {
         return await runOnce(pick.model, pick.fast);
       } catch (e) {
@@ -196,6 +208,20 @@ async function process(msg: Incoming): Promise<unknown> {
         if (/thinking|reasoning/i.test(e instanceof Error ? e.message : String(e))) return runOnce(pick.model, undefined);
         throw e;
       }
+    };
+    // A fast turn that fails or comes back empty is retried once on the full path, so the router can
+    // only ever make a reply faster, never lose it.
+    const run = async (pick: Pick<ModelPick, "model" | "fast">) => {
+      if (!plan) return runPick(pick);
+      try {
+        const r = await runPick(pick);
+        if (r.text.trim()) return r;
+        console.warn("[router] fast path gave no text; retrying full");
+      } catch (e) {
+        console.warn("[router] fast path failed; retrying full:", e instanceof Error ? e.message.slice(0, 160) : e);
+      }
+      plan = null;
+      return runPick(pick);
     };
     let usedModel: string | null = modelOverride ? "test" : null;
     if (modelOverride) ctx.model = "test";
@@ -213,6 +239,13 @@ async function process(msg: Incoming): Promise<unknown> {
     const toolSteps = result.steps.flatMap((st) =>
       st.toolCalls.map((c) => ({ toolName: c.toolName, input: c.input, output: st.toolResults.find((r) => r.toolCallId === c.toolCallId)?.output })),
     );
+    if (routed) {
+      toolSteps.unshift({
+        toolName: "route_message",
+        input: { model: "muse-glimmer-30b-lora", ms: routed.ms },
+        output: routed.decision ? { result: `${routed.decision.intent}/${routed.decision.lang} -> ${plan ? "fast" : "full"}` } : { error: "no decision; full path" },
+      });
+    }
     let reply = result.text.trim();
     // An explanation of who paid and why is checked against what the investigation found before it goes out.
     const facts = reply ? investigationFacts(toolSteps) : null;

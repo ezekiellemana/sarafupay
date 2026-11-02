@@ -1,0 +1,914 @@
+{
+ "report": {
+  "model": "meta:muse-spark-1.3",
+  "n": 56,
+  "fast_effort": "minimal",
+  "full": {
+   "latency_p50_ms": 1258,
+   "input_tokens_mean": 6755
+  },
+  "fast": {
+   "latency_p50_ms": 1018,
+   "input_tokens_mean": 2951
+  },
+  "same_first_action": "52/56"
+ },
+ "rows": [
+  {
+   "text": "Reply in Swahili from now on",
+   "intent": "profile_voice",
+   "full": {
+    "ms": 1735,
+    "input": 6754,
+    "output": 212,
+    "tool": "(text)"
+   },
+   "fast": {
+    "ms": 1018,
+    "input": 2702,
+    "output": 118,
+    "tool": "(text)"
+   }
+  },
+  {
+   "text": "Pledge 10k for mum's hospital bills",
+   "intent": "contribute",
+   "full": {
+    "ms": 4348,
+    "input": 6756,
+    "output": 383,
+    "tool": "(text)"
+   },
+   "fast": {
+    "ms": 1418,
+    "input": 3211,
+    "output": 180,
+    "tool": "(text)"
+   }
+  },
+  {
+   "text": "Tuna shilingi ngapi kwenye SHULE25?",
+   "intent": "collection_status",
+   "full": {
+    "ms": 1595,
+    "input": 6758,
+    "output": 129,
+    "tool": "collection_report"
+   },
+   "fast": {
+    "ms": 1728,
+    "input": 2783,
+    "output": 118,
+    "tool": "collection_report"
+   }
+  },
+  {
+   "text": "Start a harambee for Asha's graduation party",
+   "intent": "create_collection",
+   "full": {
+    "ms": 2090,
+    "input": 6757,
+    "output": 281,
+    "tool": "(text)"
+   },
+   "fast": {
+    "ms": 1173,
+    "input": 3495,
+    "output": 93,
+    "tool": "(text)"
+   }
+  },
+  {
+   "text": "Good morning, my friend told me about SarafuPay",
+   "intent": "greeting_help",
+   "full": {
+    "ms": 1991,
+    "input": 6757,
+    "output": 278,
+    "tool": "(text)"
+   },
+   "fast": {
+    "ms": 1208,
+    "input": 2648,
+    "output": 138,
+    "tool": "(text)"
+   }
+  },
+  {
+   "text": "Please anzisha mchango wa kikundi chetu cha VICOBA",
+   "intent": "create_collection",
+   "full": {
+    "ms": 1610,
+    "input": 6761,
+    "output": 223,
+    "tool": "(text)"
+   },
+   "fast": {
+    "ms": 1351,
+    "input": 3499,
+    "output": 135,
+    "tool": "(text)"
+   }
+  },
+  {
+   "text": "habari za asubuhi, nimeambiwa nijiunge hapa",
+   "intent": "greeting_help",
+   "full": {
+    "ms": 2052,
+    "input": 6761,
+    "output": 230,
+    "tool": "(text)"
+   },
+   "fast": {
+    "ms": 1435,
+    "input": 2652,
+    "output": 135,
+    "tool": "(text)"
+   }
+  },
+  {
+   "text": "pay MAMA19 $20 😊",
+   "intent": "contribute",
+   "full": {
+    "ms": 1864,
+    "input": 6754,
+    "output": 241,
+    "tool": "open_collection"
+   },
+   "fast": {
+    "ms": 794,
+    "input": 3209,
+    "output": 120,
+    "tool": "open_collection"
+   }
+  },
+  {
+   "text": "Translate 'thank you' to French",
+   "intent": "other",
+   "full": {
+    "ms": 1408,
+    "input": 6753,
+    "output": 209,
+    "tool": "(text)"
+   },
+   "fast": {
+    "ms": 765,
+    "input": 2567,
+    "output": 112,
+    "tool": "(text)"
+   }
+  },
+  {
+   "text": "Nani amelipa mpaka sasa?",
+   "intent": "collection_status",
+   "full": {
+    "ms": 977,
+    "input": 6755,
+    "output": 127,
+    "tool": "collection_report"
+   },
+   "fast": {
+    "ms": 606,
+    "input": 2780,
+    "output": 95,
+    "tool": "collection_report"
+   }
+  },
+  {
+   "text": "Make a share card for ASHA30",
+   "intent": "share",
+   "full": {
+    "ms": 1258,
+    "input": 6754,
+    "output": 140,
+    "tool": "make_share_card"
+   },
+   "fast": {
+    "ms": 1379,
+    "input": 2995,
+    "output": 142,
+    "tool": "make_share_card"
+   }
+  },
+  {
+   "text": "Tuna shilingi ngapi kwenye DAVID21?",
+   "intent": "collection_status",
+   "full": {
+    "ms": 960,
+    "input": 6758,
+    "output": 114,
+    "tool": "collection_report"
+   },
+   "fast": {
+    "ms": 925,
+    "input": 2783,
+    "output": 111,
+    "tool": "collection_report"
+   }
+  },
+  {
+   "text": "Nitalipa 100,000 kesho",
+   "intent": "contribute",
+   "full": {
+    "ms": 1894,
+    "input": 6755,
+    "output": 358,
+    "tool": "(text)"
+   },
+   "fast": {
+    "ms": 2474,
+    "input": 3210,
+    "output": 293,
+    "tool": "(text)"
+   }
+  },
+  {
+   "text": "contribute kikao3 😊",
+   "intent": "contribute",
+   "full": {
+    "ms": 1009,
+    "input": 6753,
+    "output": 100,
+    "tool": "open_collection"
+   },
+   "fast": {
+    "ms": 838,
+    "input": 3208,
+    "output": 94,
+    "tool": "open_collection"
+   }
+  },
+  {
+   "text": "Make a share card for HARUSI7 tafadhali",
+   "intent": "share",
+   "full": {
+    "ms": 839,
+    "input": 6758,
+    "output": 124,
+    "tool": "make_share_card"
+   },
+   "fast": {
+    "ms": 1315,
+    "input": 2999,
+    "output": 129,
+    "tool": "make_share_card"
+   }
+  },
+  {
+   "text": "Sarafupay ni nini",
+   "intent": "greeting_help",
+   "full": {
+    "ms": 2097,
+    "input": 6753,
+    "output": 310,
+    "tool": "(text)"
+   },
+   "fast": {
+    "ms": 1032,
+    "input": 2644,
+    "output": 157,
+    "tool": "(text)"
+   }
+  },
+  {
+   "text": "pay NEEMA24 $100",
+   "intent": "contribute",
+   "full": {
+    "ms": 908,
+    "input": 6752,
+    "output": 150,
+    "tool": "open_collection"
+   },
+   "fast": {
+    "ms": 828,
+    "input": 3207,
+    "output": 125,
+    "tool": "open_collection"
+   }
+  },
+  {
+   "text": "Badilisha jina langu liwe Mama Rehema",
+   "intent": "profile_voice",
+   "full": {
+    "ms": 825,
+    "input": 6759,
+    "output": 94,
+    "tool": "update_my_profile"
+   },
+   "fast": {
+    "ms": 529,
+    "input": 2707,
+    "output": 89,
+    "tool": "update_my_profile"
+   }
+  },
+  {
+   "text": "Habari",
+   "intent": "greeting_help",
+   "full": {
+    "ms": 1162,
+    "input": 6748,
+    "output": 178,
+    "tool": "(text)"
+   },
+   "fast": {
+    "ms": 863,
+    "input": 2639,
+    "output": 103,
+    "tool": "(text)"
+   }
+  },
+  {
+   "text": "Pledge $50 for Baraka's school fees",
+   "intent": "contribute",
+   "full": {
+    "ms": 2532,
+    "input": 6756,
+    "output": 401,
+    "tool": "(text)"
+   },
+   "fast": {
+    "ms": 1373,
+    "input": 3211,
+    "output": 232,
+    "tool": "(text)"
+   }
+  },
+  {
+   "text": "Can I get the invite text again?",
+   "intent": "share",
+   "full": {
+    "ms": 1048,
+    "input": 6754,
+    "output": 203,
+    "tool": "get_share_message"
+   },
+   "fast": {
+    "ms": 1320,
+    "input": 2995,
+    "output": 113,
+    "tool": "get_share_message"
+   }
+  },
+  {
+   "text": "Rename ASHA30 to Grace's send-off",
+   "intent": "create_collection",
+   "full": {
+    "ms": 899,
+    "input": 6755,
+    "output": 129,
+    "tool": "update_collection"
+   },
+   "fast": {
+    "ms": 868,
+    "input": 3493,
+    "output": 154,
+    "tool": "update_collection"
+   }
+  },
+  {
+   "text": "can i pay with my card? i'm in the uk",
+   "intent": "contribute",
+   "full": {
+    "ms": 2586,
+    "input": 6757,
+    "output": 499,
+    "tool": "open_collection"
+   },
+   "fast": {
+    "ms": 1371,
+    "input": 3212,
+    "output": 166,
+    "tool": "open_collection"
+   }
+  },
+  {
+   "text": "Has Neema paid",
+   "intent": "collection_status",
+   "full": {
+    "ms": 1616,
+    "input": 6750,
+    "output": 249,
+    "tool": "investigate_payments"
+   },
+   "fast": {
+    "ms": 790,
+    "input": 2775,
+    "output": 116,
+    "tool": "collection_report"
+   }
+  },
+  {
+   "text": "Tumefikisha kiasi gani 😊",
+   "intent": "collection_status",
+   "full": {
+    "ms": 1041,
+    "input": 6757,
+    "output": 120,
+    "tool": "collection_report"
+   },
+   "fast": {
+    "ms": 1193,
+    "input": 2782,
+    "output": 103,
+    "tool": "collection_report"
+   }
+  },
+  {
+   "text": "Change the deadline of DAVID21 to Friday asap",
+   "intent": "create_collection",
+   "full": {
+    "ms": 1246,
+    "input": 6756,
+    "output": 232,
+    "tool": "update_collection"
+   },
+   "fast": {
+    "ms": 1111,
+    "input": 3494,
+    "output": 201,
+    "tool": "update_collection"
+   }
+  },
+  {
+   "text": "Nani amelipa mpaka sasa",
+   "intent": "collection_status",
+   "full": {
+    "ms": 1159,
+    "input": 6754,
+    "output": 124,
+    "tool": "collection_report"
+   },
+   "fast": {
+    "ms": 837,
+    "input": 2779,
+    "output": 100,
+    "tool": "collection_report"
+   }
+  },
+  {
+   "text": "washukuru wote waliochangia shule25 tafadhali",
+   "intent": "share",
+   "full": {
+    "ms": 1815,
+    "input": 6761,
+    "output": 259,
+    "tool": "send_thank_you_videos"
+   },
+   "fast": {
+    "ms": 913,
+    "input": 3002,
+    "output": 163,
+    "tool": "send_thank_you_videos"
+   }
+  },
+  {
+   "text": "rename shule25 to asha's graduation party",
+   "intent": "create_collection",
+   "full": {
+    "ms": 1808,
+    "input": 6756,
+    "output": 269,
+    "tool": "update_collection"
+   },
+   "fast": {
+    "ms": 1598,
+    "input": 3494,
+    "output": 184,
+    "tool": "open_collection"
+   }
+  },
+  {
+   "text": "Can I pay with my card? I'm in the UK",
+   "intent": "contribute",
+   "full": {
+    "ms": 2683,
+    "input": 6757,
+    "output": 492,
+    "tool": "open_collection"
+   },
+   "fast": {
+    "ms": 1549,
+    "input": 3212,
+    "output": 256,
+    "tool": "(text)"
+   }
+  },
+  {
+   "text": "simba wameshinda jana",
+   "intent": "other",
+   "full": {
+    "ms": 1533,
+    "input": 6753,
+    "output": 195,
+    "tool": "(text)"
+   },
+   "fast": {
+    "ms": 1037,
+    "input": 2567,
+    "output": 102,
+    "tool": "(text)"
+   }
+  },
+  {
+   "text": "show my collections",
+   "intent": "collection_status",
+   "full": {
+    "ms": 882,
+    "input": 6749,
+    "output": 83,
+    "tool": "list_my_collections"
+   },
+   "fast": {
+    "ms": 556,
+    "input": 2774,
+    "output": 65,
+    "tool": "list_my_collections"
+   }
+  },
+  {
+   "text": "ok thank you, that's all for now",
+   "intent": "greeting_help",
+   "full": {
+    "ms": 885,
+    "input": 6754,
+    "output": 137,
+    "tool": "(text)"
+   },
+   "fast": {
+    "ms": 725,
+    "input": 2645,
+    "output": 86,
+    "tool": "(text)"
+   }
+  },
+  {
+   "text": "Sarafupay ni nini? pls",
+   "intent": "greeting_help",
+   "full": {
+    "ms": 2763,
+    "input": 6755,
+    "output": 392,
+    "tool": "(text)"
+   },
+   "fast": {
+    "ms": 1806,
+    "input": 2646,
+    "output": 302,
+    "tool": "(text)"
+   }
+  },
+  {
+   "text": "Has Juma paid?",
+   "intent": "collection_status",
+   "full": {
+    "ms": 1257,
+    "input": 6751,
+    "output": 182,
+    "tool": "investigate_payments"
+   },
+   "fast": {
+    "ms": 1003,
+    "input": 2776,
+    "output": 114,
+    "tool": "collection_report"
+   }
+  },
+  {
+   "text": "Nipe share message ya BABU88 please",
+   "intent": "share",
+   "full": {
+    "ms": 1120,
+    "input": 6755,
+    "output": 144,
+    "tool": "get_share_message"
+   },
+   "fast": {
+    "ms": 564,
+    "input": 2996,
+    "output": 89,
+    "tool": "get_share_message"
+   }
+  },
+  {
+   "text": "Start a harambee for mum's hospital bills",
+   "intent": "create_collection",
+   "full": {
+    "ms": 1730,
+    "input": 6756,
+    "output": 260,
+    "tool": "(text)"
+   },
+   "fast": {
+    "ms": 1555,
+    "input": 3494,
+    "output": 178,
+    "tool": "(text)"
+   }
+  },
+  {
+   "text": "Simba wameshinda jana?",
+   "intent": "other",
+   "full": {
+    "ms": 1730,
+    "input": 6754,
+    "output": 214,
+    "tool": "(text)"
+   },
+   "fast": {
+    "ms": 1398,
+    "input": 2568,
+    "output": 180,
+    "tool": "(text)"
+   }
+  },
+  {
+   "text": "Is it free to use?",
+   "intent": "pricing",
+   "full": {
+    "ms": 544,
+    "input": 6752,
+    "output": 58,
+    "tool": "pricing"
+   },
+   "fast": {
+    "ms": 582,
+    "input": 2643,
+    "output": 66,
+    "tool": "pricing"
+   }
+  },
+  {
+   "text": "Nimefiwa, nataka kuchangisha kwa ajili ya mazishi",
+   "intent": "create_collection",
+   "full": {
+    "ms": 2077,
+    "input": 6762,
+    "output": 263,
+    "tool": "(text)"
+   },
+   "fast": {
+    "ms": 1083,
+    "input": 3500,
+    "output": 153,
+    "tool": "(text)"
+   }
+  },
+  {
+   "text": "Change the deadline of DAVID21 to Saturday",
+   "intent": "create_collection",
+   "full": {
+    "ms": 1268,
+    "input": 6755,
+    "output": 232,
+    "tool": "update_collection"
+   },
+   "fast": {
+    "ms": 1291,
+    "input": 3493,
+    "output": 206,
+    "tool": "update_collection"
+   }
+  },
+  {
+   "text": "habari",
+   "intent": "greeting_help",
+   "full": {
+    "ms": 1118,
+    "input": 6748,
+    "output": 140,
+    "tool": "(text)"
+   },
+   "fast": {
+    "ms": 1060,
+    "input": 2639,
+    "output": 120,
+    "tool": "(text)"
+   }
+  },
+  {
+   "text": "Weka jina langu Neema kwenye akaunti",
+   "intent": "profile_voice",
+   "full": {
+    "ms": 921,
+    "input": 6757,
+    "output": 111,
+    "tool": "update_my_profile"
+   },
+   "fast": {
+    "ms": 859,
+    "input": 2705,
+    "output": 100,
+    "tool": "update_my_profile"
+   }
+  },
+  {
+   "text": "pricing",
+   "intent": "pricing",
+   "full": {
+    "ms": 953,
+    "input": 6747,
+    "output": 110,
+    "tool": "pricing"
+   },
+   "fast": {
+    "ms": 671,
+    "input": 2638,
+    "output": 112,
+    "tool": "pricing"
+   }
+  },
+  {
+   "text": "Show my collections",
+   "intent": "collection_status",
+   "full": {
+    "ms": 742,
+    "input": 6749,
+    "output": 143,
+    "tool": "list_my_collections"
+   },
+   "fast": {
+    "ms": 1196,
+    "input": 2774,
+    "output": 70,
+    "tool": "list_my_collections"
+   }
+  },
+  {
+   "text": "Washukuru wote waliochangia KANISA5",
+   "intent": "share",
+   "full": {
+    "ms": 1398,
+    "input": 6760,
+    "output": 219,
+    "tool": "send_thank_you_videos"
+   },
+   "fast": {
+    "ms": 757,
+    "input": 3001,
+    "output": 140,
+    "tool": "send_thank_you_videos"
+   }
+  },
+  {
+   "text": "Please anzisha mchango wa sherehe ya kuhitimu ya Asha",
+   "intent": "create_collection",
+   "full": {
+    "ms": 1431,
+    "input": 6763,
+    "output": 195,
+    "tool": "(text)"
+   },
+   "fast": {
+    "ms": 1042,
+    "input": 3501,
+    "output": 135,
+    "tool": "(text)"
+   }
+  },
+  {
+   "text": "Mchangiaji analipa makato?",
+   "intent": "pricing",
+   "full": {
+    "ms": 847,
+    "input": 6755,
+    "output": 104,
+    "tool": "pricing"
+   },
+   "fast": {
+    "ms": 619,
+    "input": 2646,
+    "output": 81,
+    "tool": "pricing"
+   }
+  },
+  {
+   "text": "Badilisha jina langu liwe Neema",
+   "intent": "profile_voice",
+   "full": {
+    "ms": 609,
+    "input": 6757,
+    "output": 115,
+    "tool": "update_my_profile"
+   },
+   "fast": {
+    "ms": 663,
+    "input": 2705,
+    "output": 81,
+    "tool": "update_my_profile"
+   }
+  },
+  {
+   "text": "Nitalipa elfu kumi mwisho wa mwezi",
+   "intent": "contribute",
+   "full": {
+    "ms": 3116,
+    "input": 6759,
+    "output": 442,
+    "tool": "(text)"
+   },
+   "fast": {
+    "ms": 2656,
+    "input": 3214,
+    "output": 445,
+    "tool": "(text)"
+   }
+  },
+  {
+   "text": "tumefikisha kiasi gani?",
+   "intent": "collection_status",
+   "full": {
+    "ms": 694,
+    "input": 6755,
+    "output": 142,
+    "tool": "collection_report"
+   },
+   "fast": {
+    "ms": 875,
+    "input": 2780,
+    "output": 114,
+    "tool": "collection_report"
+   }
+  },
+  {
+   "text": "translate 'thank you' to french",
+   "intent": "other",
+   "full": {
+    "ms": 1272,
+    "input": 6753,
+    "output": 163,
+    "tool": "(text)"
+   },
+   "fast": {
+    "ms": 734,
+    "input": 2567,
+    "output": 77,
+    "tool": "(text)"
+   }
+  },
+  {
+   "text": "nipe share message ya babu88 please",
+   "intent": "share",
+   "full": {
+    "ms": 763,
+    "input": 6755,
+    "output": 117,
+    "tool": "get_share_message"
+   },
+   "fast": {
+    "ms": 917,
+    "input": 2996,
+    "output": 131,
+    "tool": "get_share_message"
+   }
+  },
+  {
+   "text": "Contribute KIKAO3",
+   "intent": "contribute",
+   "full": {
+    "ms": 662,
+    "input": 6752,
+    "output": 81,
+    "tool": "open_collection"
+   },
+   "fast": {
+    "ms": 507,
+    "input": 3207,
+    "output": 85,
+    "tool": "open_collection"
+   }
+  },
+  {
+   "text": "change voice to woman",
+   "intent": "profile_voice",
+   "full": {
+    "ms": 676,
+    "input": 6750,
+    "output": 100,
+    "tool": "set_reply_voice"
+   },
+   "fast": {
+    "ms": 630,
+    "input": 2698,
+    "output": 81,
+    "tool": "set_reply_voice"
+   }
+  },
+  {
+   "text": "Weka jina langu Daudi kwenye akaunti",
+   "intent": "profile_voice",
+   "full": {
+    "ms": 1123,
+    "input": 6757,
+    "output": 120,
+    "tool": "update_my_profile"
+   },
+   "fast": {
+    "ms": 593,
+    "input": 2705,
+    "output": 101,
+    "tool": "update_my_profile"
+   }
+  }
+ ]
+}

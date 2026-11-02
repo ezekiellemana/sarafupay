@@ -47,6 +47,14 @@ An organiser says "watumie asante wote waliolipa" and everyone who paid gets a s
 
 Live test: two videos (one Swahili, one English) made and delivered in 78 s on CPU.
 
+### 5. Muse Glimmer message router (fine-tuned open weights)
+
+Most WhatsApp messages are simple ("tumefikisha kiasi gani?", "naitwa Asha"), but every one used to pay for the full agent: all 24 tools in the prompt and full reasoning. A small open-weights Meta model now decides first.
+
+- **Fine-tuned on our own messages:** Muse Glimmer 30B, LoRA SFT on Fireworks, trained on 687 Kiswahili, English and code-switched SarafuPay messages (278 hand-written templates, 14 intents) and scored on 97 messages from templates it never saw. Data, training and eval: [ml/router/](ml/router/README.md).
+- **Fast path for clear messages:** Muse Spark gets only that intent's tools with less reasoning. Measured on Muse Spark 1.3 over 56 messages: 56% fewer input tokens per call (6,755 to 2,951), 19% lower median latency, and the same first action in 52 of 56.
+- **Money never takes a shortcut:** payouts, receipts and cash records, chasing payers, follow-ups like "ndio" and messages with several asks always take the full path, whatever the router says. So does every message when the router is slow, down or unsure, and a fast turn that fails is retried on the full path. Each decision is in the agent activity log.
+
 ### All AI is Meta
 
 Gemini (a backup brain before the hackathon) and the dashboard chat's Gemini route were removed: the agent, the dashboard's Treasurer chat, vision, segmentation, listening and speaking all run on Meta models. Non-AI services stay (PayPal and Snippe payments, hosting).
@@ -62,3 +70,4 @@ Gemini (a backup brain before the hackathon) and the dashboard chat's Gemini rou
 | Seamless M4T v2 (open weights, self-hosted) | Spoken Swahili and English replies to voice notes; the voice in thank-you videos | Yes |
 | Muse Image | Share cards; thank-you video cards | Share cards existed; thank-you cards are new |
 | Muse Wonder | Animates the thank-you card (switches on when enabled for our key) | Yes |
+| Muse Glimmer 30B (open weights, LoRA fine-tuned on Fireworks) | Routes each text message to the fast or full agent path | Yes |
