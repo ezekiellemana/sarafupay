@@ -1,0 +1,97 @@
+{"user": "do it 🙏", "gold": {"intent": "followup", "lang": "en", "route": "full"}, "answer": "{\"intent\": \"followup\", \"lang\": \"en\", \"route\": \"full\"}"}
+{"user": "How much have I contributed", "gold": {"intent": "contribute", "lang": "en", "route": "fast"}, "answer": "{\"intent\": \"contribute\", \"lang\": \"en\", \"route\": \"fast\"}"}
+{"user": "Who hasn't paid yet? Also withdraw 100,000 TZS to +255 765 432 109", "gold": {"intent": "multi", "lang": "en", "route": "full"}, "answer": "{\"intent\": \"multi\", \"lang\": \"en\", \"route\": \"full\"}"}
+{"user": "Lipa ukumbi 30000", "gold": {"intent": "payout", "lang": "sw", "route": "full"}, "answer": "{\"intent\": \"contribute\", \"lang\": \"sw\", \"route\": \"fast\"}"}
+{"user": "who hasn't paid yet?", "gold": {"intent": "chase_payments", "lang": "en", "route": "full"}, "answer": "{\"intent\": \"chase_payments\", \"lang\": \"en\", \"route\": \"full\"}"}
+{"user": "Sarafupay ni nini", "gold": {"intent": "greeting_help", "lang": "sw", "route": "fast"}, "answer": "{\"intent\": \"greeting_help\", \"lang\": \"sw\", \"route\": \"fast\"}"}
+{"user": "nani bado hajalipa? halafu nitolee 200k kwenda +255 765 432 109", "gold": {"intent": "multi", "lang": "sw", "route": "full"}, "answer": "{\"intent\": \"multi\", \"lang\": \"sw\", \"route\": \"full\"}"}
+{"user": "D1SNKQT8CA Confirmed. You have received TZS 10k from Kelvin tafadhali", "gold": {"intent": "receipt_offline", "lang": "en", "route": "full"}, "answer": "{\"intent\": \"receipt_offline\", \"lang\": \"mix\", \"route\": \"full\"}"}
+{"user": "UN7THHQQCG Confirmed. You have received TZS 500,000 from Mwajuma", "gold": {"intent": "receipt_offline", "lang": "en", "route": "full"}, "answer": "{\"intent\": \"receipt_offline\", \"lang\": \"en\", \"route\": \"full\"}"}
+{"user": "change voice to woman", "gold": {"intent": "profile_voice", "lang": "en", "route": "fast"}, "answer": "{\"intent\": \"profile_voice\", \"lang\": \"en\", \"route\": \"fast\"}"}
+{"user": "Chase everyone who hasn't paid", "gold": {"intent": "chase_payments", "lang": "en", "route": "full"}, "answer": "{\"intent\": \"chase_payments\", \"lang\": \"en\", \"route\": \"full\"}"}
+{"user": "Who hasn't paid yet?", "gold": {"intent": "chase_payments", "lang": "en", "route": "full"}, "answer": "{\"intent\": \"chase_payments\", \"lang\": \"en\", \"route\": \"full\"}"}
+{"user": "share link? asap", "gold": {"intent": "share", "lang": "en", "route": "fast"}, "answer": "{\"intent\": \"share\", \"lang\": \"en\", \"route\": \"fast\"}"}
+{"user": "Please anzisha mchango wa kikundi chetu cha VICOBA", "gold": {"intent": "create_collection", "lang": "mix", "route": "fast"}, "answer": "{\"intent\": \"create_collection\", \"lang\": \"mix\", \"route\": \"fast\"}"}
+{"user": "Sarafupay ni nini? pls", "gold": {"intent": "greeting_help", "lang": "sw", "route": "fast"}, "answer": "{\"intent\": \"greeting_help\", \"lang\": \"sw\", \"route\": \"fast\"}"}
+{"user": "Change the deadline of DAVID21 to Friday asap", "gold": {"intent": "create_collection", "lang": "en", "route": "fast"}, "answer": "{\"intent\": \"create_collection\", \"lang\": \"en\", \"route\": \"fast\"}"}
+{"user": "share link?", "gold": {"intent": "share", "lang": "en", "route": "fast"}, "answer": "{\"intent\": \"share\", \"lang\": \"en\", \"route\": \"fast\"}"}
+{"user": "Can you remind pledgers automatically on their due date?", "gold": {"intent": "autopilot_settings", "lang": "en", "route": "full"}, "answer": "{\"intent\": \"autopilot_settings\", \"lang\": \"en\", \"route\": \"full\"}"}
+{"user": "Thank Mwajuma with a video", "gold": {"intent": "share", "lang": "en", "route": "fast"}, "answer": "{\"intent\": \"share\", \"lang\": \"en\", \"route\": \"fast\"}"}
+{"user": "give me a message to share in the family group", "gold": {"intent": "share", "lang": "en", "route": "fast"}, "answer": "{\"intent\": \"share\", \"lang\": \"en\", \"route\": \"fast\"}"}
+{"user": "Reply in Swahili from now on", "gold": {"intent": "profile_voice", "lang": "en", "route": "fast"}, "answer": "{\"intent\": \"profile_voice\", \"lang\": \"en\", \"route\": \"fast\"}"}
+{"user": "nimeshalipa 50,000 benki lakini pia naahidi 30000 kesho", "gold": {"intent": "multi", "lang": "sw", "route": "full"}, "answer": "{\"intent\": \"multi\", \"lang\": \"sw\", \"route\": \"full\"}"}
+{"user": "Habari", "gold": {"intent": "greeting_help", "lang": "sw", "route": "fast"}, "answer": "{\"intent\": \"greeting_help\", \"lang\": \"sw\", \"route\": \"fast\"}"}
+{"user": "I want to give $20 to NEEMA24", "gold": {"intent": "contribute", "lang": "en", "route": "fast"}, "answer": "{\"intent\": \"contribute\", \"lang\": \"en\", \"route\": \"fast\"}"}
+{"user": "Good morning, my friend told me about SarafuPay", "gold": {"intent": "greeting_help", "lang": "en", "route": "fast"}, "answer": "{\"intent\": \"greeting_help\", \"lang\": \"en\", \"route\": \"fast\"}"}
+{"user": "Nitumie link ya kulipia 200k", "gold": {"intent": "contribute", "lang": "sw", "route": "fast"}, "answer": "{\"intent\": \"contribute\", \"lang\": \"sw\", \"route\": \"fast\"}"}
+{"user": "Pay the hall 100,000 TZS", "gold": {"intent": "payout", "lang": "en", "route": "full"}, "answer": "{\"intent\": \"payout\", \"lang\": \"en\", \"route\": \"full\"}"}
+{"user": "Nani amelipa mpaka sasa?", "gold": {"intent": "collection_status", "lang": "sw", "route": "fast"}, "answer": "{\"intent\": \"collection_status\", \"lang\": \"sw\", \"route\": \"fast\"}"}
+{"user": "Weka jina langu Neema kwenye akaunti", "gold": {"intent": "profile_voice", "lang": "sw", "route": "fast"}, "answer": "{\"intent\": \"profile_voice\", \"lang\": \"sw\", \"route\": \"fast\"}"}
+{"user": "Washa vikumbusho vya moja kwa moja kwa KIKAO3", "gold": {"intent": "autopilot_settings", "lang": "sw", "route": "full"}, "answer": "{\"intent\": \"autopilot_settings\", \"lang\": \"sw\", \"route\": \"full\"}"}
+{"user": "i want to give 75,000 to msiba12", "gold": {"intent": "contribute", "lang": "en", "route": "fast"}, "answer": "{\"intent\": \"contribute\", \"lang\": \"en\", \"route\": \"fast\"}"}
+{"user": "What are your fees?", "gold": {"intent": "pricing", "lang": "en", "route": "fast"}, "answer": "{\"intent\": \"pricing\", \"lang\": \"en\", \"route\": \"fast\"}"}
+{"user": "Zima automatic reminders", "gold": {"intent": "autopilot_settings", "lang": "mix", "route": "full"}, "answer": "{\"intent\": \"autopilot_settings\", \"lang\": \"sw\", \"route\": \"full\"}"}
+{"user": "nani bado hajalipa? halafu nitolee 100,000 kwenda 0712345678", "gold": {"intent": "multi", "lang": "sw", "route": "full"}, "answer": "{\"intent\": \"multi\", \"lang\": \"sw\", \"route\": \"full\"}"}
+{"user": "ok thank you, that's all for now", "gold": {"intent": "greeting_help", "lang": "en", "route": "fast"}, "answer": "{\"intent\": \"greeting_help\", \"lang\": \"en\", \"route\": \"fast\"}"}
+{"user": "Nani amelipa mpaka sasa", "gold": {"intent": "collection_status", "lang": "sw", "route": "fast"}, "answer": "{\"intent\": \"collection_status\", \"lang\": \"sw\", \"route\": \"fast\"}"}
+{"user": "rename shule25 to asha's graduation party", "gold": {"intent": "create_collection", "lang": "en", "route": "fast"}, "answer": "{\"intent\": \"create_collection\", \"lang\": \"en\", \"route\": \"fast\"}"}
+{"user": "Badilisha jina langu liwe Mama Rehema", "gold": {"intent": "profile_voice", "lang": "sw", "route": "fast"}, "answer": "{\"intent\": \"profile_voice\", \"lang\": \"sw\", \"route\": \"fast\"}"}
+{"user": "mnapata faida vipi", "gold": {"intent": "pricing", "lang": "sw", "route": "fast"}, "answer": "{\"intent\": \"pricing\", \"lang\": \"sw\", \"route\": \"fast\"}"}
+{"user": "tumefikisha kiasi gani?", "gold": {"intent": "collection_status", "lang": "sw", "route": "fast"}, "answer": "{\"intent\": \"collection_status\", \"lang\": \"sw\", \"route\": \"fast\"}"}
+{"user": "simba wameshinda jana", "gold": {"intent": "other", "lang": "sw", "route": "fast"}, "answer": "{\"intent\": \"other\", \"lang\": \"sw\", \"route\": \"fast\"}"}
+{"user": "BABU88", "gold": {"intent": "contribute", "lang": "sw", "route": "fast"}, "answer": "{\"intent\": \"followup\", \"lang\": \"sw\", \"route\": \"full\"}"}
+{"user": "Mnachaji shilingi ngapi? tafadhali", "gold": {"intent": "pricing", "lang": "sw", "route": "fast"}, "answer": "{\"intent\": \"pricing\", \"lang\": \"sw\", \"route\": \"fast\"}"}
+{"user": "cash out please", "gold": {"intent": "payout", "lang": "en", "route": "full"}, "answer": "{\"intent\": \"payout\", \"lang\": \"en\", \"route\": \"full\"}"}
+{"user": "nimepokea elfu kumi kutoka kwa kelvin kwa m-pesa moja kwa moja", "gold": {"intent": "receipt_offline", "lang": "sw", "route": "full"}, "answer": "{\"intent\": \"receipt_offline\", \"lang\": \"sw\", \"route\": \"full\"}"}
+{"user": "do it asap", "gold": {"intent": "followup", "lang": "en", "route": "full"}, "answer": "{\"intent\": \"followup\", \"lang\": \"en\", \"route\": \"full\"}"}
+{"user": "Nimeshalipa TZS 15,000 benki lakini pia naahidi laki moja Jumamosi", "gold": {"intent": "multi", "lang": "sw", "route": "full"}, "answer": "{\"intent\": \"multi\", \"lang\": \"sw\", \"route\": \"full\"}"}
+{"user": "SHULE25", "gold": {"intent": "contribute", "lang": "sw", "route": "fast"}, "answer": "{\"intent\": \"followup\", \"lang\": \"sw\", \"route\": \"full\"}"}
+{"user": "Pesa zitumwe kwa Kelvin namba +255 765 432 109", "gold": {"intent": "payout", "lang": "sw", "route": "full"}, "answer": "{\"intent\": \"payout\", \"lang\": \"sw\", \"route\": \"full\"}"}
+{"user": "habari za asubuhi, nimeambiwa nijiunge hapa", "gold": {"intent": "greeting_help", "lang": "sw", "route": "fast"}, "answer": "{\"intent\": \"greeting_help\", \"lang\": \"sw\", \"route\": \"fast\"}"}
+{"user": "Give me a message to share in the family group", "gold": {"intent": "share", "lang": "en", "route": "fast"}, "answer": "{\"intent\": \"share\", \"lang\": \"en\", \"route\": \"fast\"}"}
+{"user": "wakumbushe walioahidi", "gold": {"intent": "chase_payments", "lang": "sw", "route": "full"}, "answer": "{\"intent\": \"chase_payments\", \"lang\": \"sw\", \"route\": \"full\"}"}
+{"user": "Tuna shilingi ngapi kwenye SHULE25?", "gold": {"intent": "collection_status", "lang": "sw", "route": "fast"}, "answer": "{\"intent\": \"collection_status\", \"lang\": \"sw\", \"route\": \"fast\"}"}
+{"user": "Rename ASHA30 to Grace's send-off", "gold": {"intent": "create_collection", "lang": "en", "route": "fast"}, "answer": "{\"intent\": \"create_collection\", \"lang\": \"en\", \"route\": \"fast\"}"}
+{"user": "Mnapata faida vipi?", "gold": {"intent": "pricing", "lang": "sw", "route": "fast"}, "answer": "{\"intent\": \"pricing\", \"lang\": \"sw\", \"route\": \"fast\"}"}
+{"user": "Make a share card for BABU88", "gold": {"intent": "share", "lang": "en", "route": "fast"}, "answer": "{\"intent\": \"share\", \"lang\": \"en\", \"route\": \"fast\"}"}
+{"user": "Subiri kidogo", "gold": {"intent": "followup", "lang": "sw", "route": "full"}, "answer": "{\"intent\": \"followup\", \"lang\": \"sw\", \"route\": \"full\"}"}
+{"user": "Why is Neema's payment still pending?", "gold": {"intent": "chase_payments", "lang": "en", "route": "full"}, "answer": "{\"intent\": \"chase_payments\", \"lang\": \"en\", \"route\": \"full\"}"}
+{"user": "Endelea", "gold": {"intent": "followup", "lang": "sw", "route": "full"}, "answer": "{\"intent\": \"followup\", \"lang\": \"sw\", \"route\": \"full\"}"}
+{"user": "Lipa ukumbi laki 2", "gold": {"intent": "payout", "lang": "sw", "route": "full"}, "answer": "{\"intent\": \"contribute\", \"lang\": \"sw\", \"route\": \"fast\"}"}
+{"user": "Simba wameshinda jana?", "gold": {"intent": "other", "lang": "sw", "route": "fast"}, "answer": "{\"intent\": \"other\", \"lang\": \"sw\", \"route\": \"fast\"}"}
+{"user": "who hasn't paid yet? also withdraw 75,000 to 0712345678", "gold": {"intent": "multi", "lang": "en", "route": "full"}, "answer": "{\"intent\": \"multi\", \"lang\": \"en\", \"route\": \"full\"}"}
+{"user": "Tumefikisha kiasi gani 😊", "gold": {"intent": "collection_status", "lang": "sw", "route": "fast"}, "answer": "{\"intent\": \"collection_status\", \"lang\": \"sw\", \"route\": \"fast\"}"}
+{"user": "Tuna shilingi ngapi kwenye DAVID21?", "gold": {"intent": "collection_status", "lang": "sw", "route": "fast"}, "answer": "{\"intent\": \"collection_status\", \"lang\": \"sw\", \"route\": \"fast\"}"}
+{"user": "pledge 100,000 tzs for the church building fund", "gold": {"intent": "contribute", "lang": "en", "route": "fast"}, "answer": "{\"intent\": \"contribute\", \"lang\": \"en\", \"route\": \"fast\"}"}
+{"user": "Mnachaji shilingi ngapi?", "gold": {"intent": "pricing", "lang": "sw", "route": "fast"}, "answer": "{\"intent\": \"pricing\", \"lang\": \"sw\", \"route\": \"fast\"}"}
+{"user": "How many people have contributed to NEEMA24", "gold": {"intent": "collection_status", "lang": "en", "route": "fast"}, "answer": "{\"intent\": \"collection_status\", \"lang\": \"en\", \"route\": \"fast\"}"}
+{"user": "Here's my receipt, I already paid", "gold": {"intent": "receipt_offline", "lang": "en", "route": "full"}, "answer": "{\"intent\": \"receipt_offline\", \"lang\": \"en\", \"route\": \"full\"}"}
+{"user": "How many people have contributed to KIKAO3?", "gold": {"intent": "collection_status", "lang": "en", "route": "fast"}, "answer": "{\"intent\": \"collection_status\", \"lang\": \"en\", \"route\": \"fast\"}"}
+{"user": "Start a harambee for Asha's graduation party", "gold": {"intent": "create_collection", "lang": "en", "route": "fast"}, "answer": "{\"intent\": \"create_collection\", \"lang\": \"en\", \"route\": \"fast\"}"}
+{"user": "Nitumie link ya kulipia elfu ishirini asap", "gold": {"intent": "contribute", "lang": "sw", "route": "fast"}, "answer": "{\"intent\": \"contribute\", \"lang\": \"sw\", \"route\": \"fast\"}"}
+{"user": "can you remind pledgers automatically on their due date?", "gold": {"intent": "autopilot_settings", "lang": "en", "route": "full"}, "answer": "{\"intent\": \"autopilot_settings\", \"lang\": \"en\", \"route\": \"full\"}"}
+{"user": "Daudi paid me $50 in cash, please record it", "gold": {"intent": "receipt_offline", "lang": "en", "route": "full"}, "answer": "{\"intent\": \"receipt_offline\", \"lang\": \"en\", \"route\": \"full\"}"}
+{"user": "Asha paid me $100 in cash, please record it 🙏", "gold": {"intent": "receipt_offline", "lang": "en", "route": "full"}, "answer": "{\"intent\": \"receipt_offline\", \"lang\": \"en\", \"route\": \"full\"}"}
+{"user": "here's my receipt, i already paid", "gold": {"intent": "receipt_offline", "lang": "en", "route": "full"}, "answer": "{\"intent\": \"receipt_offline\", \"lang\": \"en\", \"route\": \"full\"}"}
+{"user": "Weka jina langu Daudi kwenye akaunti", "gold": {"intent": "profile_voice", "lang": "sw", "route": "fast"}, "answer": "{\"intent\": \"profile_voice\", \"lang\": \"sw\", \"route\": \"fast\"}"}
+{"user": "No", "gold": {"intent": "followup", "lang": "en", "route": "full"}, "answer": "{\"intent\": \"followup\", \"lang\": \"en\", \"route\": \"full\"}"}
+{"user": "Badilisha jina langu liwe Neema", "gold": {"intent": "profile_voice", "lang": "sw", "route": "fast"}, "answer": "{\"intent\": \"profile_voice\", \"lang\": \"sw\", \"route\": \"fast\"}"}
+{"user": "Thank Neema with a video", "gold": {"intent": "share", "lang": "en", "route": "fast"}, "answer": "{\"intent\": \"share\", \"lang\": \"en\", \"route\": \"fast\"}"}
+{"user": "Please anzisha mchango wa sherehe ya kuhitimu ya Asha", "gold": {"intent": "create_collection", "lang": "mix", "route": "fast"}, "answer": "{\"intent\": \"create_collection\", \"lang\": \"mix\", \"route\": \"fast\"}"}
+{"user": "Washa vikumbusho vya moja kwa moja kwa KANISA5", "gold": {"intent": "autopilot_settings", "lang": "sw", "route": "full"}, "answer": "{\"intent\": \"autopilot_settings\", \"lang\": \"sw\", \"route\": \"full\"}"}
+{"user": "Make a share card for ASHA30 😊", "gold": {"intent": "share", "lang": "en", "route": "fast"}, "answer": "{\"intent\": \"share\", \"lang\": \"en\", \"route\": \"fast\"}"}
+{"user": "how much have i contributed?", "gold": {"intent": "contribute", "lang": "en", "route": "fast"}, "answer": "{\"intent\": \"contribute\", \"lang\": \"en\", \"route\": \"fast\"}"}
+{"user": "Start a harambee for mum's hospital bills", "gold": {"intent": "create_collection", "lang": "en", "route": "fast"}, "answer": "{\"intent\": \"create_collection\", \"lang\": \"en\", \"route\": \"fast\"}"}
+{"user": "Nani bado hajalipa kwenye HARUSI7? Remind them", "gold": {"intent": "chase_payments", "lang": "mix", "route": "full"}, "answer": "{\"intent\": \"chase_payments\", \"lang\": \"sw\", \"route\": \"full\"}"}
+{"user": "What are your fees", "gold": {"intent": "pricing", "lang": "en", "route": "fast"}, "answer": "{\"intent\": \"pricing\", \"lang\": \"en\", \"route\": \"fast\"}"}
+{"user": "Pledge 30,000 for the church building fund", "gold": {"intent": "contribute", "lang": "en", "route": "fast"}, "answer": "{\"intent\": \"contribute\", \"lang\": \"en\", \"route\": \"fast\"}"}
+{"user": "Nani bado hajalipa kwenye MSIBA12? Remind them", "gold": {"intent": "chase_payments", "lang": "mix", "route": "full"}, "answer": "{\"intent\": \"chase_payments\", \"lang\": \"sw\", \"route\": \"full\"}"}
+{"user": "Nimefiwa, nataka kuchangisha kwa ajili ya mazishi", "gold": {"intent": "create_collection", "lang": "sw", "route": "fast"}, "answer": "{\"intent\": \"create_collection\", \"lang\": \"sw\", \"route\": \"fast\"}"}
+{"user": "Nimepokea elfu ishirini kutoka kwa Peter kwa M-Pesa moja kwa moja asap", "gold": {"intent": "receipt_offline", "lang": "sw", "route": "full"}, "answer": "{\"intent\": \"receipt_offline\", \"lang\": \"sw\", \"route\": \"full\"}"}
+{"user": "why is hamisi's payment still pending?", "gold": {"intent": "chase_payments", "lang": "en", "route": "full"}, "answer": "{\"intent\": \"chase_payments\", \"lang\": \"en\", \"route\": \"full\"}"}
+{"user": "pay the hall 10k asap", "gold": {"intent": "payout", "lang": "en", "route": "full"}, "answer": "{\"intent\": \"chase_payments\", \"lang\": \"en\", \"route\": \"full\"}"}
+{"user": "Subiri kidogo asap", "gold": {"intent": "followup", "lang": "sw", "route": "full"}, "answer": "{\"intent\": \"followup\", \"lang\": \"sw\", \"route\": \"full\"}"}
+{"user": "Change the deadline of DAVID21 to Saturday", "gold": {"intent": "create_collection", "lang": "en", "route": "fast"}, "answer": "{\"intent\": \"create_collection\", \"lang\": \"en\", \"route\": \"fast\"}"}
+{"user": "habari", "gold": {"intent": "greeting_help", "lang": "sw", "route": "fast"}, "answer": "{\"intent\": \"greeting_help\", \"lang\": \"sw\", \"route\": \"fast\"}"}
+{"user": "Pesa zitumwe kwa Zawadi namba 0688 998 877", "gold": {"intent": "payout", "lang": "sw", "route": "full"}, "answer": "{\"intent\": \"payout\", \"lang\": \"sw\", \"route\": \"full\"}"}
+{"user": "Tell me a joke", "gold": {"intent": "other", "lang": "en", "route": "fast"}, "answer": "{\"intent\": \"greeting_help\", \"lang\": \"en\", \"route\": \"fast\"}"}

@@ -7,7 +7,7 @@ import { MockLanguageModelV4 } from "ai/test";
 
 process.env.PGLITE_DIR = "memory";
 // Real model keys in the shell (a dev box, a cloud session) must not leak into the offline run.
-for (const k of ["MODEL_API_KEY", "META_MODEL_API_KEY", "META_OPEN_API_KEY", "META_OPEN_BASE_URL", "META_OPEN_MODEL", "GEMINI_API_KEY", "GOOGLE_GENERATIVE_AI_API_KEY", "EVIDENCE_SIGNING_KEY", "META_VOICE_URL", "META_VOICE_KEY"]) delete process.env[k];
+for (const k of ["MODEL_API_KEY", "META_MODEL_API_KEY", "META_OPEN_API_KEY", "META_OPEN_BASE_URL", "META_OPEN_MODEL", "GEMINI_API_KEY", "GOOGLE_GENERATIVE_AI_API_KEY", "EVIDENCE_SIGNING_KEY", "META_VOICE_URL", "META_VOICE_KEY", "FIREWORKS_API_KEY", "ROUTER_MODEL", "ROUTER_BASE_URL"]) delete process.env[k];
 process.env.PAYPAL_CLIENT_ID = "test-id";
 process.env.PAYPAL_SECRET = "test-secret";
 process.env.APP_URL = "https://sarafupay.test";
@@ -1126,6 +1126,69 @@ async function main() {
       delete process.env.MODEL_API_KEY;
     }
     console.log("✓ thank-you videos: Muse Image card (Muse Wonder clip when enabled) + spoken thanks, one per contribution, retried on failure, owner only");
+  }
+
+  // 13. Glimmer router: clear low-stakes messages get a smaller tool set; money and failures take the full path.
+  {
+    const { MockLanguageModelV4: Mock } = await import("ai/test");
+    const seen: string[][] = [];
+    let failFast = false;
+    __setModelForTests(
+      new Mock({
+        doGenerate: async (opts: { tools?: { name: string }[] }) => {
+          const names = (opts.tools ?? []).map((t) => t.name);
+          seen.push(names);
+          if (failFast && names.length < 10) throw new Error("fast path broke");
+          return { content: [{ type: "text", text: "Tumefikisha 60%." }], finishReason: { unified: "stop", raw: "stop" }, usage, warnings: [] };
+        },
+      }),
+    );
+    process.env.FIREWORKS_API_KEY = "fw_test";
+    process.env.ROUTER_MODEL = "accounts/test/deployments/router";
+    let answer = '{"intent": "collection_status", "lang": "sw", "route": "fast"}';
+    let routerUp = true;
+    const routerCalls: string[] = [];
+    const realFetch5 = globalThis.fetch;
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input instanceof Request ? input.url : input);
+      if (url === "https://api.fireworks.ai/inference/v1/chat/completions") {
+        routerCalls.push(JSON.parse(String(init?.body)).messages[1].content);
+        return routerUp ? Response.json({ choices: [{ message: { content: answer } }] }) : new Response("down", { status: 503 });
+      }
+      return realFetch5(input, init);
+    }) as typeof fetch;
+    try {
+      const R = "sim:255700000909";
+      await say(R, "Tumefikisha kiasi gani?");
+      assert.deepEqual(routerCalls, ["Tumefikisha kiasi gani?"]);
+      const fast = seen.at(-1)!;
+      assert.ok(fast.includes("collection_report") && !fast.includes("prepare_payout") && !fast.includes("record_offline_payment"), `fast tools: ${fast}`);
+      assert.equal((await inbox(R)).at(-1), "Tumefikisha 60%.");
+      const routeLog = await db.select().from(schema.agentActions).where(eq(schema.agentActions.phone, R));
+      assert.ok(routeLog.some((a) => a.tool === "route_message"), "routing decision is in the audit trail");
+
+      answer = '{"intent": "payout", "lang": "sw", "route": "fast"}'; // the model says fast; policy says full
+      await say(R, "Toa elfu 50 kwenda 0754123456");
+      assert.ok(seen.at(-1)!.includes("prepare_payout"), "money messages always get every tool");
+
+      routerUp = false;
+      await say(R, "Makato ni kiasi gani?");
+      assert.ok(seen.at(-1)!.includes("prepare_payout"), "router down = today's full path");
+
+      routerUp = true;
+      answer = '{"intent": "pricing", "lang": "sw", "route": "fast"}';
+      failFast = true;
+      const before = seen.length;
+      await say(R, "Mnachaji shilingi ngapi?");
+      assert.ok(seen.length > before + 1 && seen.at(-1)!.includes("prepare_payout"), "a failed fast turn is retried on the full path");
+      assert.equal((await inbox(R)).at(-1), "Tumefikisha 60%.");
+    } finally {
+      globalThis.fetch = realFetch5;
+      delete process.env.FIREWORKS_API_KEY;
+      delete process.env.ROUTER_MODEL;
+      __setModelForTests(model);
+    }
+    console.log("✓ Glimmer router: fast tool subset for clear messages, full path for money, outages and failed fast turns");
   }
 
   // 12. Rates an admin saved before Oct 25 lose the SarafuPay payout fee once; later edits stand.

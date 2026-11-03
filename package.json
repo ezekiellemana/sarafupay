@@ -12,10 +12,12 @@
     "reconcile": "node scripts/cron-reconcile.mjs",
     "seed": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/seed-demo.ts",
     "test:pricing": "node --import tsx --test tests/pricing.test.ts",
+    "test:router": "node --conditions=react-server --import tsx --test tests/router.test.ts",
     "demo:copilot": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/demo-copilot.ts",
     "demo:thankyou": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/demo-thankyou.ts",
     "demo:receipt": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/demo-receipt.ts",
-    "eval:voice": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/eval-voice.ts"
+    "eval:voice": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/eval-voice.ts",
+    "eval:fastpath": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/eval-fast-path.ts"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.77",

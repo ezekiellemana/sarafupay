@@ -1,0 +1,44 @@
+{
+  "steps": 43,
+  "base": {
+    "label": "base",
+    "exact_match": 0.0,
+    "unterminated": 97,
+    "prompt_tokens": 20091,
+    "sampled_tokens": 9312,
+    "field_accuracy": {
+      "intent": 0.0,
+      "lang": 0.0,
+      "route": 0.0
+    }
+  },
+  "tuned": {
+    "label": "tuned",
+    "exact_match": 0.8969072164948454,
+    "unterminated": 0,
+    "prompt_tokens": 20091,
+    "sampled_tokens": 2254,
+    "field_accuracy": {
+      "intent": 0.9381443298969072,
+      "lang": 0.9587628865979382,
+      "route": 0.9587628865979382
+    }
+  },
+  "promoted_model": "accounts/sarafupay/models/muse-starter-sl-sarafu-router-1",
+  "exact_match_delta": 0.8969,
+  "paired": {
+    "only_tuned_correct": 87,
+    "only_base_correct": 0,
+    "p_value": 1.2924697071141057e-26
+  },
+  "session": "ts-08571582b6684211a77be6d8c840e1a3",
+  "log": "muse_starter_logs/sarafu-router-1",
+  "cost": {
+    "training": "$0 (promotional)",
+    "evaluation_sampling": {
+      "prompt_tokens": 40182,
+      "sampled_tokens": 11566,
+      "note": "billed separately from training at published per-token rates"
+    }
+  }
+}

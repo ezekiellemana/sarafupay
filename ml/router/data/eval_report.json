@@ -1,0 +1,12 @@
+{
+ "accounts/sarafupay/deployments/sarafu-router": {
+  "n": 97,
+  "intent_acc": 0.938,
+  "lang_acc": 0.959,
+  "route_acc": 0.959,
+  "exact_match": 0.897,
+  "valid_json": 1.0,
+  "full_sent_to_fast": 2,
+  "latency_p50_s": 0.711
+ }
+}

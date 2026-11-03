@@ -44,6 +44,16 @@ export const env = {
   metaOpenApiKey: () => get("META_OPEN_API_KEY"),
   metaOpenBaseUrl: () => get("META_OPEN_BASE_URL", "https://api.fireworks.ai/inference/v1").replace(/\/$/, ""),
   metaOpenModel: () => get("META_OPEN_MODEL", "accounts/fireworks/models/muse-spark-open"),
+  /**
+   * Message router: Muse Glimmer 30B fine-tuned (LoRA) on SarafuPay messages, on a Fireworks deployment
+   * (accounts/<acct>/deployments/<id>). Unset = no routing, every message takes the full path.
+   */
+  fireworksApiKey: () => get("FIREWORKS_API_KEY"),
+  routerModel: () => get("ROUTER_MODEL"),
+  routerBaseUrl: () => get("ROUTER_BASE_URL", "https://api.fireworks.ai/inference/v1").replace(/\/$/, ""),
+  routerTimeoutMs: () => Number(get("ROUTER_TIMEOUT_MS", "1500")) || 1500,
+  /** Reasoning effort for messages the router sends down the fast path. */
+  fastReasoningEffort: () => get("META_FAST_REASONING_EFFORT", "minimal"),
   metaImageModel: () => get("META_IMAGE_MODEL", "muse-image-1.0"),
   metaVideoModel: () => get("META_VIDEO_MODEL", "muse-wonder-1.0"),
   metaTranscribeModel: () => get("META_TRANSCRIBE_MODEL", "muse-voice-transcribe-1.0"),
