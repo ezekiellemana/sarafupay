@@ -51,6 +51,47 @@ Two of the four differences were "Has Juma paid?", where the full model investig
 templates were relabelled as `chase_payments` (full). The other two were reasonable ("rename X"
 opened the collection first; "can I pay by card?" answered in text).
 
+## Results: base vs tuned (run `sarafu-router-1`, 2026-11-03)
+
+LoRA rank 8, 1 epoch, 43 steps over the 687 training rows on Fireworks Serverless Training (training
+cost $0, promotional). Both models answered the same 97 holdout messages, from templates never used
+in training, with a 96-token answer budget:
+
+| | base Muse Glimmer 30B | tuned (`sarafu-router-1`) |
+|---|---|---|
+| exact match (all three keys) | 0 / 97 (0%) | 87 / 97 (89.7%) |
+| intent accuracy | 0% | 93.8% |
+| language accuracy | 0% | 95.9% |
+| route (fast / full) accuracy | 0% | 95.9% |
+| valid JSON | 0 / 97 (never finished an answer) | 97 / 97 |
+| sampled tokens, all 97 | 9,312 | 2,254 |
+
+Paired: the tuned model was right on 87 messages the base got wrong, and never the other way round
+(p ≈ 1e-26). The base model is not "wrong" so much as unusable for this job: it starts reasoning and
+runs out of the answer budget before writing any JSON.
+
+The 10 misses (full list in `results/sarafu-router-1/predictions_tuned.jsonl`):
+
+- **2 full messages sent to the fast path**, the costly kind: "Lipa ukumbi 30000" and "Lipa ukumbi
+  laki 2" (pay the hall) were read as `contribute` instead of `payout`. The fast `contribute` path
+  has no payout tool, so no money can move, but the reply would be off (it offers a payment link).
+  More "lipa <supplier>" payout templates are the fix for the next run.
+- 2 fast messages sent to the full path (bare collection codes "BABU88", "SHULE25" read as a
+  follow-up): slower, not harmful.
+- 4 language-only misses on Kiswahili/English mixes, 1 payout read as chasing payers (still full),
+  1 "tell me a joke" read as `greeting_help` (still fast).
+
+Files: `results/sarafu-router-1/summary.json` (the starter's report), `metrics.jsonl` (training
+loss per step), `predictions_base.jsonl` and `predictions_tuned.jsonl`. The adapter is
+`accounts/sarafupay/models/muse-starter-sl-sarafu-router-1`.
+
+**Deployed check.** The tuned adapter was deployed on one H200 (live merge) for about 6 minutes and
+`eval_router.py` re-scored the 97 holdout messages through Fireworks' chat API: the same numbers
+(89.7% exact, route 95.9%, 2 full-to-fast misses, 97/97 valid JSON) and a **median latency of
+0.71 s** per message from our server's side, inside the router's 1.5 s budget. The deployment was
+deleted straight after (`data/eval_report.json`, `data/preds_accounts_sarafupay_deployments_sarafu-router.jsonl`).
+Going live needs a deployment kept running, which bills per GPU-hour.
+
 ## Train, deploy, evaluate (needs `FIREWORKS_API_KEY`)
 
 ```bash

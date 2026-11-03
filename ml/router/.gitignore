@@ -1,3 +1,4 @@
 .cookbook/
 __pycache__/
 data/preds_*.jsonl
+.venv/
