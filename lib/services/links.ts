@@ -38,8 +38,8 @@ export function shareMessage(c: Collection, ownerName?: string | null, lang: Lan
     "",
     t(
       lang,
-      `Kila malipo na kila matumizi yanafuatiliwa kwa uwazi na SarafuPay (PayPal).`,
-      `Every payment and payout is tracked transparently by SarafuPay (PayPal).`,
+      `Kila malipo na kila matumizi yanafuatiliwa kwa uwazi na SarafuPay.`,
+      `Every payment and payout is tracked transparently by SarafuPay.`,
     ),
   ]
     .filter((l) => l !== null)
